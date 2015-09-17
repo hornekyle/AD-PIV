@@ -1060,6 +1060,7 @@ contains
 			sl = sl/maxval(sl)
 		end if
 		sb = [minval(sl),maxval(sl)]
+		cb = 0.0_wp
 		if(present(c)) cb = real([minval(c),maxval(c)],pp)
 		
 		scalingl = 1.0_pp
@@ -1111,6 +1112,7 @@ contains
 		real(pp)::dx,dxs
 		integer::k
 		
+		cb = 0.0_wp
 		if(present(c)) cb = real(mixval(c),pp)
 		dxs = 0.8_pp
 		if(present(relWidth)) dxs = real(relWidth,pp)
@@ -1161,6 +1163,7 @@ contains
 		real(pp)::dy,dys
 		integer::k
 		
+		cb = 0.0_wp
 		if(present(c)) cb = real(mixval(c),pp)
 		dys = 0.8_pp
 		if(present(relWidth)) dys = real(relWidth,pp)

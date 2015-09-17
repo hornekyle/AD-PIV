@@ -30,6 +30,7 @@ module autodiff_mod
 	
 	interface matmul
 		module procedure matmul_ra
+		module procedure matmul_aa
 	end interface
 
 	interface sum
@@ -237,6 +238,20 @@ contains
 			o(k) = sum_a1(A(k,:)*x(:))
 		end do
 	end function matmul_ra
+
+	function matmul_aa(A,x) result(o)
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(size(A,2)),intent(in)::x
+		type(ad_t),dimension(:),allocatable::o
+		
+		integer::k
+		
+		allocate(o(size(x)))
+		
+		do k=1,size(A,1)
+			o(k) = sum_a1(A(k,:)*x(:))
+		end do
+	end function matmul_aa
 
 	!============================!
 	!= Transcendental Functions =!

@@ -90,7 +90,6 @@ contains
 		integer::Nd,Nv,Na,ud_id,fmtn,v_id
 		
 		integer::ier,lts
-		integer::k
 		
 		lts = -1
 		if(present(ts)) lts = ts
@@ -117,7 +116,6 @@ contains
 		integer::Nd,Nv,Na,ud_id,fmtn,v_id
 		
 		integer::ier,lts
-		integer::k
 		
 		lts = -1
 		if(present(ts)) lts = ts
@@ -144,7 +142,6 @@ contains
 		integer::Nd,Nv,Na,ud_id,fmtn,v_id
 		
 		integer::ier,lts
-		integer::k
 		
 		lts = -1
 		if(present(ts)) lts = ts
@@ -248,7 +245,6 @@ contains
 		integer,intent(in)::ts
 		character(*),intent(in)::vn
 		real(dp),dimension(:,:),intent(in)::v
-		integer::o
 		
 		integer::f_id,t_id,v_id
 		integer::ier
@@ -270,7 +266,6 @@ contains
 		integer,intent(in)::ts
 		character(*),intent(in)::vn
 		real(dp),dimension(:,:,:),intent(in)::v
-		integer::o
 		
 		integer::f_id,t_id,v_id
 		integer::ier

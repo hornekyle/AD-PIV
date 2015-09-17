@@ -17,7 +17,7 @@ contains
 		real(wp)::dt
 		real(wp),dimension(2)::R
 		
-		s = 9
+		s = 10
 		
 		N = 2**s
 		L = 0.0512_wp
@@ -26,7 +26,7 @@ contains
 		R = L/real(N,wp)*[1.0_wp,0.1_wp]
 		
 		Ux = L(1)/real(N(1),wp)*5.0_wp
-		Uy = 0.0_wp
+		Uy = L(2)/real(N(2),wp)*1.0_wp
 		Lx = L(1)
 		Ly = L(2)
 		
@@ -35,7 +35,7 @@ contains
 		
 		call doTrue(p)
 		call doPass(p,1,[32,32])
-		call doPass(p,2,[24,24])
+		call doPass(p,2,[32,32])
 		
 		call p%plot()
 		call p%stats()

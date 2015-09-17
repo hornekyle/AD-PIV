@@ -35,7 +35,9 @@ contains
 		!$omp barrier
 		!$omp do schedule(static,1)
 		do j=1,p%Nv(2)
-			if(tid==0) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
+			if(tid==0 .and. j/=p%Nv(2)) then
+				call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
+			end if
 			do i=1,p%Nv(1)
 				
 				if(k==1) then
@@ -75,7 +77,8 @@ contains
 			jh = jl+N(2)-1
 			A = p%A(il:ih,jl:jh)
 			B = p%B(il:ih,jl:jh)
-			M = crossCorrelateDirect(A,B,0.25_wp)
+			
+			M = crossCorrelateDirect(A,B,0.5_wp)
 			o = M%dispGauss()
 		end function firstPass
 	
@@ -85,28 +88,39 @@ contains
 			
 			type(ad_t),dimension(:,:),allocatable::A,B
 			real(wp),dimension(2)::ps
-			integer,dimension(2)::sp,sm
+			integer,dimension(2)::sp,sm,s
 			real(wp),dimension(2)::up
 			type(ad_t),dimension(2)::d
-			type(map_t)::M
+!~ 			type(map_t)::M
 			integer::il,ih
 			integer::jl,jh
 			
 			ps = p%L/real(p%N,wp)
 			
 			up = real([p%passes(k-1)%u(i,j),p%passes(k-1)%v(i,j)])
-			sp = ceiling(up/2.0_wp)
-			sm = floor(up/2.0_wp)
+			o  = [p%passes(k-1)%u(i,j),p%passes(k-1)%v(i,j)]
+			
+			s  = nint(up)
+			sp = s/2
+			sm = s-sp
 			
 			il = minloc( abs(p%px-(p%vx(i)-real(N(1),wp)*ps(1)/2.0_wp)) , 1 )
 			jl = minloc( abs(p%py-(p%vy(j)-real(N(2),wp)*ps(2)/2.0_wp)) , 1 )
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
+			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]<1) ) return
+			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]<1) ) return
+			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]>p%N(1)) ) return
+			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]>p%N(2)) ) return
+			
 			A = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
 			B = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
-			M = crossCorrelateDirect(A,B,0.25_wp)
-			d = M%dispGauss()
+			
+!~ 			M = crossCorrelateDirect(A,B,0.5_wp)
+!~ 			d = M%dispGauss()
+			d = leastSquares(A,B)
+			
 			o = real(sp+sm,wp)+d
 		end function secondPass
 	
@@ -130,9 +144,11 @@ contains
 		type(ad_t),dimension(-1:1)::h
 		type(ad_t),dimension(2)::s
 		integer,dimension(2)::N,m
+		integer::i
 		
 		N = shape(self%C)
 		m = nint(real(self%dispInt()))
+		forall(i=1:2) m(i) = min(max(m(i),lbound(self%C,i)+1),ubound(self%C,i)-1)
 		
 		h = self%C(m(1)-1:m(1)+1,m(2))
 		s(1) = 0.5_wp*(log(h(-1))-log(h(1)))/(log(h(-1))-2.0_wp*log(h(0))+log(h(1)))
@@ -173,6 +189,42 @@ contains
 			end do
 		end do
 	end function crossCorrelateDirect
+
+	function leastSquares(A,B) result(o)
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(size(A,1),size(A,2)),intent(in)::B
+		type(ad_t),dimension(2)::o
+		
+		type(ad_t),dimension(:,:),allocatable::fx,fy,ft
+		type(ad_t),dimension(2,2)::As,Ai
+		type(ad_t),dimension(2)::bs
+		real(wp),dimension(2)::d
+		integer,dimension(2)::N
+		integer::i,j
+		
+		N = shape(A)
+		d = 1.0_wp
+		
+		allocate(fx(N(1),N(2)))
+		allocate(fy(N(1),N(2)))
+		allocate(ft(N(1),N(2)))
+		
+		fx = 0.0_wp
+		fy = 0.0_wp
+		ft = 0.0_wp
+		forall(i=2:N(1)-1,j=2:N(2)-1) fx(i,j) = (A(i+1,j)-A(i-1,j))/(2.0_wp*d(1))+(B(i+1,j)-B(i-1,j))/(2.0_wp*d(1))
+		forall(i=2:N(1)-1,j=2:N(2)-1) fy(i,j) = (A(i,j+1)-A(i,j-1))/(2.0_wp*d(2))+(B(i,j+1)-B(i,j-1))/(2.0_wp*d(2))
+		forall(i=2:N(1)-1,j=2:N(2)-1) ft(i,j) = B(i,j)-A(i,j)
+		
+		As(1,1:2) = [sum(fx*fx),sum(fx*fy)]
+		As(2,1:2) = [sum(fx*fy),sum(fy*fy)]
+		bs(1:2)   = [sum(fx*ft),sum(fy*ft)]
+		
+		Ai(1,1:2) = [ As(2,2),-As(1,2)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
+		Ai(2,1:2) = [-As(2,1), As(1,1)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
+		
+		o = matmul(Ai,-bs)
+	end function leastSquares
 
 	subroutine plotMap(self)
 		class(map_t),intent(in)::self

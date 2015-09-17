@@ -128,15 +128,19 @@ contains
 	subroutine pairStats(self)
 		class(pair_t),intent(in)::self
 		
-		real(wp),dimension(:),allocatable::h
+		real(wp),dimension(:),allocatable::h,he
 		integer::k
 		
 		do k=1,ubound(self%passes,1)
-			h = flatten(real( self%passes(k)%u-self%passes(0)%u ))
-			call doHist( pack(h,abs(h)<1.0_wp) ,'Displacement Error #fi#ge#dx#u [px]')
+			h  = flatten(real( self%passes(k)%u ))
+			he = flatten(real( self%passes(k)%u-self%passes(0)%u ))
+			call doHist( pack(h ,abs(he)<2.0_wp) ,'Displacement #fi#gd#dx#u#fn [px]')
+			call doHist( pack(he,abs(he)<2.0_wp) ,'Displacement Error #fi#ge#dx#u#fn [px]')
 			
-			h = flatten(real( self%passes(k)%v-self%passes(0)%v ))
-			call doHist( pack(h,abs(h)<1.0_wp) ,'Displacement Error #fi#ge#dy#u [px]')
+			h  = flatten(real( self%passes(k)%v ))
+			he = flatten(real( self%passes(k)%v-self%passes(0)%v ))
+			call doHist( pack(h ,abs(he)<2.0_wp) ,'Displacement #fi#gd#dy#u#fn [px]')
+			call doHist( pack(he,abs(he)<2.0_wp) ,'Displacement Error #fi#ge#dy#u#fn [px]')
 		end do
 		
 	contains
