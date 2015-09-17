@@ -16,6 +16,13 @@ module utilities_mod
 		module procedure mixval_3
 	end interface
 	
+	interface span
+		!! Return a the maximum-minumum values of an array
+		module procedure span_1
+		module procedure span_2
+		module procedure span_3
+	end interface
+	
 	interface flatten
 		!! Reduce an array to one dimension
 		module procedure flatten_2
@@ -26,6 +33,7 @@ module utilities_mod
 	public::stdout
 	
 	public::mixval
+	public::span
 	public::linspace
 	
 	public::startsWith
@@ -75,6 +83,27 @@ contains
 		
 		b = [minval(x),maxval(x)]
 	end function mixval_3
+
+	function span_1(x) result(o)
+		real(wp),dimension(:),intent(in)::x
+		real(wp)::o
+		
+		o = maxval(x)-minval(x)
+	end function span_1
+
+	function span_2(x) result(o)
+		real(wp),dimension(:,:),intent(in)::x
+		real(wp)::o
+		
+		o = maxval(x)-minval(x)
+	end function span_2
+
+	function span_3(x) result(o)
+		real(wp),dimension(:,:,:),intent(in)::x
+		real(wp)::o
+		
+		o = maxval(x)-minval(x)
+	end function span_3
 
 	function linspace(l,h,N) result(o)
 		!! Return an array of evenly-spaced values

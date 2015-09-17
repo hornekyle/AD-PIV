@@ -5,9 +5,9 @@ module pair_mod
 	use netCDF_mod
 	use plplotlib_mod
 	implicit none
+	private
 	
 	type::pass_t
-		integer,dimension(2)::N
 		type(ad_t),dimension(:,:),allocatable::u,v
 	end type
 	
@@ -26,7 +26,12 @@ module pair_mod
 		procedure::writeNC
 		procedure::plot => plotPair
 		procedure::setupPasses
+		procedure::stats => pairStats
 	end type
+	
+	public::pass_t
+	public::pair_t
+	public::newPair
 	
 contains
 
@@ -72,8 +77,8 @@ contains
 		self%vx = linspace(self%px(B(1)),self%px(self%N(1)-B(1)),N(1))
 		self%vy = linspace(self%py(B(2)),self%py(self%N(2)-B(2)),N(2))
 		
-		allocate(self%passes(Np))
-		do k=1,Np
+		allocate(self%passes(0:Np))
+		do k=0,Np
 			allocate(self%passes(k)%u(N(1),N(2)))
 			allocate(self%passes(k)%v(N(1),N(2)))
 			self%passes(k)%u = 0.0_wp
@@ -97,16 +102,16 @@ contains
 		real(wp),dimension(:,:),allocatable::u,v
 		integer::k
 		
-		do k=1,size(self%passes)
+		do k=lbound(self%passes,1),ubound(self%passes,1)
 		
 			call figure()
 			call subplot(1,1,1,aspect=1.0_wp)
 			call xylim(mixval(self%px),mixval(self%py))
-			call contourf(self%px,self%py,real(self%B)-real(self%A),10)
+!~ 			call contourf(self%px,self%py,real(self%B)-real(self%A),10)
 			if(allocated(self%vx) .and. allocated(self%vy)) then
 				x = flatten(meshGridX(self%vx,self%vy))
 				y = flatten(meshGridY(self%vx,self%vy))
-				call scatter(x,y,markColor='b',markStyle='+',markSize=0.5_wp)
+!~ 				call scatter(x,y,markColor='b',markStyle='+',markSize=0.5_wp)
 				
 				x = self%vx
 				y = self%vy
@@ -119,5 +124,39 @@ contains
 		
 		end do
 	end subroutine plotPair
+
+	subroutine pairStats(self)
+		class(pair_t),intent(in)::self
+		
+		real(wp),dimension(:),allocatable::h
+		integer::k
+		
+		do k=1,ubound(self%passes,1)
+			h = flatten(real( self%passes(k)%u-self%passes(0)%u ))
+			call doHist( pack(h,abs(h)<1.0_wp) ,'Displacement Error #fi#ge#dx#u [px]')
+			
+			h = flatten(real( self%passes(k)%v-self%passes(0)%v ))
+			call doHist( pack(h,abs(h)<1.0_wp) ,'Displacement Error #fi#ge#dy#u [px]')
+		end do
+		
+	contains
+	
+		subroutine doHist(h,L)
+			real(wp),dimension(:),intent(in)::h
+			character(*),intent(in)::L
+			
+			integer::Nb
+			
+			Nb = nint(sqrt(real(size(h),wp)))
+			
+			call figure()
+			call subplot(1,1,1)
+			call xylim(mixval(h),[0.0_wp,1.05_wp])
+			call hist(h,Nb)
+			call xticks(primary=.true.,secondary=.false.)
+			call labels(L,'','N = '//int2char(size(h)))
+		end subroutine doHist
+	
+	end subroutine pairStats
 
 end module pair_mod

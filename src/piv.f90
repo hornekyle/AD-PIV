@@ -4,6 +4,7 @@ module piv_mod
 	use autodiff_mod
 	use pair_mod
 	use plplotlib_mod
+	use omp_lib
 	implicit none
 	
 	type::map_t
@@ -25,11 +26,16 @@ contains
 		integer,intent(in)::k
 		integer,dimension(2),intent(in)::N
 		
+		integer::tid
 		type(ad_t),dimension(2)::d
 		integer::i,j
 		
+		!$omp parallel private(i,j,d,tid)
+		tid = omp_get_thread_num()
+		!$omp barrier
+		!$omp do schedule(static,1)
 		do j=1,p%Nv(2)
-			call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
+			if(tid==0) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
 			do i=1,p%Nv(1)
 				
 				if(k==1) then
@@ -43,6 +49,11 @@ contains
 				
 			end do
 		end do
+		!$omp end do
+		!$omp barrier
+		if(tid==0) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',1.0_wp)
+		!$omp barrier
+		!$omp end parallel
 		
 	contains
 	
@@ -64,7 +75,7 @@ contains
 			jh = jl+N(2)-1
 			A = p%A(il:ih,jl:jh)
 			B = p%B(il:ih,jl:jh)
-			M = crossCorrelateDirect(A,B,0.5_wp)
+			M = crossCorrelateDirect(A,B,0.25_wp)
 			o = M%dispGauss()
 		end function firstPass
 	
@@ -94,7 +105,7 @@ contains
 			
 			A = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
 			B = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
-			M = crossCorrelateDirect(A,B,0.5_wp)
+			M = crossCorrelateDirect(A,B,0.25_wp)
 			d = M%dispGauss()
 			o = real(sp+sm,wp)+d
 		end function secondPass

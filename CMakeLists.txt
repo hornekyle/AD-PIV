@@ -18,8 +18,8 @@ set(sources
 
 
 set(CMAKE_Fortran_FLAGS "-g -Wall -Wtabs")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -Wtabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -Wtabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan -fopenmp")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native -fopenmp")
 
 include_directories("/usr/include")
 include_directories("/usr/include/plplot")

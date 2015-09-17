@@ -3,6 +3,7 @@ module generator_mod
 	use utilities_mod
 	use autodiff_mod
 	use pair_mod
+	use omp_lib
 	implicit none
 	private
 	
@@ -12,12 +13,11 @@ module generator_mod
 	real(wp)::Lx = 1.0_wp
 	real(wp)::Ly = 1.0_wp
 	
-	public::generatePair
-	
 	public::Ux,Uy
 	public::Lx,Ly
 	
-	public::pairStats
+	public::generatePair
+	public::doTrue
 	
 contains
 
@@ -49,6 +49,7 @@ contains
 		end type
 		
 		type(particle_t),dimension(:),allocatable::particles
+		integer::tid
 		integer::k
 		
 		o = newPair(N,L,dt)
@@ -60,11 +61,21 @@ contains
 			particles(k)%r = diff(R(1),3)+R(2)*randomNormal()
 		end do
 		
+		!$omp parallel private(k,tid)
+		tid = omp_get_thread_num()
+		!$omp barrier
+		!$omp sections
+		!$omp section
 		do k=1,Np
 			call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
 			call project( integrate(particles(k)%x,-dt/2.0_wp) , particles(k) , o%A )
+		end do
+		!$omp section
+		do k=1,Np
 			call project( integrate(particles(k)%x,+dt/2.0_wp) , particles(k) , o%B )
 		end do
+		!$omp end sections
+		!$omp end parallel
 		
 	contains
 	
@@ -132,42 +143,31 @@ contains
 		
 		type(ad_t)::r,s,c
 		
-		r = sqrt( (x(1)-Lx)**2+x(2)**2)
-		c = (x(1)-Lx)/r
+		r = sqrt(x(1)**2+x(2)**2)
+		c = x(1)/r
 		s = x(2)/r
 		
 		o(1) = diff(Ux,1)
 		o(2) = diff(Uy,2)
+		
+!~ 		o(1) = diff(-Ux*real(r*s),1)
+!~ 		o(2) = diff( Ux*real(r*c),2)
 	end function uf
 
-	subroutine pairStats(p)
-		class(pair_t),intent(in)::p
+	subroutine doTrue(p)
+		class(pair_t),intent(inout)::p
 		
-		real(wp),dimension(:),allocatable::h
-		integer::k
+		type(ad_t),dimension(2)::x,ul
+		integer::i,j
 		
-		do k=1,size(p%passes)
-			h = flatten( real(p%passes(k)%u) )
-			call doHist(h,'Displacement #fid#dx#u [px]')
-			
-			h = flatten( real(p%passes(k)%v) )
-			call doHist(h,'Displacement #fid#dy#u [px]')
+		do j=1,p%Nv(2)
+			do i=1,p%Nv(1)
+				x = [p%vx(i),p%vy(j)]
+				ul = uf(x)*real(p%N,wp)/p%L
+				p%passes(0)%u(i,j) = ul(1)
+				p%passes(0)%v(i,j) = ul(2)
+			end do
 		end do
-		
-	contains
-	
-		subroutine doHist(h,L)
-			real(wp),dimension(:),intent(in)::h
-			character(*),intent(in)::L
-			
-			call figure()
-			call subplot(1,1,1)
-			call xylim(mixval(h),[0.0_wp,1.05_wp])
-			call hist(h)
-			call xticks(primary=.true.,secondary=.false.)
-			call labels(L,'','Vector Counts [##]')
-		end subroutine doHist
-	
-	end subroutine pairStats
+	end subroutine doTrue
 
 end module generator_mod
