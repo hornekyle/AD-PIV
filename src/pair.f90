@@ -6,16 +6,26 @@ module pair_mod
 	use plplotlib_mod
 	implicit none
 	
+	type::pass_t
+		integer,dimension(2)::N
+		real(wp),dimension(:,:),allocatable::u,v
+	end type
+	
 	type::pair_t
-		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(2)::L
+		integer,dimension(2)::N,Nv
+		
+		real(wp),dimension(:),allocatable::px,py
 		real(wp),dimension(:),allocatable::vx,vy
+		
 		type(ad_t),dimension(:,:),allocatable::A,B
-		type(ad_t),dimension(:,:),allocatable::u,v
-		type(ad_t),dimension(:,:),allocatable::u2,v2
-		real(wp),dimension(2)::d
 		real(wp)::dt
+		
+		type(pass_t),dimension(:),allocatable::passes
 	contains
 		procedure::writeNC
+		procedure::plot => plotPair
+		procedure::setupPasses
 	end type
 	
 contains
@@ -26,50 +36,85 @@ contains
 		real(wp),intent(in),optional::dt
 		type(pair_t)::o
 		
-		allocate(o%x(N(1)))
-		allocate(o%y(N(2)))
+		allocate(o%px(N(1)))
+		allocate(o%py(N(2)))
 		allocate(o%A(N(1),N(2)))
 		allocate(o%B(N(1),N(2)))
+		o%N = N
 		
 		if(present(L)) then
-			o%x = linspace(0.0_wp,L(1),N(1))
-			o%y = linspace(0.0_wp,L(2),N(2))
-			o%d = [o%x(2)-o%x(1),o%y(2)-o%y(1)]
+			o%px = linspace(0.0_wp,L(1),N(1))
+			o%py = linspace(0.0_wp,L(2),N(2))
+			o%L = L
 		else
-			o%x = 0.0_wp
-			o%y = 0.0_wp
-			o%d = 0.0_wp
+			o%px = linspace(0.0_wp,1.0_wp,N(1))
+			o%py = linspace(0.0_wp,1.0_wp,N(1))
+			o%L = 1.0_wp
 		end if
 		
 		if(present(dt)) then
 			o%dt = dt
 		else
-			o%dt = 0.0_wp
+			o%dt = 1.0_wp
 		end if
 	end function newPair
+
+	subroutine setupPasses(self,Np,B,S)
+		class(pair_t),intent(inout)::self
+		integer,intent(in)::Np
+		integer,dimension(2),intent(in)::B,S
+		
+		integer,dimension(2)::N
+		integer::k
+		
+		N = floor(real(self%N-2*B,wp)/real(S,wp))
+		self%Nv = N
+		self%vx = linspace(self%px(B(1)),self%px(self%N(1)-B(1)),N(1))
+		self%vy = linspace(self%py(B(2)),self%py(self%N(2)-B(2)),N(2))
+		
+		allocate(self%passes(Np))
+		do k=1,Np
+			allocate(self%passes(k)%u(N(1),N(2)))
+			allocate(self%passes(k)%v(N(1),N(2)))
+			self%passes(k)%u = 0.0_wp
+			self%passes(k)%v = 0.0_wp
+		end do
+	end subroutine setupPasses
 
 	subroutine writeNC(self,fn)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I'],self%x,self%y)
+		call write_grid(fn,['I'],self%px,self%py)
 		call write_step(fn,0.0_wp,1,'I',real(self%A))
 		call write_step(fn,self%dt,2,'I',real(self%B))
 	end subroutine writeNC
 
-	subroutine plotPair(p)
-		type(pair_t),intent(in)::p
-		real(wp),dimension(:),allocatable::h,h1,h2
+	subroutine plotPair(self)
+		class(pair_t),intent(in)::self
 		
-		call figure()
-		call subplot(1,1,1,aspect=1.0_wp)
-		call xylim(mixval(p%x),mixval(p%y))
-		call contourf(p%x,p%y,real(p%A),5)
-		if(allocated(p%u)) then
-			call quiver(p%vx,p%vy,real(p%u),real(p%v),lineColor='k',lineWidth=2.0_wp)
-		end if
-		call ticks()
-		call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Image A')
+		real(wp),dimension(:),allocatable::x,y
+		integer::k
+		
+		do k=1,size(self%passes)
+		
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%px),mixval(self%py))
+			call contourf(self%px,self%py,real(self%B)-real(self%A),10)
+			if(allocated(self%vx) .and. allocated(self%vy)) then
+				x = flatten(meshGridX(self%vx,self%vy))
+				y = flatten(meshGridY(self%vx,self%vy))
+				call scatter(x,y,markColor='b',markStyle='+',markSize=0.5_wp)
+				
+				x = self%vx
+				y = self%vy
+				call quiver(x,y,self%passes(k)%u,self%passes(k)%v,lineColor='c')
+			end if
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Image B')
+		
+		end do
 	end subroutine plotPair
 
 end module pair_mod

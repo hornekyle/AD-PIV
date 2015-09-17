@@ -31,6 +31,9 @@ module utilities_mod
 	public::startsWith
 	public::endsWith
 	
+	public::meshGridX
+	public::meshGridY
+	
 	public::randomNormal
 	public::randomUniform
 	public::mean
@@ -178,7 +181,7 @@ contains
 		
 		allocate(o(Nx,Ny))
 		
-		forall(i=1:Nx,j=1:Ny) o(i,j) = y(i)
+		forall(i=1:Nx,j=1:Ny) o(i,j) = y(j)
 	end function meshGridY
 
 	function colorize(s,c) result(o)

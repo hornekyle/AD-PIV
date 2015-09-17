@@ -15,8 +15,6 @@ module generator_mod
 	public::generatePair
 	
 	public::Ux,Uy
-	
-	public::setStats
 	public::Lx,Ly
 	
 contains
@@ -31,11 +29,17 @@ contains
 		!! - Integrate position +dt/2
 		!! - Add particle image to o%B
 		integer,dimension(2),intent(in)::N
+			!! Number of pixels in each axis
 		real(wp),dimension(2),intent(in)::L
+			!! Physical size in each axis
 		integer,intent(in)::Np
+			!! Total number of particles generated
 		real(wp),intent(in)::dt
+			!! Time between images
 		real(wp),dimension(2),intent(in)::R
+			!! Particle size parameter
 		type(pair_t)::o
+			!! Output
 		
 		type::particle_t
 			real(wp),dimension(2)::x
@@ -96,15 +100,15 @@ contains
 			integer::il,ih,i
 			integer::jl,jh,j
 			
-			il = max( minloc(abs( o%x-(x0(1)%x-3.0_wp*real(p%r)) ),1) , 1)
-			ih = min( minloc(abs( o%x-(x0(1)%x+3.0_wp*real(p%r)) ),1) , N(1))
-			jl = max( minloc(abs( o%x-(x0(2)%x-3.0_wp*real(p%r)) ),1) , 1)
-			jh = min( minloc(abs( o%x-(x0(2)%x+3.0_wp*real(p%r)) ),1) , N(2))
+			il = max( minloc(abs( o%px-(x0(1)%x-3.0_wp*real(p%r)) ),1) , 1)
+			ih = min( minloc(abs( o%px-(x0(1)%x+3.0_wp*real(p%r)) ),1) , N(1))
+			jl = max( minloc(abs( o%py-(x0(2)%x-3.0_wp*real(p%r)) ),1) , 1)
+			jh = min( minloc(abs( o%py-(x0(2)%x+3.0_wp*real(p%r)) ),1) , N(2))
 			
 			do i=il,ih
 				do j=jl,jh
-					x = o%x(i)
-					y = o%y(j)
+					x = o%px(i)
+					y = o%py(j)
 					F(i,j) = F(i,j)+gauss(x,y,x0(1),x0(2),p%r,p%r)
 				end do
 			end do
@@ -132,125 +136,6 @@ contains
 		
 		o(1) = diff(Ux,1)
 		o(2) = diff(Uy,2)
-
-!~ 		o(1) = diff( real( (cos(2.0_wp*PI*x(2)/(15.0_wp*Ux))+2.0_wp)/3.0_wp*Ux ) , 1)
-!~ 		o(2) = diff(Uy,2)
-		
-!~ 		o(1) = diff( real( s*Ux*r/sqrt(2.0_wp)/Lx) , 1)
-!~ 		o(2) = diff( real(-c*Ux*r/sqrt(2.0_wp)/Ly) , 2)
 	end function uf
-
-	subroutine setStats(p)
-		type(pair_t),dimension(:),intent(in)::p
-		
-		type(ad_t),dimension(:),allocatable::u,v
-		type(ad_t),dimension(:),allocatable::eu,ev
-		type(ad_t),dimension(:),allocatable::ru,rv
-		type(ad_t),dimension(2)::x,ul
-		integer::N,i,j,k,l
-		
-		N = sum([( product(shape(p(k)%u)) , k=1,size(p) )])
-		
-		allocate( u(N))
-		allocate( v(N))
-		
-		allocate(eu(N))
-		allocate(ev(N))
-		
-		allocate(ru(N))
-		allocate(rv(N))
-		
-		l = 1
-		do k=1,size(p)
-			do j=1,size(p(k)%vy)
-				do i=1,size(p(k)%vx)
-					x = [p(k)%vx(i),p(k)%vy(j)]
-					ul = uf(x)
-					
-					u(l) = p(k)%u(i,j) !-real(nint(real(p(k)%u(i,j))),wp)
-					v(l) = p(k)%v(i,j) !-real(nint(real(p(k)%v(i,j))),wp)
-					
-					eu(l) = p(k)%u(i,j)-ul(1)
-					ev(l) = p(k)%v(i,j)-ul(2)
-					
-					ru(l) = (p(k)%u(i,j)-ul(1))/( sqrt(ul(1)**2+ul(2)**2) )
-					rv(l) = (p(k)%v(i,j)-ul(2))/( sqrt(ul(1)**2+ul(2)**2) )
-					
-					if( abs(real(p(k)%u(i,j)-ul(1)))>2.0_wp ) cycle
-					if( abs(real(p(k)%v(i,j)-ul(2)))>2.0_wp ) cycle
-					
-					l = l+1
-				end do
-			end do
-		end do
-		
-		write(*,*) 'Good vectors: ',l-1
-		
-		u  = u(1:l-1)
-		v  = v(1:l-1)
-		eu = eu(1:l-1)
-		ev = ev(1:l-1)
-		ru = ru(1:l-1)
-		rv = rv(1:l-1)
-		
-		call doHist(real(u),'Velocity #fiu#fn [m/s]')
-!~ 		call doHist(der(u,1),'Differential Velocity #fidu/dU#fn [m/s]')
-!~ 		call doHist(der(u,2),'Differential Velocity #fidu/dV#fn [m/s]')
-!~ 		call doHist(der(u,3),'Differential Velocity #fidu/dR#fn [m/s]')
-		
-!~ 		call doHist(real(v),'Velocity #fiv#fn [m/s]')
-!~ 		call doHist(der(v,1),'Differential Velocity #fidv/dU#fn [m/s]')
-!~ 		call doHist(der(v,2),'Differential Velocity #fidv/dV#fn [m/s]')
-!~ 		call doHist(der(v,3),'Differential Velocity #fidv/dR#fn [m/s]')
-		
-!~ 		call doHist(real(eu),'Velocity Error #fi#ge#du#u#fn [m/s]')
-!~ 		call doHist(der(eu,1),'Differential Velocity Error #fid#ge#du#u/dU#fn [m/s]')
-!~ 		call doHist(der(eu,2),'Differential Velocity Error #fid#ge#du#u/dV#fn [m/s]')
-!~ 		call doHist(der(eu,3),'Differential Velocity Error #fid#ge#du#u/dR#fn [m/s]')
-		
-!~ 		call doHist(real(ev),'Velocity Error #fi#ge#dv#u#fn [m/s]')
-!~ 		call doHist(der(ev,1),'Differential Velocity Error #fid#ge#dv#u/dU#fn [m/s]')
-!~ 		call doHist(der(ev,2),'Differential Velocity Error #fid#ge#dv#u/dV#fn [m/s]')
-!~ 		call doHist(der(ev,3),'Differential Velocity Error #fid#ge#dv#u/dR#fn [m/s]')
-		
-!~ 		call doScatter(real(u),real(eu),'u [m/s]','#fi#ge#du#u#fn [m/s]')
-!~ 		call doScatter(real(u),real(ev),'u [m/s]','#fi#ge#dv#u#fn [m/s]')
-!~ 		call doScatter(real(v),real(eu),'v [m/s]','#fi#ge#du#u#fn [m/s]')
-!~ 		call doScatter(real(v),real(ev),'v [m/s]','#fi#ge#dv#u#fn [m/s]')
-!~ 		
-!~ 		call doScatter(real(eu),real(ev),'#fi#ge#du#u#fn [m/s]','#fi#ge#dv#u#fn [m/s]')
-!~ 		
-!~ 		call doScatter(real(u),der(u,1),'#fiu#fn [m/s]','#fidu/dU#fn [m/s]')
-		
-	contains
-	
-		subroutine doHist(h,n)
-			real(wp),dimension(:),intent(in)::h
-			character(*),intent(in)::n
-			
-			integer::Nb
-			
-			Nb = nint( sqrt( real(size(eu),wp) ) )
-			call figure()
-			call subplot(1,1,1)
-			call xylim(mixval(h),[0.0_wp,1.05_wp])
-			call hist(h,Nb)
-			call xticks(primary=.true.,secondary=.false.)
-			call labels( n , '' , 'N = '//int2char(size(h)) )
-		end subroutine doHist
-	
-		subroutine doScatter(x,y,xn,yn)
-			real(wp),dimension(:),intent(in)::x,y
-			character(*),intent(in)::xn,yn
-			
-			call figure()
-			call subplot(1,1,1)
-			call xylim(mixval(x),mixval(y))
-			call plot(x,y,lineStyle='',markStyle='+',markColor='b')
-			call ticks()
-			call labels( xn , yn , 'N = '//int2char(size(x)) )
-		end subroutine doScatter
-	
-	end subroutine setStats
 
 end module generator_mod
