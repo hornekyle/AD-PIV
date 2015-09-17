@@ -8,7 +8,7 @@ module pair_mod
 	
 	type::pass_t
 		integer,dimension(2)::N
-		real(wp),dimension(:,:),allocatable::u,v
+		type(ad_t),dimension(:,:),allocatable::u,v
 	end type
 	
 	type::pair_t
@@ -94,6 +94,7 @@ contains
 		class(pair_t),intent(in)::self
 		
 		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:,:),allocatable::u,v
 		integer::k
 		
 		do k=1,size(self%passes)
@@ -109,10 +110,12 @@ contains
 				
 				x = self%vx
 				y = self%vy
-				call quiver(x,y,self%passes(k)%u,self%passes(k)%v,lineColor='c')
+				u = real(self%passes(k)%u)
+				v = real(self%passes(k)%v)
+				call quiver(x,y,u,v,lineColor='c')
 			end if
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Image B')
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
 		
 		end do
 	end subroutine plotPair

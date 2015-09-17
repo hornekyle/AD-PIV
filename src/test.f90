@@ -19,7 +19,7 @@ contains
 		
 		N = [512,512]
 		L = 0.0512_wp
-		Np = 2**13
+		Np = 2**14
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.1_wp]
 		
@@ -28,10 +28,12 @@ contains
 		
 		p = generatePair(N,L,Np,dt,R)
 		call p%writeNC('out.nc')
-		call p%setupPasses(1,[32,32],[16,16])
+		call p%setupPasses(2,[32,32],[16,16])
 		call doPass(p,1,[32,32])
+		call doPass(p,2,[24,24])
 		
 		call p%plot()
+		call pairStats(p)
 	end subroutine testGenerate
 
 end module test_mod

@@ -17,6 +17,8 @@ module generator_mod
 	public::Ux,Uy
 	public::Lx,Ly
 	
+	public::pairStats
+	
 contains
 
 	function generatePair(N,L,Np,dt,R) result(o)
@@ -137,5 +139,35 @@ contains
 		o(1) = diff(Ux,1)
 		o(2) = diff(Uy,2)
 	end function uf
+
+	subroutine pairStats(p)
+		class(pair_t),intent(in)::p
+		
+		real(wp),dimension(:),allocatable::h
+		integer::k
+		
+		do k=1,size(p%passes)
+			h = flatten( real(p%passes(k)%u) )
+			call doHist(h,'Displacement #fid#dx#u [px]')
+			
+			h = flatten( real(p%passes(k)%v) )
+			call doHist(h,'Displacement #fid#dy#u [px]')
+		end do
+		
+	contains
+	
+		subroutine doHist(h,L)
+			real(wp),dimension(:),intent(in)::h
+			character(*),intent(in)::L
+			
+			call figure()
+			call subplot(1,1,1)
+			call xylim(mixval(h),[0.0_wp,1.05_wp])
+			call hist(h)
+			call xticks(primary=.true.,secondary=.false.)
+			call labels(L,'','Vector Counts [##]')
+		end subroutine doHist
+	
+	end subroutine pairStats
 
 end module generator_mod
