@@ -4,8 +4,8 @@ module autodiff_mod
 
 	private
 
-	integer,parameter::S = 3
-	integer::N = 3
+	integer,parameter::S = 4
+	integer::N = 4
 
 	type::ad_t
 		real(wp)::x = 0.0_wp
@@ -112,6 +112,7 @@ module autodiff_mod
 	public::operator(/)
 	public::operator(**)
 	public::set_adN
+	public::get_adN
 
 contains
 
@@ -119,6 +120,11 @@ contains
 		integer,intent(in)::Ni
 		N = Ni
 	end subroutine set_adN
+
+	function get_adN() result(o)
+		integer::o
+		o = N
+	end function get_adN
 
 	!================!
 	!= Constructors =!

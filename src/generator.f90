@@ -7,8 +7,8 @@ module generator_mod
 	implicit none
 	private
 	
-	real(wp)::Ux
-	real(wp)::Uy
+	type(ad_t)::Ux
+	type(ad_t)::Uy
 	
 	real(wp)::Lx = 1.0_wp
 	real(wp)::Ly = 1.0_wp
@@ -53,6 +53,11 @@ contains
 		integer::k
 		
 		o = newPair(N,L,dt)
+		
+		call random_number(o%A%x)
+		call random_number(o%B%x)
+		o%A = o%A%x*diff(0.1_wp,4)
+		o%B = o%B%x*diff(0.1_wp,4)
 		
 		allocate(particles(Np))
 		
@@ -141,17 +146,18 @@ contains
 		type(ad_t),dimension(2),intent(in)::x
 		type(ad_t),dimension(2)::o
 		
-		type(ad_t)::r,s,c
+		type(ad_t)::r,s,c,R0
 		
-		r = sqrt(x(1)**2+x(2)**2)
+		r = sqrt(sum(x**2))
+		R0 = sqrt(Lx**2+Ly**2)
 		c = x(1)/r
 		s = x(2)/r
 		
-		o(1) = diff(Ux,1)
-		o(2) = diff(Uy,2)
+		o(1) = Ux
+		o(2) = Uy
 		
-!~ 		o(1) = diff(-Ux*real(r*s),1)
-!~ 		o(2) = diff( Ux*real(r*c),2)
+!~ 		o(1) = diff(-Ux*real(r/R0*s),1)
+!~ 		o(2) = diff( Ux*real(r/R0*c),2)
 	end function uf
 
 	subroutine doTrue(p)

@@ -23,7 +23,8 @@ module pair_mod
 		
 		type(pass_t),dimension(:),allocatable::passes
 	contains
-		procedure::writeNC
+		procedure::writePair
+		procedure::writeVectors
 		procedure::plot => plotPair
 		procedure::setupPasses
 		procedure::stats => pairStats
@@ -86,14 +87,65 @@ contains
 		end do
 	end subroutine setupPasses
 
-	subroutine writeNC(self,fn)
+	subroutine writePair(self,fn)
+		!! FIXME: Need global derivative table
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I'],self%px,self%py)
+		call write_grid(fn,['I','U','V','R','N'],self%px,self%py)
+		
 		call write_step(fn,0.0_wp,1,'I',real(self%A))
+		call write_step(fn,0.0_wp,1,'U',der(self%A,1))
+		call write_step(fn,0.0_wp,1,'V',der(self%A,2))
+		call write_step(fn,0.0_wp,1,'R',der(self%A,3))
+		call write_step(fn,0.0_wp,1,'N',der(self%A,4))
+		
+		
 		call write_step(fn,self%dt,2,'I',real(self%B))
-	end subroutine writeNC
+		call write_step(fn,self%dt,2,'U',der(self%B,1))
+		call write_step(fn,self%dt,2,'V',der(self%B,2))
+		call write_step(fn,self%dt,2,'R',der(self%B,3))
+		call write_step(fn,self%dt,2,'N',der(self%B,4))
+	end subroutine writePair
+
+	subroutine writeVectors(self,fn)
+		!! FIXME: Need global derivative table
+		class(pair_t),intent(in)::self
+		character(*),intent(in)::fn
+		
+		character(64),dimension(:),allocatable::vars
+		integer::Nd,k
+		Nd = 4
+		
+		allocate(vars( 2*(1+Nd) ))
+		
+		vars( 1) = 'u'
+		vars( 2) = 'dudU'
+		vars( 3) = 'dudV'
+		vars( 4) = 'dudR'
+		vars( 5) = 'dudN'
+		vars( 6) = 'v'
+		vars( 7) = 'dvdU'
+		vars( 8) = 'dvdV'
+		vars( 9) = 'dvdR'
+		vars(10) = 'dvdN'
+		
+		call write_grid(fn,vars,self%vx,self%vy)
+		
+		do k=lbound(self%passes,1),ubound(self%passes,1)
+			call write_step(fn,real(k,wp),k+1,'u',real(self%passes(k)%u))
+			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,1))
+			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,2))
+			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,3))
+			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,4))
+			call write_step(fn,real(k,wp),k+1,'v',real(self%passes(k)%u))
+			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%u,1))
+			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%u,2))
+			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%u,3))
+			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%u,4))
+		end do
+		
+	end subroutine writeVectors
 
 	subroutine plotPair(self)
 		class(pair_t),intent(in)::self
@@ -141,6 +193,26 @@ contains
 			he = flatten(real( self%passes(k)%v-self%passes(0)%v ))
 			call doHist( pack(h ,abs(he)<2.0_wp) ,'Displacement #fi#gd#dy#u#fn [px]')
 			call doHist( pack(he,abs(he)<2.0_wp) ,'Displacement Error #fi#ge#dy#u#fn [px]')
+			
+			h  = flatten(der( self%passes(k)%u , 1 ))
+			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 1 ))
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dx#u#fn [px]')
+			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dx#u#fn [px]')
+			
+			h  = flatten(der( self%passes(k)%u , 2 ))
+			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 2 ))
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dy#u#fn [px]')
+			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dy#u#fn [px]')
+			
+			h  = flatten(der( self%passes(k)%v , 1 ))
+			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 1 ))
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dx#u#fn [px]')
+			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dx#u#fn [px]')
+			
+			h  = flatten(der( self%passes(k)%v , 2 ))
+			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 2 ))
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dy#u#fn [px]')
+			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dy#u#fn [px]')
 		end do
 		
 	contains
@@ -158,7 +230,7 @@ contains
 			call xylim(mixval(h),[0.0_wp,1.05_wp])
 			call hist(h,Nb)
 			call xticks(primary=.true.,secondary=.false.)
-			call labels(L,'','N = '//int2char(size(h)))
+			call labels(L,'','Pass '//int2char(k)//'; N = '//int2char(size(h)))
 		end subroutine doHist
 	
 	end subroutine pairStats
