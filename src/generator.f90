@@ -38,7 +38,7 @@ contains
 			!! Total number of particles generated
 		real(wp),intent(in)::dt
 			!! Time between images
-		real(wp),dimension(2),intent(in)::R
+		type(ad_t),dimension(2),intent(in)::R
 			!! Particle size parameter
 		type(pair_t)::o
 			!! Output
@@ -63,7 +63,7 @@ contains
 		
 		do k=1,Np
 			particles(k)%x = (([randomUniform(),randomUniform()]+1.0_wp)/2.0_wp*1.2_wp-0.1_wp)*L
-			particles(k)%r = diff(R(1),3)+R(2)*randomNormal()
+			particles(k)%r = R(1)+R(2)*randomNormal()
 		end do
 		
 		!$omp parallel private(k,tid)
@@ -153,11 +153,11 @@ contains
 		c = x(1)/r
 		s = x(2)/r
 		
-		o(1) = Ux
-		o(2) = Uy
+!~ 		o(1) = Ux
+!~ 		o(2) = Uy
 		
-!~ 		o(1) = diff(-Ux*real(r/R0*s),1)
-!~ 		o(2) = diff( Ux*real(r/R0*c),2)
+		o(1) = -Ux*diff(real(r/R0*s),1)
+		o(2) =  Uy*diff(real(r/R0*c),2)
 	end function uf
 
 	subroutine doTrue(p)

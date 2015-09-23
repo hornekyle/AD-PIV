@@ -50,7 +50,8 @@ module plplotlib_mod
 	
 	public::plot,plot3
 	public::scatter,errorbar
-	public::contour,contourf,colorbar
+	public::contour,contourf
+	public::colorbar,colorbar2
 	public::bar,barh
 	public::hist
 	public::fillBetween,fillBetweenx
@@ -498,6 +499,47 @@ contains
 			& [PL_COLORBAR_LABEL_LEFT,PL_COLORBAR_LABEL_RIGHT],labels, &
 			& ['bcvmt'],[0.0_pp],[0],[size(values)],values)
 	end subroutine colorbar
+
+	subroutine colorbar2(z,N,leftLabel,rightLabel)
+		!! Add a colorbar to the top of the plot
+		real(wp),dimension(:,:),intent(in)::z
+			!! Data used for levels computation
+		integer,intent(in)::N
+			!! Number of levels to compute
+		character(*),intent(in),optional::leftLabel
+			!! Label for left side of colorbar
+		character(*),intent(in),optional::rightLabel
+			!! Label for right side of colorbar
+		
+		real(pp),dimension(:,:),allocatable::values
+		character(64),dimension(2)::labels
+		
+		real(pp)::fill_width
+		real(pp)::cont_width
+		integer::cont_color
+		real(pp)::colorbar_width
+		real(pp)::colorbar_height
+		integer::k
+		
+		values = reshape( &
+			& real([( real(k-1,wp)/real(N-1,wp)*(maxval(z)-minval(z))+minval(z) ,k=1,N)],pp), &
+			& [N,1])
+		
+		fill_width = 2.0_pp
+		cont_width = 0.0_pp
+		cont_color = 1
+		labels = ''
+		if(present(leftLabel )) labels(1) = leftLabel
+		if(present(rightLabel)) labels(2) = rightLabel
+		
+		call plcolorbar(colorbar_width,colorbar_height,&
+			& ior(PL_COLORBAR_GRADIENT,PL_COLORBAR_SHADE_LABEL),PL_POSITION_RIGHT,&
+			& 0.01_pp,0.0_pp,0.05_pp,0.75_pp,&
+			& 0,1,1,0.0_pp,0.0_pp, &
+			& cont_color,cont_width, &
+			& [PL_COLORBAR_LABEL_BOTTOM,PL_COLORBAR_LABEL_TOP],labels, &
+			& ['bcvmt'],[0.0_pp],[0],[size(values)],values)
+	end subroutine colorbar2
 
 	subroutine legend(corner,series,lineWidths,markScales,markCounts,ncol)
 		!! Create legend for plot data

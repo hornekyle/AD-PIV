@@ -133,16 +133,16 @@ contains
 		call write_grid(fn,vars,self%vx,self%vy)
 		
 		do k=lbound(self%passes,1),ubound(self%passes,1)
-			call write_step(fn,real(k,wp),k+1,'u',real(self%passes(k)%u))
+			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
 			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,1))
 			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,2))
 			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,3))
 			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,4))
-			call write_step(fn,real(k,wp),k+1,'v',real(self%passes(k)%u))
-			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%u,1))
-			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%u,2))
-			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%u,3))
-			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%u,4))
+			call write_step(fn,real(k,wp),k+1,'v',  real(self%passes(k)%v  ))
+			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,1))
+			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,2))
+			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,3))
+			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,4))
 		end do
 		
 	end subroutine writeVectors
@@ -151,29 +151,90 @@ contains
 		class(pair_t),intent(in)::self
 		
 		real(wp),dimension(:),allocatable::x,y
-		real(wp),dimension(:,:),allocatable::u,v
-		integer::k
+		real(wp),dimension(:,:),allocatable::u,v,h
+		character(1),dimension(4)::names
+		integer,dimension(2)::N,s
+		integer::i,k
 		
-		do k=lbound(self%passes,1),ubound(self%passes,1)
+		names = ['U','V','R','N']
 		
-			call figure()
-			call subplot(1,1,1,aspect=1.0_wp)
-			call xylim(mixval(self%px),mixval(self%py))
-!~ 			call contourf(self%px,self%py,real(self%B)-real(self%A),10)
-			if(allocated(self%vx) .and. allocated(self%vy)) then
-				x = flatten(meshGridX(self%vx,self%vy))
-				y = flatten(meshGridY(self%vx,self%vy))
-!~ 				call scatter(x,y,markColor='b',markStyle='+',markSize=0.5_wp)
+		do k=lbound(self%passes,1)+1,ubound(self%passes,1)
+			
+!~ 			call figure()
+!~ 			call subplot(1,1,1,aspect=1.0_wp)
+!~ 			call xylim(mixval(self%px),mixval(self%py))
+!~ 			if(allocated(self%vx) .and. allocated(self%vy)) then
+!~ 				x = self%vx
+!~ 				y = self%vy
+!~ 				u = real(self%passes(k)%u)
+!~ 				v = real(self%passes(k)%v)
+!~ 				N = [size(x),size(y)]
+!~ 				s = N/16+1
+!~ 				call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
+!~ 			else
+!~ 				call contourf(self%px,self%py,real(self%B)-real(self%A),10)
+!~ 			end if
+!~ 			call ticks()
+!~ 			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
+			
+			if(allocated(self%vx) .and. allocated(self%vy) .and. k>0) then
+				h = real(self%passes(k)%u)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%px),mixval(self%py))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' u')
 				
-				x = self%vx
-				y = self%vy
-				u = real(self%passes(k)%u)
-				v = real(self%passes(k)%v)
-				call quiver(x,y,u,v,lineColor='c')
+				h = real(self%passes(k)%v)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%px),mixval(self%py))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' v')
+				
+				h = real(self%passes(0)%u-self%passes(k)%u)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%px),mixval(self%py))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#du#u')
+				
+				h = real(self%passes(0)%v-self%passes(k)%v)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%px),mixval(self%py))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#dv#u')
+			
+				do i=1,size(names)
+					h = der(self%passes(k)%u,i)
+					call figure()
+					call subplot(1,1,1,aspect=1.0_wp)
+					call xylim(mixval(self%px),mixval(self%py))
+					call contourf(self%vx,self%vy,h,20)
+					call colorbar2(h,20)
+					call ticks()
+					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' du/d'//names(i))
+					
+					h = der(self%passes(k)%v,i)
+					call figure()
+					call subplot(1,1,1,aspect=1.0_wp)
+					call xylim(mixval(self%px),mixval(self%py))
+					call contourf(self%vx,self%vy,h,20)
+					call colorbar2(h,20)
+					call ticks()
+					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' dv/d'//names(i))
+				end do
 			end if
-			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
-		
+			
 		end do
 	end subroutine plotPair
 

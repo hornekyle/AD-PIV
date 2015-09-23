@@ -21,10 +21,16 @@ contains
 	!= Passes =!
 	!==========!
 	
-	subroutine doPass(p,k,N)
+	subroutine doPass(p,k,N,method,reference)
 		class(pair_t),intent(inout)::p
+			!! Image pair
 		integer,intent(in)::k
+			!! Pass index
 		integer,dimension(2),intent(in)::N
+			!! Window size
+		character(*),intent(in)::method
+			!! Computation method
+		integer,intent(in),optional::reference
 		
 		integer::tid
 		type(ad_t),dimension(2)::d
@@ -40,10 +46,10 @@ contains
 			end if
 			do i=1,p%Nv(1)
 				
-				if(k==1) then
-					d = firstPass(i,j)
+				if(present(reference)) then
+					d = secondPass(i,j,reference)
 				else
-					d = secondPass(i,j)
+					d = firstPass(i,j)
 				end if
 				
 				p%passes(k)%u(i,j) = d(1)
@@ -61,7 +67,9 @@ contains
 	
 		function firstPass(i,j) result(o)
 			integer,intent(in)::i,j
+				!! Corrdinates of vector
 			type(ad_t),dimension(2)::o
+				!! Result
 			
 			type(ad_t),dimension(:,:),allocatable::A,B
 			real(wp),dimension(2)::ps
@@ -78,27 +86,37 @@ contains
 			A = p%A(il:ih,jl:jh)
 			B = p%B(il:ih,jl:jh)
 			
-			M = crossCorrelateDirect(A,B,0.5_wp)
-			o = M%dispGauss()
+			select case(method)
+			case('map')
+				M = crossCorrelateDirect(A,B,0.5_wp)
+				o = M%dispGauss()
+			case('lsq')
+				o = leastSquares(A,B)
+			end select
+			
 		end function firstPass
 	
-		function secondPass(i,j) result(o)
+		function secondPass(i,j,r) result(o)
 			integer,intent(in)::i,j
+				!! Corrdinates of vector
+			integer,intent(in)::r
+				!! Reference pass for window shifting
 			type(ad_t),dimension(2)::o
+				!! Result
 			
 			type(ad_t),dimension(:,:),allocatable::A,B
 			real(wp),dimension(2)::ps
 			integer,dimension(2)::sp,sm,s
 			real(wp),dimension(2)::up
 			type(ad_t),dimension(2)::d
-!~ 			type(map_t)::M
+			type(map_t)::M
 			integer::il,ih
 			integer::jl,jh
 			
 			ps = p%L/real(p%N,wp)
 			
-			up = real([p%passes(k-1)%u(i,j),p%passes(k-1)%v(i,j)])
-			o  = [p%passes(k-1)%u(i,j),p%passes(k-1)%v(i,j)]
+			up = real([p%passes(r)%u(i,j),p%passes(r)%v(i,j)])
+			o  = [p%passes(r)%u(i,j),p%passes(r)%v(i,j)]
 			
 			s  = nint(up)
 			sp = s/2
@@ -117,9 +135,13 @@ contains
 			A = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
 			B = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
 			
-!~ 			M = crossCorrelateDirect(A,B,0.5_wp)
-!~ 			d = M%dispGauss()
-			d = leastSquares(A,B)
+			select case(method)
+			case('map')
+				M = crossCorrelateDirect(A,B,0.5_wp)
+				d = M%dispGauss()
+			case('lsq')
+				d = leastSquares(A,B)
+			end select
 			
 			o = real(sp+sm,wp)+d
 		end function secondPass
@@ -129,6 +151,33 @@ contains
 	!=================!
 	!= Displacements =!
 	!=================!
+
+	function crossCorrelateDirect(A,B,F) result(o)
+		!! Compute cross correlation between A and B
+		!! Mandates that they are the same shape
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(size(A,1),size(A,2)),intent(in)::B
+		real(wp),intent(in)::F
+		type(map_t)::o
+		
+		integer,dimension(2)::N
+		integer::Ail,Aih,Bil,Bih,i
+		integer::Ajl,Ajh,Bjl,Bjh,j
+		
+		N = shape(A)
+		allocate(o%C( -nint(F*N(1)):nint(F*N(1)) , -nint(F*N(2)):nint(F*N(2)) ))
+		
+		do i=lbound(o%C,1),ubound(o%C,1)
+			Ail = max(1-i,1); Aih = min(N(1)-i,N(1))
+			Bil = max(1+i,1); Bih = min(N(1)+i,N(1))
+			do j=lbound(o%C,2),ubound(o%C,2)
+				Ajl = max(1-j,1); Ajh = min(N(2)-j,N(2))
+				Bjl = max(1+j,1); Bjh = min(N(2)+j,N(2))
+				
+				o%C(i,j) = sum(A(Ail:Aih,Ajl:Ajh)*B(Bil:Bih,Bjl:Bjh))/real( (Aih-Ail)*(Ajh-Ajl) ,wp)
+			end do
+		end do
+	end function crossCorrelateDirect
 
 	function dispInt(self) result(o)
 		class(map_t),intent(in)::self
@@ -158,37 +207,6 @@ contains
 		
 		o = real(m,wp)+s
 	end function dispGauss
-
-	!=============!
-	!= Utilities =!
-	!=============!
-
-	function crossCorrelateDirect(A,B,F) result(o)
-		!! Compute cross correlation between A and B
-		!! Mandates that they are the same shape
-		type(ad_t),dimension(:,:),intent(in)::A
-		type(ad_t),dimension(size(A,1),size(A,2)),intent(in)::B
-		real(wp),intent(in)::F
-		type(map_t)::o
-		
-		integer,dimension(2)::N
-		integer::Ail,Aih,Bil,Bih,i
-		integer::Ajl,Ajh,Bjl,Bjh,j
-		
-		N = shape(A)
-		allocate(o%C( -nint(F*N(1)):nint(F*N(1)) , -nint(F*N(2)):nint(F*N(2)) ))
-		
-		do i=lbound(o%C,1),ubound(o%C,1)
-			Ail = max(1-i,1); Aih = min(N(1)-i,N(1))
-			Bil = max(1+i,1); Bih = min(N(1)+i,N(1))
-			do j=lbound(o%C,2),ubound(o%C,2)
-				Ajl = max(1-j,1); Ajh = min(N(2)-j,N(2))
-				Bjl = max(1+j,1); Bjh = min(N(2)+j,N(2))
-				
-				o%C(i,j) = sum(A(Ail:Aih,Ajl:Ajh)*B(Bil:Bih,Bjl:Bjh))/real( (Aih-Ail)*(Ajh-Ajl) ,wp)
-			end do
-		end do
-	end function crossCorrelateDirect
 
 	function leastSquares(A,B) result(o)
 		type(ad_t),dimension(:,:),intent(in)::A
@@ -226,6 +244,10 @@ contains
 		o = matmul(Ai,-bs)
 	end function leastSquares
 
+	!=============!
+	!= Utilities =!
+	!=============!
+
 	subroutine plotMap(self)
 		class(map_t),intent(in)::self
 		
@@ -241,5 +263,57 @@ contains
 		call ticks()
 		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','')
 	end subroutine plotMap
+
+	subroutine filter(p,k,tol)
+		class(pair_t),intent(inout)::p
+			!! Image pair
+		integer,intent(in)::k
+			!! Pass index
+		real(wp),intent(in)::tol
+			!! Tolerance before culling [0,1]
+		
+		type(ad_t),dimension(2)::u,m,t
+		integer,dimension(2)::N
+		integer::i,j
+		
+		N = [size(p%vx),size(p%vy)]
+		
+		do j=1,N(2)
+			do i=1,N(1)
+				u = [p%passes(k)%u(i,j),p%passes(k)%v(i,j)]
+				t = [p%passes(0)%u(i,j),p%passes(0)%v(i,j)]
+				m = tryMean(i,j)
+				if( norm2(real(u-t))/norm2(real(t)) > tol) then
+					p%passes(k)%u(i,j) = m(1)
+					p%passes(k)%v(i,j) = m(2)
+				end if
+			end do
+		end do
+	
+	contains
+	
+		function tryMean(i,j) result(o)
+			integer,intent(in)::i,j
+			type(ad_t),dimension(2)::o
+			
+			integer::c,ii,jj
+			
+			o = 0.0_wp
+			c = 0
+			do ii=-1,1,2
+				do jj=-1,1,2
+					if(i+ii<1   ) cycle
+					if(i+ii>N(1)) cycle
+					if(j+jj<1   ) cycle
+					if(j+jj>N(2)) cycle
+					c = c+1
+					o = o+[p%passes(k)%u(i+ii,j+jj),p%passes(k)%v(i+ii,j+jj)]
+				end do
+			end do
+			
+			o = o/real(c,wp)
+		end function tryMean
+	
+	end subroutine filter
 
 end module piv_mod
