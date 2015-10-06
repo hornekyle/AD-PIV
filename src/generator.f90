@@ -49,7 +49,7 @@ contains
 		end type
 		
 		type(particle_t),dimension(:),allocatable::particles
-		integer::tid
+		integer::tid,tct
 		integer::k
 		
 		o = newPair(N,L,dt)
@@ -66,20 +66,15 @@ contains
 			particles(k)%r = R(1)+R(2)*randomNormal()
 		end do
 		
-		!$omp parallel private(k,tid)
+		!$omp parallel private(k,tid,tct)
 		tid = omp_get_thread_num()
+		tct = omp_get_num_threads()
 		!$omp barrier
-		!$omp sections
-		!$omp section
 		do k=1,Np
-			call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
-			call project( integrate(particles(k)%x,-dt/2.0_wp) , particles(k) , o%A )
+			if(tid==0) call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
+			call project( integrate(particles(k)%x,-dt/2.0_wp) , particles(k) , o%A , [tid,tct])
+			call project( integrate(particles(k)%x,+dt/2.0_wp) , particles(k) , o%B , [tid,tct])
 		end do
-		!$omp section
-		do k=1,Np
-			call project( integrate(particles(k)%x,+dt/2.0_wp) , particles(k) , o%B )
-		end do
-		!$omp end sections
 		!$omp end parallel
 		
 	contains
@@ -103,7 +98,7 @@ contains
 			end do
 		end function integrate
 	
-		subroutine project(x0,p,F)
+		subroutine project(x0,p,F,omp)
 			!! Define compute ranges for i and j
 			!! - Respect array bounds
 			!! - Cover |x-x0|<3*r
@@ -111,20 +106,31 @@ contains
 			!! - Compute gaussian contribution to this pixel
 			!! - Add to current value in image
 			type(ad_t),dimension(2),intent(in)::x0
+				!! Central position for particle
 			type(particle_t),intent(in)::p
+				!! Particle data
 			type(ad_t),dimension(:,:),intent(inout)::F
+				!! Field to which the particle is added
+			integer,dimension(2),intent(in)::omp
+				!! Thread information [thread_id, thread_count]
 			
 			type(ad_t)::x,y
 			integer::il,ih,i
 			integer::jl,jh,j
+			
+			integer::tid,tct
+			
+			tid = omp(1)
+			tct = omp(2)
 			
 			il = max( minloc(abs( o%px-(x0(1)%x-3.0_wp*real(p%r)) ),1) , 1)
 			ih = min( minloc(abs( o%px-(x0(1)%x+3.0_wp*real(p%r)) ),1) , N(1))
 			jl = max( minloc(abs( o%py-(x0(2)%x-3.0_wp*real(p%r)) ),1) , 1)
 			jh = min( minloc(abs( o%py-(x0(2)%x+3.0_wp*real(p%r)) ),1) , N(2))
 			
-			do i=il,ih
-				do j=jl,jh
+			do j=jl,jh
+				if(.not. mod(j,tct)==tid) cycle
+				do i=il,ih
 					x = o%px(i)
 					y = o%py(j)
 					F(i,j) = F(i,j)+gauss(x,y,x0(1),x0(2),p%r,p%r)
@@ -148,16 +154,19 @@ contains
 		
 		type(ad_t)::r,s,c,R0
 		
-		r = sqrt(sum(x**2))
-		R0 = sqrt(Lx**2+Ly**2)
-		c = x(1)/r
+		r = sqrt(sum( [x(1)-Lx,x(2)]**2 ))
+		R0 = (Lx+Ly)/2.0_wp
+		c = (x(1)-Lx)/r
 		s = x(2)/r
 		
 !~ 		o(1) = Ux
 !~ 		o(2) = Uy
 		
-		o(1) = -Ux*diff(real(r/R0*s),1)
-		o(2) =  Uy*diff(real(r/R0*c),2)
+!~ 		o(1) =  Ux*real(x(2)/R0)
+!~ 		o(2) =  Uy
+		
+		o(1) =  Ux*real(r/R0*s)
+		o(2) = -Uy*real(r/R0*c)
 	end function uf
 
 	subroutine doTrue(p)

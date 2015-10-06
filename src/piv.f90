@@ -218,30 +218,77 @@ contains
 		type(ad_t),dimension(2)::bs
 		real(wp),dimension(2)::d
 		integer,dimension(2)::N
-		integer::i,j
 		
 		N = shape(A)
 		d = 1.0_wp
 		
-		allocate(fx(N(1),N(2)))
-		allocate(fy(N(1),N(2)))
-		allocate(ft(N(1),N(2)))
-		
-		fx = 0.0_wp
-		fy = 0.0_wp
-		ft = 0.0_wp
-		forall(i=2:N(1)-1,j=2:N(2)-1) fx(i,j) = (A(i+1,j)-A(i-1,j))/(2.0_wp*d(1))+(B(i+1,j)-B(i-1,j))/(2.0_wp*d(1))
-		forall(i=2:N(1)-1,j=2:N(2)-1) fy(i,j) = (A(i,j+1)-A(i,j-1))/(2.0_wp*d(2))+(B(i,j+1)-B(i,j-1))/(2.0_wp*d(2))
-		forall(i=2:N(1)-1,j=2:N(2)-1) ft(i,j) = B(i,j)-A(i,j)
+		fx = (grad(A,1,d(1))+grad2(B,1,d(1)))/2.0_wp
+		fy = (grad(A,2,d(2))+grad2(B,2,d(2)))/2.0_wp
+		ft = B-A
 		
 		As(1,1:2) = [sum(fx*fx),sum(fx*fy)]
-		As(2,1:2) = [sum(fx*fy),sum(fy*fy)]
+		As(2,1:2) = [sum(fy*fx),sum(fy*fy)]
 		bs(1:2)   = [sum(fx*ft),sum(fy*ft)]
 		
 		Ai(1,1:2) = [ As(2,2),-As(1,2)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
 		Ai(2,1:2) = [-As(2,1), As(1,1)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
 		
 		o = matmul(Ai,-bs)
+		
+	contains
+	
+		function grad(f,r,h) result(o)
+			type(ad_t),dimension(:,:),intent(in)::f
+			integer,intent(in)::r
+			real(wp),intent(in)::h
+			type(ad_t),dimension(:,:),allocatable::o
+			
+			integer,dimension(2)::N,d
+			type(ad_t),dimension(-2:2)::l
+			integer::i,j,k
+			
+			N = shape(f)
+			d = 0
+			d(r) = 1
+			allocate(o(N(1),N(2)))
+			o = 0.0_wp
+			
+			do j=1+2,N(2)-2
+				do i=1+2,N(1)-2
+					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
+!~ 					o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
+					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+!~ 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+				end do
+			end do
+		end function grad
+	
+		function grad2(f,r,h) result(o)
+			type(ad_t),dimension(:,:),intent(in)::f
+			integer,intent(in)::r
+			real(wp),intent(in)::h
+			type(ad_t),dimension(:,:),allocatable::o
+			
+			integer,dimension(2)::N,d
+			type(ad_t),dimension(-2:2)::l
+			integer::i,j,k
+			
+			N = shape(f)
+			d = 0
+			d(r) = 1
+			allocate(o(N(1),N(2)))
+			o = 0.0_wp
+			
+			do j=1+2,N(2)-2
+				do i=1+2,N(1)-2
+					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
+!~ 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
+					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+!~ 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+				end do
+			end do
+		end function grad2
+	
 	end function leastSquares
 
 	!=============!

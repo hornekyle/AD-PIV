@@ -160,22 +160,24 @@ contains
 		
 		do k=lbound(self%passes,1)+1,ubound(self%passes,1)
 			
-!~ 			call figure()
-!~ 			call subplot(1,1,1,aspect=1.0_wp)
-!~ 			call xylim(mixval(self%px),mixval(self%py))
-!~ 			if(allocated(self%vx) .and. allocated(self%vy)) then
-!~ 				x = self%vx
-!~ 				y = self%vy
-!~ 				u = real(self%passes(k)%u)
-!~ 				v = real(self%passes(k)%v)
-!~ 				N = [size(x),size(y)]
-!~ 				s = N/16+1
-!~ 				call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
-!~ 			else
-!~ 				call contourf(self%px,self%py,real(self%B)-real(self%A),10)
-!~ 			end if
-!~ 			call ticks()
-!~ 			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%px),mixval(self%py))
+			if(allocated(self%vx) .and. allocated(self%vy)) then
+				x = self%vx
+				y = self%vy
+				u = real(self%passes(k)%u)
+				v = real(self%passes(k)%v)
+				N = [size(x),size(y)]
+				s = N/16+1
+				call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
+			else
+				call contourf(self%px,self%py,real(self%B)-real(self%A),10)
+			end if
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
+			
+			call figure()
 			
 			if(allocated(self%vx) .and. allocated(self%vy) .and. k>0) then
 				h = real(self%passes(k)%u)

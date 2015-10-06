@@ -10,22 +10,28 @@ contains
 
 	subroutine test
 		type(pair_t),dimension(:),allocatable::pairs
+		character(64)::buf
 		type(pair_t)::a
 		integer::N,k,s
 		
-		N = 20
+		N = 1
 		allocate(pairs(N))
 		
-		s = 12
+		s = 10
 		do k=1,N
 			write(*,*) colorize('Processing pair: '//int2char(k),[5,5,5])
+			write(buf,*) k
+			buf = trim(adjustl(buf))
 			pairs(k) = createFullPair(s)
+			call pairs(k)%writePair('pair-'//trim(buf)//'.nc')
+			call pairs(k)%writeVectors('vectors-'//trim(buf)//'.nc')
 		end do
 		
 		a = averagePairs(pairs)
 		call a%writePair('pair.nc')
 		call a%writeVectors('vectors.nc')
 		call a%plot()
+		call a%stats()
 	end subroutine test
 
 	function createFullPair(s) result(p)
@@ -46,24 +52,24 @@ contains
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.1_wp]*diff(1.0_wp,3)
 		
-		Ux = L(1)/real(N(1),wp)*diff(1.0_wp,1)*5.0_wp
-		Uy = L(2)/real(N(2),wp)*diff(1.0_wp,2)*5.0_wp
+		Ux = L(1)/real(N(1),wp)*diff(5.0_wp,1)
+		Uy = L(2)/real(N(2),wp)*diff(5.0_wp,2)
 		Lx = L(1)
 		Ly = L(2)
 		
 		p = generatePair(N,L,Np,dt,R)
-		call p%setupPasses(3,[32,32],[16,16])
+		call p%setupPasses(2,[32,32],[16,16])
 		
 		call doTrue(p)
 		
-		call doPass(p,1,[32,32],'map')
-		call filter(p,1,0.8_wp)
+!~ 		call doPass(p,1,[32,32],'map')
+!~ 		call filter(p,1,0.8_wp)
 
-		call doPass(p,2,[24,24],'map',1)
-		call filter(p,2,0.8_wp)
+		call doPass(p,1,[24,24],'map',0)
+		call filter(p,1,0.8_wp)
 		
-		call doPass(p,3,[16,16],'lsq',1)
-		call filter(p,3,0.8_wp)
+		call doPass(p,2,[12,12],'lsq',0)
+		call filter(p,2,0.8_wp)
 		
 !~ 		call p%writePair('pair.nc')
 !~ 		call p%writeVectors('vectors.nc')
