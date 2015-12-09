@@ -66,7 +66,11 @@ contains
 	subroutine setupPasses(self,Np,B,S)
 		class(pair_t),intent(inout)::self
 		integer,intent(in)::Np
-		integer,dimension(2),intent(in)::B,S
+			!! Number of passes
+		integer,dimension(2),intent(in)::B
+			!! Boundary buffer window size
+		integer,dimension(2),intent(in)::S
+			!! Vector spacing window size
 		
 		integer,dimension(2)::N
 		integer::k

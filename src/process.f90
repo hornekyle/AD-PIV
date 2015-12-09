@@ -13,6 +13,8 @@ program process_prg
 	call setupMPI()
 	
 	N_passes = 2
+	buffer_window_size = [32,32]
+	spacing_window_size = [16,16]
 	pass_guesses = [0,0]
 	pass_sizes = reshape([ 24,24 , 24,24 ],[2,2])
 	pass_types = [character(3)::'map','lsq']
@@ -61,7 +63,7 @@ contains
 		Ly = L(2)
 		
 		p = generatePair(N,L,Np,dt,R)
-		call p%setupPasses(N_passes,[32,32],[16,16])
+		call p%setupPasses(N_passes,buffer_window_size,spacing_window_size)
 		
 		call doTrue(p)
 		

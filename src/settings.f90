@@ -20,6 +20,8 @@ module settings_mod
 	integer::image_scale = 10
 	
 	integer::N_Passes = 2
+	integer,dimension(2)::buffer_window_size
+	integer,dimension(2)::spacing_window_size
 	integer,dimension(:,:),allocatable::pass_sizes
 	integer,dimension(:),allocatable::pass_guesses
 	character(3),dimension(:),allocatable::pass_types
