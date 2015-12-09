@@ -1,4 +1,4 @@
-module mpiUtil_mod
+module clusterUtil_mod
 	use kinds_mod
 	use mpi
 	implicit none
@@ -37,4 +37,10 @@ contains
 		end do
 	end subroutine consoleMPI
 
-end module mpiUtil_mod
+	function amRoot() result(o)
+		logical::o
+		
+		o = mpi_rank==0
+	end function amRoot
+	
+end module clusterUtil_mod

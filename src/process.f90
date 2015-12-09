@@ -2,7 +2,7 @@ program process_prg
 	use kinds_mod
 	use settings_mod
 	use utilities_mod
-	use mpiUtil_mod
+	use cluster_mod
 	use pair_mod
 	use generator_mod
 	use piv_mod
@@ -11,7 +11,7 @@ program process_prg
 	integer::k
 	
 	call setupMPI()
-	do k=1,10
+	do k=1,2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		write(*,*) k,mpi_rank
 		call doPair(k)
@@ -27,7 +27,7 @@ contains
 		character(64)::buf
 		integer::s
 		
-		s = 10
+		s = 8
 		write(*,*) colorize('Processing pair: '//int2char(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))

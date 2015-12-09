@@ -5,6 +5,7 @@ module generator_mod
 	use autodiff_mod
 	use pair_mod
 	use omp_lib
+	use cluster_mod
 	implicit none
 	private
 	
@@ -63,7 +64,7 @@ contains
 		tct = omp_get_num_threads()
 		!$omp barrier
 		do k=1,Np
-			if(tid==0) call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
+			if(tid==0 .and. amRoot()) call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
 			call project( integrate(particles(k)%x,-dt/2.0_wp) , particles(k) , o%A , [tid,tct])
 			call project( integrate(particles(k)%x,+dt/2.0_wp) , particles(k) , o%B , [tid,tct])
 		end do

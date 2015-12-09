@@ -20,7 +20,7 @@ set(common_src
 	)
 
 set(process_src
-	"src/mpiUtil.f90"
+	"src/cluster.f90"
 	"src/process.f90"
 	)
 
