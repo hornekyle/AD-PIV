@@ -14,7 +14,9 @@ program process_prg
 	
 	! All these need to move to a config file
 	
-	image_scale = 8
+	N_pairs = 1
+	
+	image_scale = 10
 	
 	Lx = 1.0_wp
 	Ly = 1.0_wp
@@ -35,7 +37,7 @@ program process_prg
 	
 	! Do processing
 	
-	do k=1,2
+	do k=1,N_pairs
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		call doPair(k)
 	end do

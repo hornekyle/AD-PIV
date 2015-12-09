@@ -19,6 +19,8 @@ module settings_mod
 	
 	integer::image_scale
 	
+	integer::N_pairs
+	
 	integer::N_Passes
 	integer,dimension(2)::buffer_window_size
 	integer,dimension(2)::spacing_window_size

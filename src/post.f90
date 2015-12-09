@@ -11,8 +11,8 @@ program post_prg
 	
 	call p%readPair('pair-1.nc','vectors-1.nc')
 	
-	call setup()
-	call plotPair(p)
+	call setup(device='svgqt',filename='output-post-%n.svg')
+	call pairStats(p)
 	call show()
 	
 contains
