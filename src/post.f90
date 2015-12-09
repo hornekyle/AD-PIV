@@ -11,7 +11,7 @@ program post_prg
 	character(:),allocatable::pfn,vfn
 	integer::j,k
 	
-	N_pairs = 2
+	N_pairs = 4
 	allocate(p(N_pairs))
 	do k=1,N_pairs
 		pfn = 'pair-'//int2char(k)//'.nc'
@@ -26,10 +26,7 @@ program post_prg
 	end do
 	
 	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
-	do k=1,N_pairs
-		call plotPair(p(k))
-		call pairStats(p(k))
-	end do
+	call fullStats(p)
 	call show()
 	
 contains
@@ -174,7 +171,7 @@ contains
 		
 		integer::Nb
 		
-		Nb = nint(sqrt(real(size(h),wp)))
+		Nb = nint((real(size(h),wp))**(0.5_wp))
 		
 		call figure()
 		call subplot(1,1,1)
@@ -184,22 +181,24 @@ contains
 		call labels(L,'','Pass '//int2char(k)//'; N = '//int2char(size(h)))
 	end subroutine doHist
 
-
-	subroutine plotMap(self)
-		class(map_t),intent(in)::self
+	subroutine fullStats(pairs)
+		type(pair_t),dimension(:),intent(in)::pairs
 		
-		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:),allocatable::h,he,hd
+		integer::j,k
 		
-		x = linspace(real(lbound(self%C,1),wp),real(ubound(self%C,1),wp),size(self%C,1))
-		y = linspace(real(lbound(self%C,2),wp),real(ubound(self%C,2),wp),size(self%C,2))
-		
-		call figure()
-		call subplot(1,1,1,aspect=1.0_wp)
-		call xylim(mixval(x),mixval(y))
-		call contourf(x,y,real(self%C),25)
-		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','')
-	end subroutine plotMap
-
+		h  = [real(wp)::]
+		he = [real(wp)::]
+		do k=1,size(pairs(1)%passes)-1
+			do j=1,size(pairs)
+				h  = [h, real( pairs(j)%passes(k)%u )  ]
+				he = [he,real( pairs(j)%passes(0)%u ) ]
+			end do
+		end do
+		hd = h-he
+		call doHist( h  ,'Displacement #fi#gd#dx#u#fn [px]',0)
+		call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dU#dx#u#fn [px]',k)
+	end subroutine fullStats
+	
 end program post_prg
  

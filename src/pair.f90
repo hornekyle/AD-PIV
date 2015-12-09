@@ -112,6 +112,8 @@ contains
 
 	subroutine readPair(self,fn,vfn)
 		!! FIXME: Need global derivative table
+		!! FIXME: Make fn -> pfn
+		!! FIXME: Make pfn optional
 		class(pair_t)::self
 		character(*),intent(in)::fn
 			!! Filename of pair
