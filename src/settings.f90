@@ -19,6 +19,10 @@ module settings_mod
 	
 	integer::image_scale = 10
 	
+	integer::N_Passes = 2
+	integer,dimension(:,:),allocatable::pass_sizes
+	character(3),dimension(:),allocatable::pass_types
+	
 contains
 
 	function uf(x) result(o)

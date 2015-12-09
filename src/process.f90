@@ -11,6 +11,11 @@ program process_prg
 	integer::k
 	
 	call setupMPI()
+	
+	N_passes = 2
+	pass_sizes = reshape([24,24,24,24],[2,2])
+	pass_types = [character(3)::'map','lsq']
+	
 	do k=1,2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		call doPair(k)
@@ -39,9 +44,9 @@ contains
 		
 		integer,dimension(2)::N
 		real(wp),dimension(2)::L
-		integer::Np
-		real(wp)::dt
 		type(ad_t),dimension(2)::R
+		real(wp)::dt
+		integer::Np,k
 		
 		N = 2**image_scale
 		L = 0.0512_wp
@@ -55,15 +60,13 @@ contains
 		Ly = L(2)
 		
 		p = generatePair(N,L,Np,dt,R)
-		call p%setupPasses(2,[32,32],[16,16])
+		call p%setupPasses(N_passes,[32,32],[16,16])
 		
 		call doTrue(p)
-
-		call doPass(p,1,[24,24],'map',0)
-		call filter(p,1,0.1_wp)
 		
-		call doPass(p,2,[24,24],'lsq',0)
-		call filter(p,2,0.1_wp)
+		do k=1,N_passes
+			call doPass(p,k,pass_sizes(:,k),pass_types(k),0)
+		end do
 	end function createFullPair
 
 end program process_prg
