@@ -3,9 +3,9 @@ enable_language(Fortran)
 set(PROJECT "AD-PIV")
 project(${PROJECT})
 
-set(CMAKE_Fortran_FLAGS "-g -Wall -Wtabs -fopenmp")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wtabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan -fopenmp")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native -fopenmp")
+set(CMAKE_Fortran_FLAGS "-fopenmp")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wtabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native")
 
 set(common_src
 	"src/autodiff.f90"
@@ -29,20 +29,30 @@ set(post_src
 	"src/post.f90"
 	)
 
-include_directories("/usr/include")
-include_directories("/usr/include/plplot")
-include_directories("/usr/lib/x86_64-linux-gnu/fortran/modules/plplot")
+include(FindPkgConfig)
+pkg_search_module(PLPLOT REQUIRED plplot-f95 plplotd-f95)
+include_directories(${PLPLOT_INCLUDE_DIRS})
+link_directories(${PLPLOT_LIBRARY_DIRS})
+
+find_library(NETCDF_LIBRARY netcdff "/usr/lib")
+find_path(NETCDF_INCLUDE "netcdf.mod" "/usr/include")
+
+include_directories(${NETCDF_INCLUDE})
 
 add_executable(process ${common_src} ${process_src})
 target_link_libraries(process "gomp")
-target_link_libraries(process "netcdff")
+target_link_libraries(process ${NETCDF_LIBRARY})
 
 add_executable(post ${common_src} ${post_src})
 target_link_libraries(post "gomp")
-target_link_libraries(post "netcdff")
-target_link_libraries(post "plplotf95d" "plplotf95cd")
+target_link_libraries(post ${NETCDF_LIBRARY})
+target_link_libraries(post ${PLPLOT_LIBRARIES})
 
 set(FORD_EXECUTABLE "ford")
 add_custom_target(ford
-	COMMAND ${FORD_EXECUTABLE} "${CMAKE_SOURCE_DIR}/project.md"
-	WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/pages" "${CMAKE_BINARY_DIR}/pages"
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/src" "${CMAKE_BINARY_DIR}/src"
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/project.md" "${CMAKE_BINARY_DIR}"
+	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_BINARY_DIR}"
+	COMMAND ${FORD_EXECUTABLE} "project.md"
+	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
