@@ -1,9 +1,9 @@
 module piv_mod
 	use kinds_mod
+	use settings_mod
 	use utilities_mod
 	use autodiff_mod
 	use pair_mod
-	use plplotlib_mod
 	use omp_lib
 	implicit none
 	
@@ -12,7 +12,6 @@ module piv_mod
 	contains
 		procedure::dispInt
 		procedure::dispGauss
-		procedure::plot => plotMap
 	end type
 	
 contains
@@ -294,22 +293,6 @@ contains
 	!=============!
 	!= Utilities =!
 	!=============!
-
-	subroutine plotMap(self)
-		class(map_t),intent(in)::self
-		
-		real(wp),dimension(:),allocatable::x,y
-		
-		x = linspace(real(lbound(self%C,1),wp),real(ubound(self%C,1),wp),size(self%C,1))
-		y = linspace(real(lbound(self%C,2),wp),real(ubound(self%C,2),wp),size(self%C,2))
-		
-		call figure()
-		call subplot(1,1,1,aspect=1.0_wp)
-		call xylim(mixval(x),mixval(y))
-		call contourf(x,y,real(self%C),25)
-		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','')
-	end subroutine plotMap
 
 	subroutine filter(p,k,tol)
 		class(pair_t),intent(inout)::p

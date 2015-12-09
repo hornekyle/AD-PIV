@@ -11,6 +11,9 @@ author_description: Assistant Professor
 email: kyle.horne@unt.edu
 github: https://github.com/hornekyle/
 summary: AD-PIV
+graph: true
+source: true
+display: public
 
 Automatic differentiation Particle-image Velocimetry
 

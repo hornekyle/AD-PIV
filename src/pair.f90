@@ -3,7 +3,6 @@ module pair_mod
 	use utilities_mod
 	use autodiff_mod
 	use netCDF_mod
-	use plplotlib_mod
 	implicit none
 	private
 	
@@ -24,10 +23,9 @@ module pair_mod
 		type(pass_t),dimension(:),allocatable::passes
 	contains
 		procedure::writePair
+		procedure::readPair
 		procedure::writeVectors
-		procedure::plot => plotPair
 		procedure::setupPasses
-		procedure::stats => pairStats
 	end type
 	
 	public::pass_t
@@ -108,6 +106,60 @@ contains
 		call write_step(fn,self%dt,2,'N',der(self%B,4))
 	end subroutine writePair
 
+	subroutine readPair(self,fn)
+		!! FIXME: Need global derivative table
+		class(pair_t)::self
+		character(*),intent(in)::fn
+		
+		character(64),dimension(:),allocatable::vars
+		real(wp),dimension(:),allocatable::x,y,z,t
+		real(wp),dimension(:,:),allocatable::I,U,V,R,N
+		integer,dimension(2)::M
+		integer::k
+		
+		call read_grid(fn,vars,x,y,z,t)
+		M = [size(x),size(y)]
+		self%px = x
+		self%py = y
+		
+		allocate(I( M(1) , M(2) ))
+		allocate(U( M(1) , M(2) ))
+		allocate(V( M(1) , M(2) ))
+		allocate(R( M(1) , M(2) ))
+		allocate(N( M(1) , M(2) ))
+		
+		call read_step(fn,'I',I,1)
+		call read_step(fn,'U',U,1)
+		call read_step(fn,'V',V,1)
+		call read_step(fn,'R',R,1)
+		call read_step(fn,'N',N,1)
+		if(allocated(self%A)) deallocate(self%A)
+		allocate(self%A( M(1) , M(2) ))
+		self%A%x = I
+		self%A%d(1) = U
+		self%A%d(2) = V
+		self%A%d(3) = R
+		self%A%d(4) = N
+		
+		call read_step(fn,'I',I,2)
+		call read_step(fn,'U',U,2)
+		call read_step(fn,'V',V,2)
+		call read_step(fn,'R',R,2)
+		call read_step(fn,'N',N,2)
+		if(allocated(self%B)) deallocate(self%B)
+		allocate(self%B( M(1) , M(2) ))
+		self%B%x = I
+		self%B%d(1) = U
+		self%B%d(2) = V
+		self%B%d(3) = R
+		self%B%d(4) = N
+		
+		write(*,*) 'x',shape(self%px),mixval(self%px)
+		write(*,*) 'y',shape(self%py),mixval(self%py)
+		write(*,*) 't',shape(t),mixval(t)
+		write(*,*) [character(2):: (trim(vars(k)),k=1,size(vars))]
+	end subroutine readPair
+
 	subroutine writeVectors(self,fn)
 		!! FIXME: Need global derivative table
 		class(pair_t),intent(in)::self
@@ -146,156 +198,5 @@ contains
 		end do
 		
 	end subroutine writeVectors
-
-	subroutine plotPair(self)
-		class(pair_t),intent(in)::self
-		
-		real(wp),dimension(:),allocatable::x,y
-		real(wp),dimension(:,:),allocatable::u,v,h
-		character(1),dimension(4)::names
-		integer,dimension(2)::N,s
-		integer::i,k
-		
-		names = ['U','V','R','N']
-		
-		do k=lbound(self%passes,1)+1,ubound(self%passes,1)
-			
-			call figure()
-			call subplot(1,1,1,aspect=1.0_wp)
-			call xylim(mixval(self%px),mixval(self%py))
-			if(allocated(self%vx) .and. allocated(self%vy)) then
-				x = self%vx
-				y = self%vy
-				u = real(self%passes(k)%u)
-				v = real(self%passes(k)%v)
-				N = [size(x),size(y)]
-				s = N/16+1
-				call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
-			else
-				call contourf(self%px,self%py,real(self%B)-real(self%A),10)
-			end if
-			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
-			
-			call figure()
-			
-			if(allocated(self%vx) .and. allocated(self%vy) .and. k>0) then
-				h = real(self%passes(k)%u)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' u')
-				
-				h = real(self%passes(k)%v)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' v')
-				
-				h = real(self%passes(0)%u-self%passes(k)%u)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#du#u')
-				
-				h = real(self%passes(0)%v-self%passes(k)%v)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#dv#u')
-			
-				do i=1,size(names)
-					h = der(self%passes(k)%u,i)
-					call figure()
-					call subplot(1,1,1,aspect=1.0_wp)
-					call xylim(mixval(self%px),mixval(self%py))
-					call contourf(self%vx,self%vy,h,20)
-					call colorbar2(h,20)
-					call ticks()
-					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' du/d'//names(i))
-					
-					h = der(self%passes(k)%v,i)
-					call figure()
-					call subplot(1,1,1,aspect=1.0_wp)
-					call xylim(mixval(self%px),mixval(self%py))
-					call contourf(self%vx,self%vy,h,20)
-					call colorbar2(h,20)
-					call ticks()
-					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' dv/d'//names(i))
-				end do
-			end if
-			
-		end do
-	end subroutine plotPair
-
-	subroutine pairStats(self)
-		class(pair_t),intent(in)::self
-		
-		real(wp),dimension(:),allocatable::h,he
-		integer::k
-		
-		do k=1,ubound(self%passes,1)
-			h  = flatten(real( self%passes(k)%u ))
-			he = flatten(real( self%passes(k)%u-self%passes(0)%u ))
-			call doHist( pack(h ,abs(he)<2.0_wp) ,'Displacement #fi#gd#dx#u#fn [px]')
-			call doHist( pack(he,abs(he)<2.0_wp) ,'Displacement Error #fi#ge#dx#u#fn [px]')
-			
-			h  = flatten(real( self%passes(k)%v ))
-			he = flatten(real( self%passes(k)%v-self%passes(0)%v ))
-			call doHist( pack(h ,abs(he)<2.0_wp) ,'Displacement #fi#gd#dy#u#fn [px]')
-			call doHist( pack(he,abs(he)<2.0_wp) ,'Displacement Error #fi#ge#dy#u#fn [px]')
-			
-			h  = flatten(der( self%passes(k)%u , 1 ))
-			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 1 ))
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dx#u#fn [px]')
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dx#u#fn [px]')
-			
-			h  = flatten(der( self%passes(k)%u , 2 ))
-			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 2 ))
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dy#u#fn [px]')
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dy#u#fn [px]')
-			
-			h  = flatten(der( self%passes(k)%v , 1 ))
-			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 1 ))
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dx#u#fn [px]')
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dx#u#fn [px]')
-			
-			h  = flatten(der( self%passes(k)%v , 2 ))
-			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 2 ))
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dy#u#fn [px]')
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dy#u#fn [px]')
-		end do
-		
-	contains
-	
-		subroutine doHist(h,L)
-			real(wp),dimension(:),intent(in)::h
-			character(*),intent(in)::L
-			
-			integer::Nb
-			
-			Nb = nint(sqrt(real(size(h),wp)))
-			
-			call figure()
-			call subplot(1,1,1)
-			call xylim(mixval(h),[0.0_wp,1.05_wp])
-			call hist(h,Nb)
-			call xticks(primary=.true.,secondary=.false.)
-			call labels(L,'','Pass '//int2char(k)//'; N = '//int2char(size(h)))
-		end subroutine doHist
-	
-	end subroutine pairStats
 
 end module pair_mod

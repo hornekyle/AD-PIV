@@ -27,12 +27,24 @@ module kinds_mod
 	real(wp),parameter::E  = exp(1.0_wp)
 		!! Euler's constant
 	
+	!==================!
+	!= Buffer Lengths =!
+	!==================!
+	
+	integer,parameter::str_long = 128
+	character(:),parameter::fmt_long = '(1A128)'
+	integer,parameter::str_short = 32
+	character(:),parameter::fmt_short = '(1A32)'
+	
 	!===========!
 	!= Exports =!
 	!===========!
 	
 	public::sp,dp,ep,qp,wp
 	public::PI,E
+	
+	public::str_long,str_short
+	public::fmt_long,fmt_short
 	
 	public::printTypes
 	
