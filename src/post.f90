@@ -7,12 +7,29 @@ program post_prg
 	use piv_mod
 	implicit none
 	
-	type(pair_t)::p
+	type(pair_t),dimension(:),allocatable::p
+	character(:),allocatable::pfn,vfn
+	integer::j,k
 	
-	call p%readPair('pair-1.nc','vectors-1.nc')
+	N_pairs = 2
+	allocate(p(N_pairs))
+	do k=1,N_pairs
+		pfn = 'pair-'//int2char(k)//'.nc'
+		vfn = 'vectors-'//int2char(k)//'.nc'
+		
+		call p(k)%readPair(pfn,vfn)
+		deallocate(p(k)%A,p(k)%B)
+		
+		do j=1,size(p(k)%passes)-1
+			call filter(p(k),j,0.1_wp)
+		end do
+	end do
 	
-	call setup(device='svgqt',filename='output-post-%n.svg')
-	call pairStats(p)
+	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
+	do k=1,N_pairs
+		call plotPair(p(k))
+		call pairStats(p(k))
+	end do
 	call show()
 	
 contains

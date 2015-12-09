@@ -14,9 +14,9 @@ program process_prg
 	
 	! All these need to move to a config file
 	
-	N_pairs = 1
+	N_pairs = 2
 	
-	image_scale = 10
+	image_scale = 11
 	
 	Lx = 1.0_wp
 	Ly = 1.0_wp
