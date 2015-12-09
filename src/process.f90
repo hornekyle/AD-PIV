@@ -24,20 +24,16 @@ contains
 		
 		type(pair_t)::pair
 		character(64)::buf
-		integer::s
 		
-		s = 10
 		write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))
-		pair = createFullPair(s)
+		pair = createFullPair()
 		call pair%writePair('pair-'//trim(buf)//'.nc')
 		call pair%writeVectors('vectors-'//trim(buf)//'.nc')
 	end subroutine doPair
 
-	function createFullPair(s) result(p)
-		integer,intent(in)::s
-			!! Size exponent
+	function createFullPair() result(p)
 		type(pair_t)::p
 			!! Result
 		
@@ -47,9 +43,9 @@ contains
 		real(wp)::dt
 		type(ad_t),dimension(2)::R
 		
-		N = 2**s
+		N = 2**image_scale
 		L = 0.0512_wp
-		Np = 2*4**(s-2)
+		Np = 2*4**(image_scale-2)
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.0_wp]*diff(1.0_wp,3)
 		

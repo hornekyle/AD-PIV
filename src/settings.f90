@@ -17,6 +17,8 @@ module settings_mod
 	
 	real(wp)::noise_level = 0.1_wp
 	
+	integer::image_scale = 10
+	
 contains
 
 	function uf(x) result(o)
