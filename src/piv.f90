@@ -46,7 +46,11 @@ contains
 			do i=1,p%Nv(1)
 				
 				if(present(reference)) then
-					d = secondPass(i,j,reference)
+					if(reference>=0) then
+						d = secondPass(i,j,reference)
+					else
+						d = firstPass(i,j)
+					end if
 				else
 					d = firstPass(i,j)
 				end if

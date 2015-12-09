@@ -13,7 +13,8 @@ program process_prg
 	call setupMPI()
 	
 	N_passes = 2
-	pass_sizes = reshape([24,24,24,24],[2,2])
+	pass_guesses = [0,0]
+	pass_sizes = reshape([ 24,24 , 24,24 ],[2,2])
 	pass_types = [character(3)::'map','lsq']
 	
 	do k=1,2
@@ -65,7 +66,7 @@ contains
 		call doTrue(p)
 		
 		do k=1,N_passes
-			call doPass(p,k,pass_sizes(:,k),pass_types(k),0)
+			call doPass(p,k,pass_sizes(:,k),pass_types(k),pass_guesses(k))
 		end do
 	end function createFullPair
 

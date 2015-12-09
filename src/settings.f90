@@ -21,6 +21,7 @@ module settings_mod
 	
 	integer::N_Passes = 2
 	integer,dimension(:,:),allocatable::pass_sizes
+	integer,dimension(:),allocatable::pass_guesses
 	character(3),dimension(:),allocatable::pass_types
 	
 contains
