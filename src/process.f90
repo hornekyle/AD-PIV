@@ -12,12 +12,28 @@ program process_prg
 	
 	call setupMPI()
 	
+	! All these need to move to a config file
+	
+	image_scale = 10
+	
+	Lx = 1.0_wp
+	Ly = 1.0_wp
+	
+	Ux0 = 5.0_wp
+	Uy0 = 5.0_wp
+	
+	velocity_mode = 3
+	
+	noise_level = 0.1_wp
+	
 	N_passes = 2
 	buffer_window_size = [32,32]
 	spacing_window_size = [16,16]
 	pass_guesses = [0,0]
 	pass_sizes = reshape([ 24,24 , 24,24 ],[2,2])
 	pass_types = [character(3)::'map','lsq']
+	
+	! Do processing
 	
 	do k=1,2
 		if(mod(k,mpi_size)/=mpi_rank) cycle

@@ -4,22 +4,22 @@ module settings_mod
 	use config_mod
 	implicit none
 	
-	real(wp)::Ux0 = 5.0_wp
-	real(wp)::Uy0 = 5.0_wp
+	real(wp)::Ux0
+	real(wp)::Uy0
 	
 	type(ad_t)::Ux
 	type(ad_t)::Uy
 	
-	real(wp)::Lx = 1.0_wp
-	real(wp)::Ly = 1.0_wp
+	real(wp)::Lx
+	real(wp)::Ly
 	
-	integer::velocity_mode = 3
+	integer::velocity_mode
 	
-	real(wp)::noise_level = 0.1_wp
+	real(wp)::noise_level
 	
-	integer::image_scale = 10
+	integer::image_scale = 10 ! 1024x1024
 	
-	integer::N_Passes = 2
+	integer::N_Passes
 	integer,dimension(2)::buffer_window_size
 	integer,dimension(2)::spacing_window_size
 	integer,dimension(:,:),allocatable::pass_sizes
