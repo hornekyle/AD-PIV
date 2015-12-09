@@ -1,4 +1,4 @@
-module clusterUtil_mod
+module cluster_mod
 	use kinds_mod
 	use mpi
 	implicit none
@@ -43,4 +43,4 @@ contains
 		o = mpi_rank==0
 	end function amRoot
 	
-end module clusterUtil_mod
+end module cluster_mod

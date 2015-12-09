@@ -10,24 +10,21 @@ set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native")
 set(common_src
 	"src/autodiff.f90"
 	"src/config.f90"
-	"src/generator.f90"
 	"src/kinds.f90"
 	"src/netCDF.f90"
 	"src/pair.f90"
 	"src/piv.f90"
 	"src/settings.f90"
-	"src/utilities.f90"
-	)
+	"src/utilities.f90")
 
 set(process_src
 	"src/cluster.f90"
-	"src/process.f90"
-	)
+	"src/generator.f90"
+	"src/process.f90")
 
 set(post_src
 	"src/plplotlib.f90"
-	"src/post.f90"
-	)
+	"src/post.f90")
 
 include(FindPkgConfig)
 pkg_search_module(PLPLOT REQUIRED plplot-f95 plplotd-f95)
