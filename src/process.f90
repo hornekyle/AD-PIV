@@ -13,7 +13,6 @@ program process_prg
 	call setupMPI()
 	do k=1,2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
-		write(*,*) k,mpi_rank
 		call doPair(k)
 	end do
 	call finalizeMPI()
@@ -27,8 +26,8 @@ contains
 		character(64)::buf
 		integer::s
 		
-		s = 8
-		write(*,*) colorize('Processing pair: '//int2char(k),[5,5,5])
+		s = 10
+		write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair(s)

@@ -12,6 +12,8 @@ module settings_mod
 	
 	integer::velocity_mode = 1
 	
+	real(wp)::noise_level = 0.1_wp
+	
 contains
 
 	function uf(x) result(o)

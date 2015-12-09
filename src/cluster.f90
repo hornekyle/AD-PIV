@@ -3,9 +3,9 @@ module cluster_mod
 	use mpi
 	implicit none
 	
-	integer::mpi_size
+	integer::mpi_size = 0
 		!! MPI global communicator size
-	integer::mpi_rank
+	integer::mpi_rank = 0
 		!! MPI global communicator rank
 	integer::mpi_err
 		!! MPI error code
