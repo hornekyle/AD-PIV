@@ -4,13 +4,16 @@ module settings_mod
 	use config_mod
 	implicit none
 	
+	real(wp)::Ux0 = 5.0_wp
+	real(wp)::Uy0 = 5.0_wp
+	
 	type(ad_t)::Ux
 	type(ad_t)::Uy
 	
 	real(wp)::Lx = 1.0_wp
 	real(wp)::Ly = 1.0_wp
 	
-	integer::velocity_mode = 1
+	integer::velocity_mode = 3
 	
 	real(wp)::noise_level = 0.1_wp
 	

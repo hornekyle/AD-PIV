@@ -53,8 +53,8 @@ contains
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.0_wp]*diff(1.0_wp,3)
 		
-		Ux = L(1)/real(N(1),wp)*diff(5.0_wp,1)
-		Uy = L(2)/real(N(2),wp)*diff(5.0_wp,2)
+		Ux = L(1)/real(N(1),wp)*diff(Ux0,1)
+		Uy = L(2)/real(N(2),wp)*diff(Uy0,2)
 		Lx = L(1)
 		Ly = L(2)
 		
@@ -62,21 +62,12 @@ contains
 		call p%setupPasses(2,[32,32],[16,16])
 		
 		call doTrue(p)
-		
-!~ 		call doPass(p,1,[32,32],'map')
-!~ 		call filter(p,1,0.8_wp)
 
 		call doPass(p,1,[24,24],'map',0)
 		call filter(p,1,0.1_wp)
 		
 		call doPass(p,2,[24,24],'lsq',0)
 		call filter(p,2,0.1_wp)
-		
-!~ 		call p%writePair('pair.nc')
-!~ 		call p%writeVectors('vectors.nc')
-		
-!~ 		call p%plot()
-!~ 		call p%stats()
 	end function createFullPair
 
 end program process_prg
