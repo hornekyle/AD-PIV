@@ -9,7 +9,11 @@ program post_prg
 	
 	type(pair_t)::p
 	
-	call p%readPair('pair-1.nc')
+	call p%readPair('pair-1.nc','vectors-1.nc')
+	
+	call setup()
+	call plotPair(p)
+	call show()
 	
 contains
 

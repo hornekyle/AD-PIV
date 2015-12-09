@@ -17,7 +17,7 @@ module settings_mod
 	
 	real(wp)::noise_level
 	
-	integer::image_scale = 10 ! 1024x1024
+	integer::image_scale
 	
 	integer::N_Passes
 	integer,dimension(2)::buffer_window_size

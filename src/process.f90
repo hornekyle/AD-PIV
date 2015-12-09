@@ -14,7 +14,7 @@ program process_prg
 	
 	! All these need to move to a config file
 	
-	image_scale = 10
+	image_scale = 8
 	
 	Lx = 1.0_wp
 	Ly = 1.0_wp
