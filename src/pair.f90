@@ -8,6 +8,7 @@ module pair_mod
 	
 	type::pass_t
 		type(ad_t),dimension(:,:),allocatable::u,v
+		logical,dimension(:,:),allocatable::mask
 	end type
 	
 	type::pair_t
@@ -110,12 +111,10 @@ contains
 		call write_step(fn,self%dt,2,'N',der(self%B,4))
 	end subroutine writePair
 
-	subroutine readPair(self,fn,vfn)
+	subroutine readPair(self,pfn,vfn)
 		!! FIXME: Need global derivative table
-		!! FIXME: Make fn -> pfn
-		!! FIXME: Make pfn optional
 		class(pair_t)::self
-		character(*),intent(in)::fn
+		character(*),intent(in),optional::pfn
 			!! Filename of pair
 		character(*),intent(in),optional::vfn
 			!! Filename of vectors
@@ -126,91 +125,93 @@ contains
 		integer,dimension(2)::M
 		integer::Np,k
 		
-		call read_grid(fn,vars,x,y,z,t)
-		M = [size(x),size(y)]
-		self%px = x
-		self%py = y
-		
-		allocate(I( M(1) , M(2) ))
-		allocate(U( M(1) , M(2) ))
-		allocate(V( M(1) , M(2) ))
-		allocate(R( M(1) , M(2) ))
-		allocate(N( M(1) , M(2) ))
-		
-		call read_step(fn,'I',I,1)
-		call read_step(fn,'U',U,1)
-		call read_step(fn,'V',V,1)
-		call read_step(fn,'R',R,1)
-		call read_step(fn,'N',N,1)
-		if(allocated(self%A)) deallocate(self%A)
-		allocate(self%A( M(1) , M(2) ))
-		self%A%x = I
-		self%A%d(1) = U
-		self%A%d(2) = V
-		self%A%d(3) = R
-		self%A%d(4) = N
-		
-		call read_step(fn,'I',I,2)
-		call read_step(fn,'U',U,2)
-		call read_step(fn,'V',V,2)
-		call read_step(fn,'R',R,2)
-		call read_step(fn,'N',N,2)
-		if(allocated(self%B)) deallocate(self%B)
-		allocate(self%B( M(1) , M(2) ))
-		self%B%x = I
-		self%B%d(1) = U
-		self%B%d(2) = V
-		self%B%d(3) = R
-		self%B%d(4) = N
-		
-		if(.not. present(vfn)) return
-		
-		deallocate(vars,x,y,t)
-		call read_grid(vfn,vars,x,y,z,t)
-		self%vx = x
-		self%vy = y
-		Np = size(t)-1
-		
-		! Allocate passes
-		if(allocated(self%passes)) deallocate(self%passes)
-		allocate(self%passes(0:Np))
-		
-		deallocate(I,U,V,R,N)
-		allocate(I(size(x),size(y)))
-		allocate(U(size(x),size(y)))
-		allocate(V(size(x),size(y)))
-		allocate(R(size(x),size(y)))
-		allocate(N(size(x),size(y)))
-		
-		! Read each pass
-		do k=0,Np
-			allocate(self%passes(k)%u(size(x),size(y)))
-			allocate(self%passes(k)%v(size(x),size(y)))
+		if(present(pfn)) then
+			call read_grid(pfn,vars,x,y,z,t)
+			M = [size(x),size(y)]
+			self%px = x
+			self%py = y
 			
-			call read_step(vfn,'u',I,k+1)
-			call read_step(vfn,'dudU',U,k+1)
-			call read_step(vfn,'dudV',V,k+1)
-			call read_step(vfn,'dudR',R,k+1)
-			call read_step(vfn,'dudN',N,k+1)
+			allocate(I( M(1) , M(2) ))
+			allocate(U( M(1) , M(2) ))
+			allocate(V( M(1) , M(2) ))
+			allocate(R( M(1) , M(2) ))
+			allocate(N( M(1) , M(2) ))
 			
-			self%passes(k)%u%x    = I
-			self%passes(k)%u%d(1) = U
-			self%passes(k)%u%d(2) = V
-			self%passes(k)%u%d(3) = R
-			self%passes(k)%u%d(4) = N
+			call read_step(pfn,'I',I,1)
+			call read_step(pfn,'U',U,1)
+			call read_step(pfn,'V',V,1)
+			call read_step(pfn,'R',R,1)
+			call read_step(pfn,'N',N,1)
+			if(allocated(self%A)) deallocate(self%A)
+			allocate(self%A( M(1) , M(2) ))
+			self%A%x = I
+			self%A%d(1) = U
+			self%A%d(2) = V
+			self%A%d(3) = R
+			self%A%d(4) = N
 			
-			call read_step(vfn,'v',I,k+1)
-			call read_step(vfn,'dvdU',U,k+1)
-			call read_step(vfn,'dvdV',V,k+1)
-			call read_step(vfn,'dvdR',R,k+1)
-			call read_step(vfn,'dvdN',N,k+1)
+			call read_step(pfn,'I',I,2)
+			call read_step(pfn,'U',U,2)
+			call read_step(pfn,'V',V,2)
+			call read_step(pfn,'R',R,2)
+			call read_step(pfn,'N',N,2)
+			if(allocated(self%B)) deallocate(self%B)
+			allocate(self%B( M(1) , M(2) ))
+			self%B%x = I
+			self%B%d(1) = U
+			self%B%d(2) = V
+			self%B%d(3) = R
+			self%B%d(4) = N
+			deallocate(vars,x,y,t)
+			deallocate(I,U,V,R,N)
+		end if
+		
+		if(present(vfn)) then
+			call read_grid(vfn,vars,x,y,z,t)
+			self%vx = x
+			self%vy = y
+			Np = size(t)-1
 			
-			self%passes(k)%v%x    = I
-			self%passes(k)%v%d(1) = U
-			self%passes(k)%v%d(2) = V
-			self%passes(k)%v%d(3) = R
-			self%passes(k)%v%d(4) = N
-		end do
+			! Allocate passes
+			if(allocated(self%passes)) deallocate(self%passes)
+			allocate(self%passes(0:Np))
+			
+			allocate(I(size(x),size(y)))
+			allocate(U(size(x),size(y)))
+			allocate(V(size(x),size(y)))
+			allocate(R(size(x),size(y)))
+			allocate(N(size(x),size(y)))
+			
+			! Read each pass
+			do k=0,Np
+				allocate(self%passes(k)%u(size(x),size(y)))
+				allocate(self%passes(k)%v(size(x),size(y)))
+				
+				call read_step(vfn,'u',I,k+1)
+				call read_step(vfn,'dudU',U,k+1)
+				call read_step(vfn,'dudV',V,k+1)
+				call read_step(vfn,'dudR',R,k+1)
+				call read_step(vfn,'dudN',N,k+1)
+				
+				self%passes(k)%u%x    = I
+				self%passes(k)%u%d(1) = U
+				self%passes(k)%u%d(2) = V
+				self%passes(k)%u%d(3) = R
+				self%passes(k)%u%d(4) = N
+				
+				call read_step(vfn,'v',I,k+1)
+				call read_step(vfn,'dvdU',U,k+1)
+				call read_step(vfn,'dvdV',V,k+1)
+				call read_step(vfn,'dvdR',R,k+1)
+				call read_step(vfn,'dvdN',N,k+1)
+				
+				self%passes(k)%v%x    = I
+				self%passes(k)%v%d(1) = U
+				self%passes(k)%v%d(2) = V
+				self%passes(k)%v%d(3) = R
+				self%passes(k)%v%d(4) = N
+			end do
+		end if
 		
 	end subroutine readPair
 

@@ -14,9 +14,9 @@ program process_prg
 	
 	! All these need to move to a config file
 	
-	N_pairs = 4
+	N_pairs = 32
 	
-	image_scale = 12
+	image_scale = 10
 	
 	Lx = 1.0_wp
 	Ly = 1.0_wp
@@ -24,7 +24,7 @@ program process_prg
 	Ux0 = 5.0_wp
 	Uy0 = 5.0_wp
 	
-	velocity_mode = 3
+	velocity_mode = 1
 	
 	noise_level = 0.1_wp
 	
@@ -55,7 +55,7 @@ contains
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair()
-		call pair%writePair('pair-'//trim(buf)//'.nc')
+! 		call pair%writePair('pair-'//trim(buf)//'.nc')
 		call pair%writeVectors('vectors-'//trim(buf)//'.nc')
 	end subroutine doPair
 

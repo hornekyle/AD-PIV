@@ -8,21 +8,13 @@ program post_prg
 	implicit none
 	
 	type(pair_t),dimension(:),allocatable::p
-	character(:),allocatable::pfn,vfn
 	integer::j,k
 	
-	N_pairs = 4
+	N_pairs = 32
 	allocate(p(N_pairs))
 	do k=1,N_pairs
-		pfn = 'pair-'//int2char(k)//'.nc'
-		vfn = 'vectors-'//int2char(k)//'.nc'
-		
-		call p(k)%readPair(pfn,vfn)
-		deallocate(p(k)%A,p(k)%B)
-		
-		do j=1,size(p(k)%passes)-1
-			call filter(p(k),j,0.1_wp)
-		end do
+		call p(k)%readPair(vfn='vectors-'//int2char(k)//'.nc')
+		call doMask(p(k),0.1_wp)
 	end do
 	
 	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
@@ -187,18 +179,156 @@ contains
 		real(wp),dimension(:),allocatable::h,he,hd
 		integer::j,k
 		
-		h  = [real(wp)::]
-		he = [real(wp)::]
+		! u value
 		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
 			do j=1,size(pairs)
-				h  = [h, real( pairs(j)%passes(k)%u )  ]
-				he = [he,real( pairs(j)%passes(0)%u ) ]
+				h  = [h, real( pack( pairs(j)%passes(k)%u , pairs(j)%passes(k)%mask ) ) ]
+				he = [he,real( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement #fi#gd#dx#u#fn [px]',k)
+			call doHist( hd ,'Displacement Error #fi#ge#dx#u#fn [px]',k)
+		end do
+		
+		! v value
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, real( pack( pairs(j)%passes(k)%v , pairs(j)%passes(k)%mask ) ) ]
+				he = [he,real( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement #fi#gd#dy#u#fn [px]',k)
+			call doHist( hd ,'Displacement Error #fi#ge#dy#u#fn [px]',k)
+		end do
+		
+		! dudU
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%u , pairs(j)%passes(k)%mask ) , 1 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 1 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dU#fn [px]',k)
+		end do
+		
+		! dvdU
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%v , pairs(j)%passes(k)%mask ) , 1 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 1 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dU#fn [px]',k)
+		end do
+		
+		! dudV
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%u , pairs(j)%passes(k)%mask ) , 2 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 2 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dV#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dV#fn [px]',k)
+		end do
+		
+		! dvdV
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%v , pairs(j)%passes(k)%mask ) , 2 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 2 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dV#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dV#fn [px]',k)
+		end do
+		
+		! dudR
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%u , pairs(j)%passes(k)%mask ) , 3 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 3 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dR#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dR#fn [px]',k)
+		end do
+		
+		! dvdR
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%v , pairs(j)%passes(k)%mask ) , 3 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 3 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dR#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dR#fn [px]',k)
+		end do
+		
+		! dudN
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%u , pairs(j)%passes(k)%mask ) , 4 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 4 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dN#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dN#fn [px]',k)
+		end do
+		
+		! dvdN
+		do k=1,size(pairs(1)%passes)-1
+			h  = [real(wp)::]
+			he = [real(wp)::]
+			do j=1,size(pairs)
+				h  = [h, der( pack( pairs(j)%passes(k)%v , pairs(j)%passes(k)%mask ) , 4 ) ]
+				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 4 ) ]
+			end do
+			hd = h-he
+			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dN#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dN#fn [px]',k)
+		end do
+	end subroutine fullStats
+
+	subroutine doMask(p,tol)
+		type(pair_t),intent(inout)::p
+		real(wp),intent(in)::tol
+		
+		type(ad_t),dimension(2)::u,t
+		integer::i,j,k
+		
+		do k=1,size(p%passes)-1
+			if(allocated(p%passes(k)%mask)) deallocate(p%passes(k)%mask)
+			allocate(p%passes(k)%mask(size(p%vx),size(p%vy)))
+			do j=1,size(p%vy)
+				do i=1,size(p%vx)
+					u = [p%passes(k)%u(i,j),p%passes(k)%v(i,j)]
+					t = [p%passes(0)%u(i,j),p%passes(0)%v(i,j)]
+					p%passes(k)%mask(i,j) = norm2(real(u-t))/norm2(real(t))<tol
+				end do
 			end do
 		end do
-		hd = h-he
-		call doHist( h  ,'Displacement #fi#gd#dx#u#fn [px]',0)
-		call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dU#dx#u#fn [px]',k)
-	end subroutine fullStats
-	
+	end subroutine doMask
+
 end program post_prg
  
