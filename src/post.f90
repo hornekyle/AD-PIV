@@ -8,16 +8,20 @@ program post_prg
 	implicit none
 	
 	type(pair_t),dimension(:),allocatable::p
-	integer::j,k
+	type(pair_t)::mean_pair
+	integer::k
 	
-	N_pairs = 32
+	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
+	
+	N_pairs = 8
 	allocate(p(N_pairs))
 	do k=1,N_pairs
 		call p(k)%readPair(vfn='vectors-'//int2char(k)//'.nc')
-		call doMask(p(k),0.1_wp)
+		call doMask(p(k),0.2_wp)
 	end do
+	mean_pair = meanPair(p)
 	
-	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
+	call plotPair(mean_pair)
 	call fullStats(p)
 	call show()
 	
@@ -36,82 +40,77 @@ contains
 		
 		do k=lbound(self%passes,1)+1,ubound(self%passes,1)
 			
+			x = self%vx
+			y = self%vy
+			u = real(self%passes(k)%u)
+			v = real(self%passes(k)%v)
+			N = [size(x),size(y)]
+			s = N/16+1
+			
 			call figure()
 			call subplot(1,1,1,aspect=1.0_wp)
-			call xylim(mixval(self%px),mixval(self%py))
-			if(allocated(self%vx) .and. allocated(self%vy)) then
-				x = self%vx
-				y = self%vy
-				u = real(self%passes(k)%u)
-				v = real(self%passes(k)%v)
-				N = [size(x),size(y)]
-				s = N/16+1
-				call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
-			else
-				call contourf(self%px,self%py,real(self%B)-real(self%A),10)
-			end if
+			call xylim(mixval(x),mixval(y))
+			call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
 			call ticks()
 			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
 			
 			call figure()
 			
-			if(allocated(self%vx) .and. allocated(self%vy) .and. k>0) then
-				h = real(self%passes(k)%u)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' u')
-				
-				h = real(self%passes(k)%v)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' v')
-				
-				h = real(self%passes(0)%u-self%passes(k)%u)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#du#u')
-				
-				h = real(self%passes(0)%v-self%passes(k)%v)
-				call figure()
-				call subplot(1,1,1,aspect=1.0_wp)
-				call xylim(mixval(self%px),mixval(self%py))
-				call contourf(self%vx,self%vy,h,20)
-				call colorbar2(h,20)
-				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#dv#u')
+			h = real(self%passes(k)%u)
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%vx),mixval(self%vy))
+			call contourf(self%vx,self%vy,h,20)
+			call colorbar2(h,20)
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' u')
 			
-				do i=1,size(names)
-					h = der(self%passes(k)%u,i)
-					call figure()
-					call subplot(1,1,1,aspect=1.0_wp)
-					call xylim(mixval(self%px),mixval(self%py))
-					call contourf(self%vx,self%vy,h,20)
-					call colorbar2(h,20)
-					call ticks()
-					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' du/d'//names(i))
-					
-					h = der(self%passes(k)%v,i)
-					call figure()
-					call subplot(1,1,1,aspect=1.0_wp)
-					call xylim(mixval(self%px),mixval(self%py))
-					call contourf(self%vx,self%vy,h,20)
-					call colorbar2(h,20)
-					call ticks()
-					call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' dv/d'//names(i))
-				end do
-			end if
+			h = real(self%passes(k)%v)
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%vx),mixval(self%vy))
+			call contourf(self%vx,self%vy,h,20)
+			call colorbar2(h,20)
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' v')
+			
+			h = real(self%passes(0)%u-self%passes(k)%u)
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%vx),mixval(self%vy))
+			call contourf(self%vx,self%vy,h,20)
+			call colorbar2(h,20)
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#du#u')
+			
+			h = real(self%passes(0)%v-self%passes(k)%v)
+			call figure()
+			call subplot(1,1,1,aspect=1.0_wp)
+			call xylim(mixval(self%vx),mixval(self%vy))
+			call contourf(self%vx,self%vy,h,20)
+			call colorbar2(h,20)
+			call ticks()
+			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#dv#u')
+		
+			do i=1,size(names)
+				h = der(self%passes(k)%u,i)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%vx),mixval(self%vy))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' du/d'//names(i))
+				
+				h = der(self%passes(k)%v,i)
+				call figure()
+				call subplot(1,1,1,aspect=1.0_wp)
+				call xylim(mixval(self%vx),mixval(self%vy))
+				call contourf(self%vx,self%vy,h,20)
+				call colorbar2(h,20)
+				call ticks()
+				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' dv/d'//names(i))
+			end do
 			
 		end do
 	end subroutine plotPair
@@ -329,6 +328,37 @@ contains
 			end do
 		end do
 	end subroutine doMask
+
+	function meanPair(p) result(o)
+		type(pair_t),dimension(:),intent(in)::p
+		type(pair_t)::o
+		
+		integer,dimension(:,:),allocatable::c
+		integer::j,k
+		
+		o = p(1)
+		allocate(c(size(o%vx),size(o%vy)))
+		c = 0
+		
+		do k=1,size(o%passes)-1
+			o%passes(k)%u = 0.0_wp
+			o%passes(k)%v = 0.0_wp
+			o%passes(k)%mask = .true.
+		end do
+		
+		do j=1,size(o%passes)-1
+			c = 0
+			do k=1,size(p)
+				where(p(k)%passes(j)%mask)
+					o%passes(j)%u = o%passes(j)%u+p(k)%passes(j)%u
+					o%passes(j)%v = o%passes(j)%v+p(k)%passes(j)%v
+					c = c+1
+				end where
+			end do
+			o%passes(j)%u = o%passes(j)%u/real(c,wp)
+			o%passes(j)%v = o%passes(j)%v/real(c,wp)
+		end do
+	end function meanPair
 
 end program post_prg
  

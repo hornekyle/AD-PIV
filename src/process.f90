@@ -14,7 +14,7 @@ program process_prg
 	
 	! All these need to move to a config file
 	
-	N_pairs = 32
+	N_pairs = 8
 	
 	image_scale = 10
 	
@@ -24,7 +24,7 @@ program process_prg
 	Ux0 = 5.0_wp
 	Uy0 = 5.0_wp
 	
-	velocity_mode = 1
+	velocity_mode = 3
 	
 	noise_level = 0.1_wp
 	
