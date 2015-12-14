@@ -1,6 +1,7 @@
 ! TODO: make code fault tolerant
 module config_mod
 	use kinds_mod
+	use utilities_mod
 	implicit none
 	private
 
@@ -359,7 +360,7 @@ contains
 				M = (L+H)/2
 			end if
 		end do
-		if(idx==0) write(*,*) 'Key not found: ',key
+		if(idx==0) write(*,'(1A)') colorize('Key not found: ',[5,5,0])//key
 	end function findKey
 
 end module config_mod

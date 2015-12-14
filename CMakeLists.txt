@@ -36,14 +36,21 @@ find_path(NETCDF_INCLUDE "netcdf.mod" "/usr/include")
 
 include_directories(${NETCDF_INCLUDE})
 
+add_custom_target(symlink
+	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/results" "${CMAKE_BINARY_DIR}/results"
+	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/config" "${CMAKE_BINARY_DIR}/config"
+	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+
 add_executable(process ${common_src} ${process_src})
 target_link_libraries(process "gomp")
 target_link_libraries(process ${NETCDF_LIBRARY})
+add_dependencies(process symlink)
 
 add_executable(post ${common_src} ${post_src})
 target_link_libraries(post "gomp")
 target_link_libraries(post ${NETCDF_LIBRARY})
 target_link_libraries(post ${PLPLOT_LIBRARIES})
+add_dependencies(post symlink)
 
 set(FORD_EXECUTABLE "ford")
 add_custom_target(ford

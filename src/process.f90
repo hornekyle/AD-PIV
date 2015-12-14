@@ -8,34 +8,16 @@ program process_prg
 	use piv_mod
 	implicit none
 	
+	character(128)::cfn
 	integer::k
 	
 	call setupMPI()
 	
-	! All these need to move to a config file
-	
-	N_pairs = 8
-	
-	image_scale = 10
-	
-	Lx = 1.0_wp
-	Ly = 1.0_wp
-	
-	Ux0 = 5.0_wp
-	Uy0 = 5.0_wp
-	
-	velocity_mode = 3
-	
-	noise_level = 0.1_wp
-	
-	N_passes = 2
-	buffer_window_size = [32,32]
-	spacing_window_size = [16,16]
-	pass_guesses = [0,0]
-	pass_sizes = reshape([ 24,24 , 24,24 ],[2,2])
-	pass_types = [character(3)::'map','lsq']
-	
-	! Do processing
+	call get_command_argument(1,cfn)
+	call readConfig(cfn)
+	if(amRoot()) call execute_command_line('mkdir -p ./results/'//prefix)
+	call sleep(1)
+	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
 	do k=1,N_pairs
 		if(mod(k,mpi_size)/=mpi_rank) cycle
@@ -55,8 +37,7 @@ contains
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair()
-! 		call pair%writePair('pair-'//trim(buf)//'.nc')
-		call pair%writeVectors('vectors-'//trim(buf)//'.nc')
+		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc')
 	end subroutine doPair
 
 	function createFullPair() result(p)

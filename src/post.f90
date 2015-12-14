@@ -7,16 +7,19 @@ program post_prg
 	use piv_mod
 	implicit none
 	
+	character(128)::cfn
 	type(pair_t),dimension(:),allocatable::p
 	type(pair_t)::mean_pair
 	integer::k
 	
-	call setup(device='svgqt',filename='output-post-%n.svg',colormap='BlueYellow')
+	call get_command_argument(1,cfn)
+	call readConfig(cfn)
 	
-	N_pairs = 8
+	call setup(device='svgqt',filename='./results/'//prefix//'/output-post-%n.svg',colormap='BlueYellow')
+	
 	allocate(p(N_pairs))
 	do k=1,N_pairs
-		call p(k)%readPair(vfn='vectors-'//int2char(k)//'.nc')
+		call p(k)%readPair(vfn='./results/'//prefix//'/vectors-'//int2char(k)//'.nc')
 		call doMask(p(k),0.2_wp)
 	end do
 	mean_pair = meanPair(p)
