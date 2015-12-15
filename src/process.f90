@@ -56,8 +56,9 @@ contains
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.0_wp]*diff(1.0_wp,3)
 		
-		Ux = L(1)/real(N(1),wp)*diff(Ux0,1)
-		Uy = L(2)/real(N(2),wp)*diff(Uy0,2)
+		write(*,*) (L/real(N,wp))**(-1)
+		Ux = L(1)/real(N(1),wp)
+		Uy = L(2)/real(N(2),wp)
 		Lx = L(1)
 		Ly = L(2)
 		
