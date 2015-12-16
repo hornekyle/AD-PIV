@@ -10,8 +10,8 @@ module settings_mod
 	real(wp)::Ux0
 	real(wp)::Uy0
 	
-	real(wp)::Ux
-	real(wp)::Uy
+	real(wp)::Sx
+	real(wp)::Sy
 	
 	real(wp)::Lx
 	real(wp)::Ly
@@ -72,14 +72,14 @@ contains
 		
 		select case(velocity_mode)
 		case('uniform')
-			o(1) = Ux*diff(Ux0,1)
-			o(2) = Uy*diff(Uy0,2)
+			o(1) = Sx*diff(Ux0,1)
+			o(2) = Sy*diff(Uy0,2)
 		case('shear')
-			o(1) =  Ux*diff(Ux0*real(x(2)/R0),1)
-			o(2) =  Uy*diff(Uy0,2)
+			o(1) =  Sx*diff(Ux0*real(x(2)/R0),1)
+			o(2) =  Sy*diff(Uy0,2)
 		case('vortex')
-			o(1) =  Ux*diff(real( Ux0*r/R0*s),1)
-			o(2) =  Uy*diff(real(-Uy0*r/R0*c),2)
+			o(1) =  Sx*diff(real( Ux0*r/R0*s),1)
+			o(2) =  Sy*diff(real(-Uy0*r/R0*c),2)
 		end select
 	end function uf
 

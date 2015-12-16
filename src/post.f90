@@ -10,6 +10,7 @@ program post_prg
 	character(128)::cfn
 	type(pair_t),dimension(:),allocatable::p
 	type(pair_t)::mean_pair
+	type(pair_t)::stdev_pair
 	integer::k
 	
 	call get_command_argument(1,cfn)
@@ -22,10 +23,12 @@ program post_prg
 		call p(k)%readPair(vfn='./results/'//prefix//'/vectors-'//int2char(k)//'.nc')
 		call doMask(p(k),0.2_wp)
 	end do
-	mean_pair = meanPair(p)
+	mean_pair  = meanPair(p)
+	stdev_pair = stdevPair(p,mean_pair)
 	
 	call plotPair(mean_pair)
 	call fullStats(p)
+	call plotPair(stdev_pair)
 	call show()
 	
 contains
@@ -362,6 +365,38 @@ contains
 			o%passes(j)%v = o%passes(j)%v/real(c,wp)
 		end do
 	end function meanPair
+
+	function stdevPair(p,m) result(o)
+		type(pair_t),dimension(:),intent(in)::p
+		type(pair_t),intent(in)::m
+		type(pair_t)::o
+		
+		integer,dimension(:,:),allocatable::c
+		integer::j,k
+		
+		o = p(1)
+		allocate(c(size(o%vx),size(o%vy)))
+		c = 0
+		
+		do k=1,size(o%passes)-1
+			o%passes(k)%u = 0.0_wp
+			o%passes(k)%v = 0.0_wp
+			o%passes(k)%mask = .true.
+		end do
+		
+		do j=1,size(o%passes)-1
+			c = 0
+			do k=1,size(p)
+				where(p(k)%passes(j)%mask)
+					o%passes(j)%u = o%passes(j)%u+(p(k)%passes(j)%u-m%passes(j)%u)**2
+					o%passes(j)%v = o%passes(j)%v+(p(k)%passes(j)%v-m%passes(j)%v)**2
+					c = c+1
+				end where
+			end do
+			o%passes(j)%u = o%passes(j)%u/real(c-1,wp)
+			o%passes(j)%v = o%passes(j)%v/real(c-1,wp)
+		end do
+	end function stdevPair
 
 end program post_prg
  

@@ -5,6 +5,7 @@ module piv_mod
 	use autodiff_mod
 	use pair_mod
 	use omp_lib
+	use cluster_mod
 	implicit none
 	
 	type::map_t
@@ -40,7 +41,7 @@ contains
 		!$omp barrier
 		!$omp do schedule(static,1)
 		do j=1,p%Nv(2)
-			if(tid==0 .and. j/=p%Nv(2)) then
+			if(tid==0 .and. j/=p%Nv(2) .and. amRoot()) then
 				call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
 			end if
 			do i=1,p%Nv(1)
@@ -62,7 +63,7 @@ contains
 		end do
 		!$omp end do
 		!$omp barrier
-		if(tid==0) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',1.0_wp)
+		if(tid==0 .and. amRoot()) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',1.0_wp)
 		!$omp barrier
 		!$omp end parallel
 		

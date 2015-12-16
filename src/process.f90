@@ -33,7 +33,7 @@ contains
 		type(pair_t)::pair
 		character(64)::buf
 		
-		write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
+		if(amRoot()) write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair()
@@ -56,9 +56,8 @@ contains
 		dt = 1.0_wp
 		R = L/real(N,wp)*[1.0_wp,0.0_wp]*diff(1.0_wp,3)
 		
-		write(*,*) (L/real(N,wp))**(-1)
-		Ux = L(1)/real(N(1),wp)
-		Uy = L(2)/real(N(2),wp)
+		Sx = L(1)/real(N(1),wp)
+		Sy = L(2)/real(N(2),wp)
 		Lx = L(1)
 		Ly = L(2)
 		
