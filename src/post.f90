@@ -26,6 +26,9 @@ program post_prg
 	mean_pair  = meanPair(p)
 	stdev_pair = stdevPair(p,mean_pair)
 	
+	call mean_pair%writeVectors('./results/'//prefix//'/mean.nc')
+	call stdev_pair%writeVectors('./results/'//prefix//'/stdev.nc')
+	
 	call plotPair(mean_pair)
 	call fullStats(p)
 	call plotPair(stdev_pair)
@@ -168,12 +171,12 @@ contains
 		
 		integer::Nb
 		
-		Nb = nint((real(size(h),wp))**(0.5_wp))
+		Nb = nint(0.5_wp*(real(size(h),wp))**(0.5_wp))
 		
 		call figure()
 		call subplot(1,1,1)
 		call xylim(mixval(h),[0.0_wp,1.05_wp])
-		call hist(h,Nb)
+		call hist(h,Nb,relWidth=0.7_wp)
 		call xticks(primary=.true.,secondary=.false.)
 		call labels(L,'','Pass '//int2char(k)//'; N = '//int2char(size(h)))
 	end subroutine doHist

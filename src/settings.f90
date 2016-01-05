@@ -29,6 +29,9 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
+	logical::write_map = .false.
+	integer::write_map_k = 1
+	
 contains
 
 	subroutine readConfig(fn)

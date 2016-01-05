@@ -6,17 +6,71 @@ module piv_mod
 	use pair_mod
 	use omp_lib
 	use cluster_mod
+	use netCDF_mod
 	implicit none
 	
 	type::map_t
 		type(ad_t),dimension(:,:),allocatable::C
+		real(wp),dimension(:),allocatable::dx,dy
 	contains
 		procedure::dispInt
 		procedure::dispGauss
+		procedure::writeMap
+		procedure::readMap
 	end type
 	
 contains
 
+	subroutine writeMap(self,fn)
+		!! FIXME: Need global derivative table
+		class(map_t),intent(in)::self
+		character(*),intent(in)::fn
+		
+		call write_grid(fn,['I','U','V','R','N'],self%dx,self%dy)
+		
+		call write_step(fn,0.0_wp,1,'I',real(self%C))
+		call write_step(fn,0.0_wp,1,'U',der(self%C,1))
+		call write_step(fn,0.0_wp,1,'V',der(self%C,2))
+		call write_step(fn,0.0_wp,1,'R',der(self%C,3))
+		call write_step(fn,0.0_wp,1,'N',der(self%C,4))
+	end subroutine writeMap
+
+	subroutine readMap(self,fn)
+		!! FIXME: Need global derivative table
+		class(map_t)::self
+		character(*),intent(in),optional::fn
+			!! Filename of pair
+		
+		character(64),dimension(:),allocatable::vars
+		real(wp),dimension(:),allocatable::dx,dy,z,t
+		real(wp),dimension(:,:),allocatable::I,U,V,R,N
+		integer,dimension(2)::M
+		
+		call read_grid(fn,vars,dx,dy,z,t)
+		M = [size(dx),size(dy)]
+		self%dx = dx
+		self%dy = dy
+		
+		allocate(I( M(1) , M(2) ))
+		allocate(U( M(1) , M(2) ))
+		allocate(V( M(1) , M(2) ))
+		allocate(R( M(1) , M(2) ))
+		allocate(N( M(1) , M(2) ))
+		
+		call read_step(fn,'I',I,1)
+		call read_step(fn,'U',U,1)
+		call read_step(fn,'V',V,1)
+		call read_step(fn,'R',R,1)
+		call read_step(fn,'N',N,1)
+		if(allocated(self%C)) deallocate(self%C)
+		allocate(self%C( M(1) , M(2) ))
+		self%C%x = I
+		self%C%d(1) = U
+		self%C%d(2) = V
+		self%C%d(3) = R
+		self%C%d(4) = N
+	end subroutine readMap
+	
 	!==========!
 	!= Passes =!
 	!==========!
@@ -93,6 +147,8 @@ contains
 			select case(method)
 			case('map')
 				M = crossCorrelateDirect(A,B,0.5_wp)
+				if(write_map) call M%writeMap('./results/'//prefix//'/map-'//int2char(write_map_k)//'.nc')
+				write_map_k = write_map_k+1
 				o = M%dispGauss()
 			case('lsq')
 				o = leastSquares(A,B)
@@ -142,6 +198,8 @@ contains
 			select case(method)
 			case('map')
 				M = crossCorrelateDirect(A,B,0.5_wp)
+				if(write_map) call M%writeMap('./results/'//prefix//'/map-'//int2char(write_map_k)//'.nc')
+				write_map_k = write_map_k+1
 				d = M%dispGauss()
 			case('lsq')
 				d = leastSquares(A,B)
@@ -170,6 +228,8 @@ contains
 		
 		N = shape(A)
 		allocate(o%C( -nint(F*N(1)):nint(F*N(1)) , -nint(F*N(2)):nint(F*N(2)) ))
+		o%dx = linspace(-real(nint(F*N(1)),wp),real(nint(F*N(1)),wp),size(o%C,1))
+		o%dy = linspace(-real(nint(F*N(2)),wp),real(nint(F*N(2)),wp),size(o%C,2))
 		
 		do i=lbound(o%C,1),ubound(o%C,1)
 			Ail = max(1-i,1); Aih = min(N(1)-i,N(1))
@@ -260,9 +320,9 @@ contains
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
 					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-!~ 					o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
-					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-!~ 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
+! 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+! 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
 				end do
 			end do
 		end function grad
@@ -286,9 +346,9 @@ contains
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
 					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-!~ 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
-					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-!~ 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
+! 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+! 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
 				end do
 			end do
 		end function grad2
