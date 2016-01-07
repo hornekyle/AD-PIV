@@ -37,7 +37,7 @@ contains
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair()
-		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc')
+		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc',px=.true.)
 	end subroutine doPair
 
 	function createFullPair() result(p)

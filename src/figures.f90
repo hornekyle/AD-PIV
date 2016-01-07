@@ -19,7 +19,7 @@ program figures_prg
 	fn = './results/'//prefix//'/pair.nc'
 	call p%writePair(fn)
 	
-	fn = './results/'//prefix//'/output-post-%n.svg'
+	fn = './results/'//prefix//'/output-figures-%n.svg'
 	call setup(device='svgqt',filename=fn,colormap='BlueYellow',figSize=[500,400],transparent=.true.)
 	
 	call plotPair(p)

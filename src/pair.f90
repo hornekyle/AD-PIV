@@ -215,12 +215,15 @@ contains
 		
 	end subroutine readPair
 
-	subroutine writeVectors(self,fn)
+	subroutine writeVectors(self,fn,px)
 		!! FIXME: Need global derivative table
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
+		logical,intent(in),optional::px
 		
 		character(64),dimension(:),allocatable::vars
+		real(wp),dimension(:),allocatable::x,y
+		logical::pxl
 		integer::Nd,k
 		Nd = 4
 		
@@ -237,7 +240,21 @@ contains
 		vars( 9) = 'dvdR'
 		vars(10) = 'dvdN'
 		
-		call write_grid(fn,vars,self%vx,self%vy)
+		if(present(px)) then
+			pxl = px
+		else
+			pxl = .false.
+		end if
+		
+		if(pxl) then
+			x = self%vx*real(size(self%px),wp)/span(self%px)
+			y = self%vy*real(size(self%py),wp)/span(self%py)
+		else
+			x = self%vx
+			y = self%vy
+		end if
+		
+		call write_grid(fn,vars,x,y)
 		
 		do k=lbound(self%passes,1),ubound(self%passes,1)
 			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))

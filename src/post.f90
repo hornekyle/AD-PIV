@@ -61,7 +61,7 @@ contains
 			call xylim(mixval(x),mixval(y))
 			call quiver(x(::s(1)),y(::s(2)),u(::s(1),::s(2)),v(::s(1),::s(2)),lineColor='c')
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k))
+			call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k))
 			
 			call figure()
 			
@@ -72,7 +72,7 @@ contains
 			call contourf(self%vx,self%vy,h,20)
 			call colorbar2(h,20)
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' u')
+			call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #gd#dx#u')
 			
 			h = real(self%passes(k)%v)
 			call figure()
@@ -81,7 +81,7 @@ contains
 			call contourf(self%vx,self%vy,h,20)
 			call colorbar2(h,20)
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' v')
+			call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #gd#dy#u')
 			
 			h = real(self%passes(0)%u-self%passes(k)%u)
 			call figure()
@@ -90,7 +90,7 @@ contains
 			call contourf(self%vx,self%vy,h,20)
 			call colorbar2(h,20)
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#du#u')
+			call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #ge#dx#u')
 			
 			h = real(self%passes(0)%v-self%passes(k)%v)
 			call figure()
@@ -99,7 +99,7 @@ contains
 			call contourf(self%vx,self%vy,h,20)
 			call colorbar2(h,20)
 			call ticks()
-			call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' #ge#dv#u')
+			call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #ge#dy#u')
 		
 			do i=1,size(names)
 				h = der(self%passes(k)%u,i)
@@ -109,7 +109,7 @@ contains
 				call contourf(self%vx,self%vy,h,20)
 				call colorbar2(h,20)
 				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' du/d'//names(i))
+				call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #(2265)#gd#dx#u/#(2265)'//names(i))
 				
 				h = der(self%passes(k)%v,i)
 				call figure()
@@ -118,7 +118,7 @@ contains
 				call contourf(self%vx,self%vy,h,20)
 				call colorbar2(h,20)
 				call ticks()
-				call labels('Position #fix#fn [m]','Position #fiy#fn [m]','Pass '//int2char(k)//' dv/d'//names(i))
+				call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Pass '//int2char(k)//' #(2265)#gd#dy#u/#(2265)'//names(i))
 			end do
 			
 		end do
@@ -144,22 +144,22 @@ contains
 			h  = flatten(der( self%passes(k)%u , 1 ))
 			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 1 ))
 			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dx#u#fn [px]',k)
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dx#u#fn [px]',k)
+			call doHist( he ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/#(2265)U#dx#u#fn [px]',k)
 			
 			h  = flatten(der( self%passes(k)%u , 2 ))
 			he = flatten(der( self%passes(k)%u-self%passes(0)%u , 2 ))
 			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#dy#u#fn [px]',k)
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dx#u/dU#dy#u#fn [px]',k)
+			call doHist( he ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/#(2265)U#dy#u#fn [px]',k)
 			
 			h  = flatten(der( self%passes(k)%v , 1 ))
 			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 1 ))
 			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dx#u#fn [px]',k)
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dx#u#fn [px]',k)
+			call doHist( he ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)U#dx#u#fn [px]',k)
 			
 			h  = flatten(der( self%passes(k)%v , 2 ))
 			he = flatten(der( self%passes(k)%v-self%passes(0)%v , 2 ))
 			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#dy#u#fn [px]',k)
-			call doHist( he ,'Displacement Error Derivative #fid#ge#dy#u/dU#dy#u#fn [px]',k)
+			call doHist( he ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)U#dy#u#fn [px]',k)
 		end do
 	
 	end subroutine pairStats
@@ -222,8 +222,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 1 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dU#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dU#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/dU#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/dU#fn [px]',k)
 		end do
 		
 		! dvdU
@@ -235,8 +235,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 1 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dU#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dU#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dy#u/#(2265)U#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)U#fn [px]',k)
 		end do
 		
 		! dudV
@@ -248,8 +248,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 2 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dV#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dV#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/#(2265)V#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/#(2265)V#fn [px]',k)
 		end do
 		
 		! dvdV
@@ -261,8 +261,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 2 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dV#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dV#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dy#u/#(2265)V#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)V#fn [px]',k)
 		end do
 		
 		! dudR
@@ -274,8 +274,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 3 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dR#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dR#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/#(2265)R#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/#(2265)R#fn [px]',k)
 		end do
 		
 		! dvdR
@@ -287,8 +287,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 3 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dR#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dR#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dy#u/#(2265)R#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)R#fn [px]',k)
 		end do
 		
 		! dudN
@@ -300,8 +300,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 4 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dx#u/dN#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dx#u/dN#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/#(2265)N#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/#(2265)N#fn [px]',k)
 		end do
 		
 		! dvdN
@@ -313,8 +313,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%v , pairs(j)%passes(k)%mask ) , 4 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fid#gd#dy#u/dN#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fid#ge#dy#u/dN#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dy#u/#(2265)N#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dy#u/#(2265)N#fn [px]',k)
 		end do
 	end subroutine fullStats
 
