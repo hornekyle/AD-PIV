@@ -222,8 +222,8 @@ contains
 				he = [he,der( pack( pairs(j)%passes(0)%u , pairs(j)%passes(k)%mask ) , 1 ) ]
 			end do
 			hd = h-he
-			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/dU#fn [px]',k)
-			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/dU#fn [px]',k)
+			call doHist( h  ,'Displacement Derivative #fi#(2265)#gd#dx#u/#(2265)U#fn [px]',k)
+			call doHist( hd ,'Displacement Error Derivative #fi#(2265)#ge#dx#u/d#(2265)U#fn [px]',k)
 		end do
 		
 		! dvdU
