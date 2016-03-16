@@ -37,106 +37,185 @@ contains
 		type(pair_t),intent(in)::p
 		
 		real(wp),dimension(:),allocatable::x,y
-		integer::Nl,i,j
+		integer::Nl,Ng,i,j
 		
 		Nl = 25
 		x = [( real(i,wp) , i=1,size(p%px) )]
 		y = [( real(j,wp) , j=1,size(p%py) )]
+		Ng = 9
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(y)/span(x))
 		call xylim(mixval(x),mixval(y))
 		call contourf(x,y,real(p%A),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
 		call colorbar2(real(p%A),Nl)
 		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image Intensity #fiI#fn')
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image A Intensity #fiI#dA#u#fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(y)/span(x))
 		call xylim(mixval(x),mixval(y))
 		call contourf(x,y,der(p%A,1),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
 		call colorbar2(der(p%A,1),Nl)
 		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image Intensity Derivative #fi #(2265)I/#(2265)U #fn')
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image A Intensity Derivative #fi #(2265)I#dA#u/#(2265)U #fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(y)/span(x))
 		call xylim(mixval(x),mixval(y))
 		call contourf(x,y,der(p%A,2),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
 		call colorbar2(der(p%A,2),Nl)
 		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image Intensity Derivative #fi #(2265)I/#(2265)V #fn')
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image A Intensity Derivative #fi #(2265)I#dA#u/#(2265)V #fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(y)/span(x))
 		call xylim(mixval(x),mixval(y))
 		call contourf(x,y,der(p%A,3),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
 		call colorbar2(der(p%A,3),Nl)
 		call ticks()
-		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image Intensity Derivative #fi #(2265)I/#(2265)R #fn')
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image A Intensity Derivative #fi #(2265)I#dA#u/#(2265)R #fn')
 		
 ! 		call figure()
 ! 		call subplot(1,1,1,aspect=span(y)/span(x))
 ! 		call xylim(mixval(x),mixval(y))
 ! 		call contourf(x,y,der(p%A,4),Nl)
+! 		call gridlines(mixval(x),mixval(y),Ng,Ng)
 ! 		call colorbar2(der(p%A,4),Nl)
 ! 		call ticks()
-! 		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image Intensity Derivative #fi #(2265)I/#(2265)N #fn')
+! 		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image A Intensity Derivative #fi #(2265)I#dA#u/#(2265)N #fn')
+
+		call figure()
+		call subplot(1,1,1,aspect=span(y)/span(x))
+		call xylim(mixval(x),mixval(y))
+		call contourf(x,y,real(p%B),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
+		call colorbar2(real(p%B),Nl)
+		call ticks()
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image B Intensity #fiI#dB#u#fn')
+		
+		call figure()
+		call subplot(1,1,1,aspect=span(y)/span(x))
+		call xylim(mixval(x),mixval(y))
+		call contourf(x,y,der(p%B,1),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
+		call colorbar2(der(p%B,1),Nl)
+		call ticks()
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image B Intensity Derivative #fi #(2265)I#dB#u/#(2265)U #fn')
+		
+		call figure()
+		call subplot(1,1,1,aspect=span(y)/span(x))
+		call xylim(mixval(x),mixval(y))
+		call contourf(x,y,der(p%B,2),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
+		call colorbar2(der(p%B,2),Nl)
+		call ticks()
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image B Intensity Derivative #fi #(2265)I#dB#u/#(2265)V #fn')
+		
+		call figure()
+		call subplot(1,1,1,aspect=span(y)/span(x))
+		call xylim(mixval(x),mixval(y))
+		call contourf(x,y,der(p%B,3),Nl)
+		call gridlines(mixval(x),mixval(y),Ng,Ng)
+		call colorbar2(der(p%B,3),Nl)
+		call ticks()
+		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image B Intensity Derivative #fi #(2265)I#dB#u/#(2265)R #fn')
+		
+! 		call figure()
+! 		call subplot(1,1,1,aspect=span(y)/span(x))
+! 		call xylim(mixval(x),mixval(y))
+! 		call contourf(x,y,der(p%B,4),Nl)
+! 		call gridlines(mixval(x),mixval(y),Ng,Ng)
+! 		call colorbar2(der(p%B,4),Nl)
+! 		call ticks()
+! 		call labels('Position #fix#fn [px]','Position #fiy#fn [px]','Image B Intensity Derivative #fi #(2265)I#dB#u/#(2265)N #fn')
 	end subroutine plotPair
 
 	subroutine plotMap(m)
 		type(map_t),intent(in)::m
 		
-		integer::Nl
+		integer::Nl,Ng
 		
 		Nl = 25
+		Ng = 17
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(m%dy)/span(m%dx))
 		call xylim(mixval(m%dx),mixval(m%dy))
 		call contourf(m%dx,m%dy,real(m%C),Nl)
+		call gridlines(mixval(m%dx),mixval(m%dy),Ng,Ng)
 		call colorbar2(real(m%C),Nl)
 		call ticks()
-		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]','Map Intensity #fiC#fn')
+		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]','Correlation Map #fiC#fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(m%dy)/span(m%dx))
 		call xylim(mixval(m%dx),mixval(m%dy))
 		call contourf(m%dx,m%dy,der(m%C,1),Nl)
+		call gridlines(mixval(m%dx),mixval(m%dy),Ng,Ng)
 		call colorbar2(der(m%C,1),Nl)
 		call ticks()
 		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]', &
-			& 'Map Intensity Derivative #fi#(2265)C/#(2265)U#fn')
+			& 'Correlation Map Derivative #fi#(2265)C/#(2265)U#fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(m%dy)/span(m%dx))
 		call xylim(mixval(m%dx),mixval(m%dy))
 		call contourf(m%dx,m%dy,der(m%C,2),Nl)
+		call gridlines(mixval(m%dx),mixval(m%dy),Ng,Ng)
 		call colorbar2(der(m%C,2),Nl)
 		call ticks()
 		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]', &
-			& 'Map Intensity Derivative #fi#(2265)C/#(2265)V#fn')
+			& 'Correlation Map Derivative #fi#(2265)C/#(2265)V#fn')
 		
 		call figure()
 		call subplot(1,1,1,aspect=span(m%dy)/span(m%dx))
 		call xylim(mixval(m%dx),mixval(m%dy))
 		call contourf(m%dx,m%dy,der(m%C,3),Nl)
+		call gridlines(mixval(m%dx),mixval(m%dy),Ng,Ng)
 		call colorbar2(der(m%C,3),Nl)
 		call ticks()
 		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]', &
-			& 'Map Intensity Derivative #fi#(2265)C/#(2265)R#fn')
+			& 'Correlation Map Derivative #fi#(2265)C/#(2265)R#fn')
 		
 ! 		call figure()
 ! 		call subplot(1,1,1,aspect=span(m%dy)/span(m%dx))
 ! 		call xylim(mixval(m%dx),mixval(m%dy))
 ! 		call contourf(m%dx,m%dy,der(m%C,4),Nl)
+! 		call gridlines(mixval(m%dx),mixval(m%dy),Ng,Ng)
 ! 		call colorbar2(der(m%C,4),Nl)
 ! 		call ticks()
 ! 		call labels('Displacement #fi#gd#dx#u#fn [px]','Displacement #fi#gd#dy#u#fn [px]', &
-! 			& 'Map Intensity Derivative #fi#(2265)C/#(2265)N#fn')
+! 			& 'Correlation Map Derivative #fi#(2265)C/#(2265)N#fn')
 	end subroutine plotMap
 
+	subroutine gridLines(sx,sy,Nx,Ny)
+		real(wp),dimension(2),intent(in)::sx
+		real(wp),dimension(2),intent(in)::sy
+		integer,intent(in)::Nx
+		integer,intent(in)::Ny
+		
+		real(wp),dimension(:),allocatable::x,y
+		integer::k
+		
+		x = linspace(sx(1),sx(2),Nx)
+		y = linspace(sy(1),sy(2),Ny)
+		
+		do k=2,Nx-1
+			call plot([x(k),x(k)],sy,lineColor='k',lineStyle='--')
+		end do
+		do k=2,Ny-1
+			call plot(sx,[y(k),y(k)],lineCOlor='k',lineStyle='--')
+		end do
+	end subroutine gridLines
+
 	subroutine putSettings()
+		call setRandomSeed(1)
+		
 		prefix = 'figures'
 		
 		Ux0 = 5.0_wp
@@ -190,5 +269,5 @@ contains
 			call doPass(p,k,pass_sizes(:,k),pass_types(k),pass_guesses(k))
 		end do
 	end function createFullPair
-
+	
 end program figures_prg

@@ -42,6 +42,7 @@ module utilities_mod
 	public::meshGridX
 	public::meshGridY
 	
+	public::setRandomSeed
 	public::randomNormal
 	public::randomUniform
 	public::mean
@@ -149,6 +150,14 @@ contains
 		o = text(k-len(str)+1:k)==str
 	end function endsWith
 
+	subroutine setRandomSeed(S)
+		integer::S
+		integer::k,N
+
+		call random_seed(size=N)
+		call random_seed(put=[(k-1,k=1,N)]*S)
+	end subroutine setRandomSeed
+	
 	function randomNormal() result(o)
 		!! Return a sample from an approximate normal distribution
 		!! with a mean of \(\mu=0\) and a standard deviation of
@@ -254,6 +263,28 @@ contains
 		end if
 	end function real2char
 
+	elemental function real2time(a) result(o)
+		real(wp),intent(in)::a
+		character(:),allocatable::o
+		
+		integer::r,h,m,s
+		
+		r = nint(a)
+		
+		h = r/3600
+		r = mod(r,3600)
+		
+		m = r/60
+		r = mod(r,60)
+		
+		s = r
+		
+		o = ''
+		if(h>0) o = o//int2char(h)//'h '
+		if(m>0) o = o//int2char(m)//'m '
+		o = o//int2char(s)//'s'
+	end function real2time
+
 	elemental function int2char(a,f,l) result(o)
 		integer,intent(in)::a
 		character(*),optional,intent(in)::f
@@ -279,27 +310,34 @@ contains
 		end if
 	end function int2char
 
-	subroutine showProgress(m,p)
+	subroutine showProgress(m,p,ml)
 		character(*),intent(in)::m
 		real(wp),intent(in)::p
+		integer,intent(in),optional::ml
 		
 		real(wp)::r
 		real(wp),save::po
+		real(wp),save::tStart
+		real(wp)::tNow
+		integer::mld
 		integer::N,k
 		
 		N = 40
+		mld = 40
+		if(present(ml)) mld = ml
 		
 		if(p<=0.0_wp) then
 !~ 			write(stdout,'(1A)') ''
 			po = p
-		end if
-		if(p-po<0.05 .and. p<1.0_wp) then
+			tStart = wallTime()
+		else if(p-po<=0.01 .and. p<1.0_wp) then
 			return
 		else
 			po = p
 		end if
+		tNow = wallTime()
 		
-		write(stdout,'(1A)',advance='no') achar(13)//colorize(m//' [',[5,5,0])
+		write(stdout,'(1A)',advance='no') achar(13)//colorize(m//repeat(' ',mld-len(m))//' [',[5,5,0])
 		do k=1,N
 			r = real(k-1,wp)/real(N-1,wp)
 			if(r<=p) then
@@ -308,9 +346,10 @@ contains
 				write(stdout,'(1A)',advance='no') colorize(' ',[0,0,0])
 			end if
 		end do
-		write(stdout,'(1A,1A,1X,1A)',advance='no') colorize('] ',[5,5,0]), &
+		write(stdout,'(1A,1A,1X,1A,1A,1A,1A,1A,1A)',advance='no') colorize('] ',[5,5,0]), &
 		& colorize(real2char(100.0_wp*p,'1F5.1'),cmap(p,[0.0_wp,1.0_wp])), &
-		& colorize('%',[5,5,0])
+		& colorize('%',[5,5,0]), colorize(' (',[5,5,0]), real2time(tNow-tStart), &
+		& colorize(' / ',[5,5,0]), real2time( (tNow-tStart)/(p+0.0001_wp) ), colorize(')',[5,5,0])
 		if(p>=1.0_wp) write(stdout,'(1A)') ''
 		flush(stdout)
 	end subroutine showProgress
@@ -345,4 +384,17 @@ contains
 		o = sqrt(sum((d-mean(d))**2)/real(size(d)-1,wp))
 	end function standardDeviation
 
+	function wallTime() result(o)
+		real(wp)::o
+		
+		integer,parameter::ip = selected_int_kind(15)
+		integer(ip)::ticks,tickRate,r
+		
+		call system_clock(ticks,tickRate)
+		
+		r = mod(ticks,tickRate)
+		
+		o = real(ticks/tickRate,wp)+real(r,wp)/real(tickRate,wp)
+	end function wallTime
+	
 end module utilities_mod
