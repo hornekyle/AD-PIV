@@ -1,18 +1,14 @@
 project: AD-PIV
 project_dir: ./src
-display: public
 source: true
-page_dir: ./pages
+exclude: plplotlib.f90
+display: public
+graph: true
 output_dir: ./doc
 author: Dr. Kyle Horne
-author_description: Assistant Professor
-    Mechanical and Energy Engineering
-    University of North Texas
+author_description: Assistant Professor; Mechanical and Energy Engineering; University of North Texas
 email: kyle.horne@unt.edu
-github: https://github.com/hornekyle/
 summary: AD-PIV
-graph: true
-source: true
 display: public
 
 Automatic differentiation Particle-image Velocimetry

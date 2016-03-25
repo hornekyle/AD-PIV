@@ -267,9 +267,12 @@ contains
 		real(wp),intent(in)::a
 		character(:),allocatable::o
 		
-		integer::r,h,m,s
+		integer::d,r,h,m,s
 		
 		r = nint(a)
+		
+		d = r/(3600*24)
+		r = mod(r,3600*24)
 		
 		h = r/3600
 		r = mod(r,3600)
@@ -280,8 +283,9 @@ contains
 		s = r
 		
 		o = ''
-		if(h>0) o = o//int2char(h)//'h '
-		if(m>0) o = o//int2char(m)//'m '
+		if(d>0) o = o//int2char(d)//'d '
+		if(h>0.or.d>0) o = o//int2char(h)//'h '
+		if(m>0.or.h>0.or.d>0) o = o//int2char(m)//'m '
 		o = o//int2char(s)//'s'
 	end function real2time
 
