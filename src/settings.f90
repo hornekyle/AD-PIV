@@ -29,8 +29,13 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
-	logical::write_map = .false.
+	logical::write_pair = .true.
+	
+	logical::write_map = .true.
 	integer::write_map_k = 1
+	
+	logical::per_pixel = .true.
+	integer::per_pixel_k = 1
 	
 contains
 
@@ -60,6 +65,10 @@ contains
 		pass_guesses        = nint(cfg%getVector('pass_guesses'))
 		pass_sizes          = nint(cfg%getMatrix('pass_sizes'))
 		pass_types = [character(3):: ( cfg%getString('pass_types['//int2char(k)//']') , k=1,N_passes )]
+		
+		write_map = cfg%getLogical('write_map')
+		write_map_k = cfg%getInteger('write_map_k')
+		per_pixel = cfg%getLogical('per_pixel')
 	end subroutine readConfig
 
 	function uf(x) result(o)

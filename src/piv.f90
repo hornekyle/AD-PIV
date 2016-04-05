@@ -113,6 +113,8 @@ contains
 				p%passes(k)%u(i,j) = d(1)
 				p%passes(k)%v(i,j) = d(2)
 				
+				call writeVector('./results/'//prefix//'/vector-'//int2char(per_pixel_k)//'.nc',d)
+				per_pixel_k = per_pixel_k+1
 			end do
 		end do
 		!$omp end do
@@ -410,5 +412,33 @@ contains
 		end function tryMean
 	
 	end subroutine filter
+
+	subroutine writeVector(fn,v)
+		character(*),intent(in)::fn
+		type(ad_t),dimension(2)::v
+		
+		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:,:),allocatable::var
+		integer,dimension(4)::adN
+		integer,dimension(2)::N
+		
+		adN = get_adN()
+		N = adN(2:3)
+		
+		x = linspace(1.0_wp,real(N(1),wp),N(1))
+		y = linspace(1.0_wp,real(N(2),wp),N(2))
+		
+		call write_grid(fn,['U','V'],x,y)
+		
+		var = v(1)%I(1:N(1),1:N(2),1)
+		call write_step(fn,0.0_wp,1,'U',var)		
+		var = v(2)%I(1:N(1),1:N(2),1)
+		call write_step(fn,0.0_wp,1,'V',var)
+		
+		var = v(1)%I(1:N(1),1:N(2),2)
+		call write_step(fn,1.0_wp,2,'U',var)
+		var = v(2)%I(1:N(1),1:N(2),2)
+		call write_step(fn,1.0_wp,2,'V',var)
+	end subroutine writeVector
 
 end module piv_mod

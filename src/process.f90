@@ -1,5 +1,6 @@
 program process_prg
 	use kinds_mod
+	use autodiff_mod
 	use settings_mod
 	use utilities_mod
 	use cluster_mod
@@ -15,6 +16,13 @@ program process_prg
 	
 	call get_command_argument(1,cfn)
 	call readConfig(cfn)
+	
+	if(per_pixel) then
+		call set_adN(4,2**image_scale,2**image_scale,2)
+	else
+		call set_adN(4,0,0,0)
+	end if
+	
 	if(amRoot()) call execute_command_line('mkdir -p ./results/'//prefix)
 	call sleep(1)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
@@ -37,6 +45,7 @@ contains
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair()
+		if(write_pair) call pair%writePair('./results/'//prefix//'/pair-'//trim(buf)//'.nc')
 		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc',px=.true.)
 	end subroutine doPair
 
