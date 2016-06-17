@@ -154,6 +154,7 @@ contains
 			N = shape(IM)
 			
 			forall(i=1:N(1),j=1:N(2))
+				IM(i,j)%I(:,:,f) = 0.0_wp
 				IM(i,j)%I(i,j,f) = 1.0_wp
 			end forall
 			

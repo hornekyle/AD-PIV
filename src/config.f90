@@ -21,7 +21,7 @@ module config_mod
 
 	type::config_t
 		character(str_long)::fn
-		type(pair_t),dimension(:),allocatable,private::pairs
+		type(pair_t),dimension(:),allocatable::pairs
 		logical::loaded = .false.
 	contains
 		procedure::readFile
@@ -335,7 +335,7 @@ contains
 		logical::found
 		
 		L = 1
-		M = size(self%pairs)/2
+		M = size(self%pairs)/2+1
 		H = size(self%pairs)
 		found = .false.
 		

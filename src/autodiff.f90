@@ -4,19 +4,19 @@ module autodiff_mod
 
 	private
 
-	integer,parameter::S  = 4
+	integer,parameter::Sl = 4
 	integer,parameter::Sf = 2
 	integer,parameter::Si = 128
 	integer,parameter::Sj = 128
 	
-	integer::N  = 4
+	integer::Nl = 4
 	integer::Nf = 2
 	integer::Ni = 128
 	integer::Nj = 128
 
 	type::ad_t
 		real(wp)::x = 0.0_wp
-		real(wp),dimension(S)::d = 0.0_wp
+		real(wp),dimension(Sl)::d = 0.0_wp
 		real(wp),dimension(Si,Sj,Sf)::I = 0.0_wp
 	end type
 	
@@ -130,13 +130,13 @@ module autodiff_mod
 
 contains
 
-	subroutine set_adN(iN,iNi,iNj,iNf)
-		integer,intent(in),optional::iN
+	subroutine set_adN(iNl,iNi,iNj,iNf)
+		integer,intent(in),optional::iNl
 		integer,intent(in),optional::iNi
 		integer,intent(in),optional::iNj
 		integer,intent(in),optional::iNf
 		
-		if(present(iN )) call guardedSet(iN ,N ,S )
+		if(present(iNl)) call guardedSet(iNl,Nl,Sl)
 		if(present(iNi)) call guardedSet(iNi,Ni,Si)
 		if(present(iNj)) call guardedSet(iNj,Nj,Sj)
 		if(present(iNf)) call guardedSet(iNf,Nf,Sf)
@@ -160,7 +160,7 @@ contains
 
 	function get_adN() result(o)
 		integer,dimension(4)::o
-		o = [N,Ni,Nj,Nf]
+		o = [Nl,Ni,Nj,Nf]
 	end function get_adN
 
 	!================!
@@ -238,7 +238,7 @@ contains
 		integer::i,j,f,k
 		
 		o%x = sum(a%x)
-		forall(k=1:N) o%d(k) = sum(a%d(k))
+		forall(k=1:Nl) o%d(k) = sum(a%d(k))
 		forall(i=1:Ni,j=1:Nj,f=1:Nf) o%I(i,j,f) = sum(a%I(i,j,f))
 	end function sum_a1
 
@@ -248,7 +248,7 @@ contains
 		integer::i,j,f,k
 		
 		o%x = sum(a%x)
-		forall(k=1:N) o%d(k) = sum(a%d(k))
+		forall(k=1:Nl) o%d(k) = sum(a%d(k))
 		forall(i=1:Ni,j=1:Nj,f=1:Nf) o%I(i,j,f) = sum(a%I(i,j,f))
 	end function sum_a2
 
@@ -258,7 +258,7 @@ contains
 		integer::i,j,f,k
 		
 		o%x = sum(a%x)
-		forall(k=1:N) o%d(k) = sum(a%d(k))
+		forall(k=1:Nl) o%d(k) = sum(a%d(k))
 		forall(i=1:Ni,j=1:Nj,f=1:Nf) o%I(i,j,f) = sum(a%I(i,j,f))
 	end function sum_a3
 
@@ -268,7 +268,7 @@ contains
 		integer::i,j,f,k
 		
 		o%x = sum(a%x)
-		forall(k=1:N) o%d(k) = sum(a%d(k))
+		forall(k=1:Nl) o%d(k) = sum(a%d(k))
 		forall(i=1:Ni,j=1:Nj,f=1:Nf) o%I(i,j,f) = sum(a%I(i,j,f))
 	end function sum_a4
 
@@ -313,7 +313,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = sin(u%x)
-		o%d(1:N) = cos(u%x)*u%d(1:N)
+		o%d(1:Nl) = cos(u%x)*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = cos(u%x)*u%I(1:Ni,1:Nj,1:Nf)
 	end function sin_a
 
@@ -322,6 +322,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = cos(u%x)
+		o%d(1:Nl) = -sin(u%x)*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = -sin(u%x)*u%I(1:Ni,1:Nj,1:Nf)
 	end function cos_a
 
@@ -330,7 +331,7 @@ contains
 		type(ad_t)::o
 		
 		o = log(u%x)
-		o%d(1:N) = u%d(1:N)/u%x
+		o%d(1:Nl) = u%d(1:Nl)/u%x
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)/u%x
 	end function log_a
 
@@ -339,7 +340,7 @@ contains
 		type(ad_t)::o
 		
 		o = exp(u%x)
-		o%d(1:N) = exp(u%x)*u%d(1:N)
+		o%d(1:Nl) = exp(u%x)*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = exp(u%x)*u%I(1:Ni,1:Nj,1:Nf)
 	end function exp_a
 
@@ -359,7 +360,7 @@ contains
 		real(wp),intent(in)::v
 		
 		u%x = v
-		u%d(1:N) = 0.0_wp
+		u%d(1:Nl) = 0.0_wp
 		u%I(1:Ni,1:Nj,1:Nf) = 0.0_wp
 	end subroutine assign_ar
 
@@ -373,7 +374,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u+v%x
-		o%d(1:N) = v%d(1:N)
+		o%d(1:Nl) = v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = v%I(1:Ni,1:Nj,1:Nf)
 	end function add_ra
 
@@ -383,7 +384,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x+v
-		o%d(1:N) = u%d(1:N)
+		o%d(1:Nl) = u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)
 	end function add_ar
 
@@ -393,7 +394,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x+v%x
-		o%d(1:N) = u%d(1:N)+v%d(1:N)
+		o%d(1:Nl) = u%d(1:Nl)+v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)+v%I(1:Ni,1:Nj,1:Nf)
 	end function add_aa
 
@@ -406,7 +407,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = -u%x
-		o%d(1:N) = -u%d(1:N)
+		o%d(1:Nl) = -u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = -u%I(1:Ni,1:Nj,1:Nf)
 	end function neg_a
 
@@ -420,7 +421,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u-v%x
-		o%d(1:N) = -v%d(1:N)
+		o%d(1:Nl) = -v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = -v%I(1:Ni,1:Nj,1:Nf)
 	end function sub_ra
 
@@ -430,7 +431,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x-v
-		o%d(1:N) = u%d(1:N)
+		o%d(1:Nl) = u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)
 	end function sub_ar
 
@@ -440,7 +441,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x-v%x
-		o%d(1:N) = u%d(1:N)-v%d(1:N)
+		o%d(1:Nl) = u%d(1:Nl)-v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)-v%I(1:Ni,1:Nj,1:Nf)
 	end function sub_aa
 
@@ -454,7 +455,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u*v%x
-		o%d(1:N) = u*v%d(1:N)
+		o%d(1:Nl) = u*v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u*v%I(1:Ni,1:Nj,1:Nf)
 	end function mul_ra
 
@@ -464,7 +465,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x*v
-		o%d(1:N) = u%d(1:N)*v
+		o%d(1:Nl) = u%d(1:Nl)*v
 		o%I(1:Ni,1:Nj,1:Nf) = u%I(1:Ni,1:Nj,1:Nf)
 	end function mul_ar
 
@@ -474,7 +475,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x*v%x
-		o%d(1:N) = u%x*v%d(1:N)+v%x*u%d(1:N)
+		o%d(1:Nl) = u%x*v%d(1:Nl)+v%x*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = u%x*v%I(1:Ni,1:Nj,1:Nf)+v%x*u%I(1:Ni,1:Nj,1:Nf)
 	end function mul_aa
 
@@ -488,7 +489,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u/v%x
-		o%d(1:N) = (-u*v%d(1:N))/(v%x**2)
+		o%d(1:Nl) = (-u*v%d(1:Nl))/(v%x**2)
 		o%I(1:Ni,1:Nj,1:Nf) = (-u*v%I(1:Ni,1:Nj,1:Nf))/(v%x**2)
 	end function div_ra
 
@@ -498,7 +499,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x/v
-		o%d(1:N) = (v*u%d(1:N))/(v**2)
+		o%d(1:Nl) = (v*u%d(1:Nl))/(v**2)
 		o%I(1:Ni,1:Nj,1:Nf) = (v*u%I(1:Ni,1:Nj,1:Nf))/(v**2)
 	end function div_ar
 
@@ -508,7 +509,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x/v%x
-		o%d(1:N) = (v%x*u%d(1:N)-u%x*v%d(1:N))/(v%x**2)
+		o%d(1:Nl) = (v%x*u%d(1:Nl)-u%x*v%d(1:Nl))/(v%x**2)
 		o%I(1:Ni,1:Nj,1:Nf) = (v%x*u%I(1:Ni,1:Nj,1:Nf)-u%x*v%I(1:Ni,1:Nj,1:Nf))/(v%x**2)
 	end function div_aa
 
@@ -522,7 +523,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u**v%x
-		o%d(1:N) = (u**v%x*log(u))*v%d(1:N)
+		o%d(1:Nl) = (u**v%x*log(u))*v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = (u**v%x*log(u))*v%I(1:Ni,1:Nj,1:Nf)
 	end function pow_ra
 
@@ -532,7 +533,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x**v
-		o%d(1:N) = (u%x**(v-1.0_wp)*v)*u%d(1:N)
+		o%d(1:Nl) = (u%x**(v-1.0_wp)*v)*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = (u%x**(v-1.0_wp)*v)*u%I(1:Ni,1:Nj,1:Nf)
 	end function pow_ar
 
@@ -542,7 +543,7 @@ contains
 		type(ad_t)::o
 		
 		o%x = u%x**v
-		o%d(1:N) = (u%x**real(v-1,wp)*v)*u%d(1:N)
+		o%d(1:Nl) = (u%x**real(v-1,wp)*v)*u%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = (u%x**real(v-1,wp)*v)*u%I(1:Ni,1:Nj,1:Nf)
 	end function pow_ai
 
@@ -552,7 +553,7 @@ contains
 		type(ad_t)::o
 
 		o%x = u%x**v%x
-		o%d(1:N) = (u%x**(v%x-1.0_wp)*v%x)*u%d(1:N)+(u%x**v%x*log(u%x))*v%d(1:N)
+		o%d(1:Nl) = (u%x**(v%x-1.0_wp)*v%x)*u%d(1:Nl)+(u%x**v%x*log(u%x))*v%d(1:Nl)
 		o%I(1:Ni,1:Nj,1:Nf) = (u%x**(v%x-1.0_wp)*v%x)*u%I(1:Ni,1:Nj,1:Nf)+(u%x**v%x*log(u%x))*v%I(1:Ni,1:Nj,1:Nf)
 	end function pow_aa
 
