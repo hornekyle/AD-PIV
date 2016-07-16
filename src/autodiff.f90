@@ -6,13 +6,13 @@ module autodiff_mod
 
 	integer,parameter::Sl = 4
 	integer,parameter::Sf = 2
-	integer,parameter::Si = 128
-	integer,parameter::Sj = 128
+	integer,parameter::Si = 48
+	integer,parameter::Sj = 48
 	
 	integer::Nl = 4
 	integer::Nf = 2
-	integer::Ni = 128
-	integer::Nj = 128
+	integer::Ni = 2
+	integer::Nj = 2
 
 	type::ad_t
 		real(wp)::x = 0.0_wp

@@ -18,7 +18,7 @@ program process_prg
 	call readConfig(cfn)
 	
 	if(per_pixel) then
-		call set_adN(4,2**image_scale,2**image_scale,2)
+		call set_adN(4, maxval(pass_sizes(1,:)) , maxval(pass_sizes(2,:)) ,2)
 	else
 		call set_adN(4,0,0,0)
 	end if
@@ -61,9 +61,9 @@ contains
 		
 		N = 2**image_scale
 		L = 0.0512_wp
-		Np = 2*4**(image_scale-2)
+		Np = nint( real(2*4**(image_scale-2),wp)*particles_scale )
 		dt = 1.0_wp
-		R = L/real(N,wp)*[1.0_wp,0.0_wp]*diff(1.0_wp,3)
+		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff(1.0_wp,3)
 		
 		Sx = L(1)/real(N(1),wp)
 		Sy = L(2)/real(N(2),wp)

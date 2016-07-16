@@ -20,6 +20,8 @@ module settings_mod
 	real(wp)::noise_level
 	
 	integer::image_scale
+	real(wp)::particles_scale
+	real(wp)::particle_radius
 	integer::N_pairs
 	
 	integer::N_Passes
@@ -56,8 +58,10 @@ contains
 		velocity_mode = trim(cfg%getString('velocity_mode'))
 		noise_level   = cfg%getReal('noise_level')
 		
-		image_scale = cfg%getInteger('image_scale')
-		N_pairs     = cfg%getInteger('N_pairs')
+		image_scale     = cfg%getInteger('image_scale')
+		particles_scale = cfg%getReal('particles_scale')
+		particle_radius = cfg%getReal('particle_radius')
+		N_pairs         = cfg%getInteger('N_pairs')
 		
 		N_passes = cfg%getInteger('N_passes')
 		buffer_window_size  = nint(cfg%getVector('buffer_window_size'))

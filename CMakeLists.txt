@@ -3,8 +3,14 @@ enable_language(Fortran)
 set(PROJECT "AD-PIV")
 project(${PROJECT})
 
+if(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
+	set(WTABS "-Wno-tabs")
+else(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
+	set(WTABS "-Wtabs")
+endif(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
+
 set(CMAKE_Fortran_FLAGS "")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wtabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall ${WTABS} -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
 set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native")
 
 set(common_src

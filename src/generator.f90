@@ -70,11 +70,6 @@ contains
 		end do
 		!$omp end parallel
 		
-		if(per_pixel) then
-			call pixelize(o%A,1)
-			call pixelize(o%B,2)
-		end if
-		
 	contains
 	
 		function integrate(x0,dt) result(o)
@@ -143,23 +138,6 @@ contains
 			
 			o = exp(-((x-x0)/xs)**2)*exp(-((y-y0)/ys)**2)
 		end function gauss
-		
-		subroutine pixelize(IM,f)
-			type(ad_t),dimension(:,:),intent(inout)::IM
-			integer,intent(in)::f
-			
-			integer,dimension(2)::N
-			integer::i,j
-			
-			N = shape(IM)
-			
-			forall(i=1:N(1),j=1:N(2))
-				IM(i,j)%I(:,:,f) = 0.0_wp
-				IM(i,j)%I(i,j,f) = 1.0_wp
-			end forall
-			
-			write(*,*) N,f
-		end subroutine pixelize
 		
 	end function generatePair
 

@@ -143,8 +143,12 @@ contains
 			jl = minloc( abs(p%py-(p%vy(j)-real(N(2),wp)*ps(2)/2.0_wp)) , 1 )
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
+			
 			A = p%A(il:ih,jl:jh)
 			B = p%B(il:ih,jl:jh)
+			
+			call pixelize(A,1)
+			call pixelize(B,2)
 			
 			select case(method)
 			case('map')
@@ -197,6 +201,9 @@ contains
 			A = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
 			B = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
 			
+			call pixelize(A,1)
+			call pixelize(B,2)
+			
 			select case(method)
 			case('map')
 				M = crossCorrelateDirect(A,B,0.5_wp)
@@ -209,6 +216,19 @@ contains
 			
 			o = real(sp+sm,wp)+d
 		end function secondPass
+	
+		subroutine pixelize(A,f)
+			type(ad_t),dimension(:,:),intent(inout)::A
+			integer::f
+			
+			integer::i,j
+			
+			do j=1,size(A,2)
+				do i=1,size(A,1)
+					A(i,j)%I(i,j,f) = 1.0_wp
+				end do
+			end do
+		end subroutine pixelize
 	
 	end subroutine doPass
 	
@@ -249,7 +269,23 @@ contains
 		class(map_t),intent(in)::self
 		type(ad_t),dimension(2)::o
 		
-		o = real(maxloc(real(self%C))+lbound(self%C)-1,wp)
+		integer,dimension(2)::Ni,Nj
+		real(wp),dimension(:,:),allocatable::W
+		integer::i,j
+		
+! 		W = real(self%C)
+! 		o = real(maxloc(W)+lbound(self%C)-1,wp)
+		
+		Ni = [ lbound(self%C,1),ubound(self%C,1) ]
+		Nj = [ lbound(self%C,2),ubound(self%C,2) ]
+		allocate( W( Ni(1):Ni(2) , Nj(1):Nj(2) ) )
+		
+		forall(i=Ni(1):Ni(2),j=Nj(1):Nj(2))
+			W(i,j) = real(self%C(i,j))*(2.0_wp-real(abs(i),wp)/real(Ni(2),wp))*(1.0_wp-real(abs(j),wp)/real(Nj(2),wp))
+		end forall
+		
+		o = real(maxloc(W)+[Ni(1),Nj(1)]-1,wp)
+		
 	end function dispInt
 
 	function dispGauss(self) result(o)
