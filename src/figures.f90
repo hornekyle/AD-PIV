@@ -245,15 +245,15 @@ contains
 		
 		integer,dimension(2)::N
 		real(wp),dimension(2)::L
-		type(ad_t),dimension(2)::R
+		type(ad1_t),dimension(2)::R
 		real(wp)::dt
 		integer::Np,k
 		
 		N = 2**image_scale
 		L = 0.0512_wp
-		Np = nint(0.05_wp*4.0_wp**(image_scale-2))
+		Np = nint( real(2*4**(image_scale-2),wp)*particles_scale )
 		dt = 1.0_wp
-		R = L/real(N,wp)*[5.0_wp,0.0_wp]*diff(1.0_wp,3)
+		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,3)
 		
 		Sx = L(1)/real(N(1),wp)
 		Sy = L(2)/real(N(2),wp)

@@ -76,10 +76,10 @@ contains
 	end subroutine readConfig
 
 	function uf(x) result(o)
-		type(ad_t),dimension(2),intent(in)::x
-		type(ad_t),dimension(2)::o
+		type(ad1_t),dimension(2),intent(in)::x
+		type(ad1_t),dimension(2)::o
 		
-		type(ad_t)::r,s,c,R0
+		type(ad1_t)::r,s,c,R0
 		
 		r = sqrt(sum( [x(1)-Lx,x(2)]**2 ))
 		R0 = (Lx+Ly)/2.0_wp
@@ -88,14 +88,14 @@ contains
 		
 		select case(velocity_mode)
 		case('uniform')
-			o(1) = Sx*diff(Ux0,1)
-			o(2) = Sy*diff(Uy0,2)
+			o(1) = Sx*diff1(Ux0,1)
+			o(2) = Sy*diff1(Uy0,2)
 		case('shear')
-			o(1) =  Sx*diff(Ux0*real(x(2)/R0),1)
-			o(2) =  Sy*diff(Uy0,2)
+			o(1) =  Sx*diff1(Ux0*real(x(2)/R0),1)
+			o(2) =  Sy*diff1(Uy0,2)
 		case('vortex')
-			o(1) =  Sx*diff(real( Ux0*r/R0*s),1)
-			o(2) =  Sy*diff(real(-Uy0*r/R0*c),2)
+			o(1) =  Sx*diff1(real( Ux0*r/R0*s),1)
+			o(2) =  Sy*diff1(real(-Uy0*r/R0*c),2)
 		end select
 	end function uf
 

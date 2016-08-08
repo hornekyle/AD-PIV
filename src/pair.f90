@@ -7,7 +7,7 @@ module pair_mod
 	private
 	
 	type::pass_t
-		type(ad_t),dimension(:,:),allocatable::u,v
+		type(ad3_t),dimension(:,:),allocatable::u,v
 		logical,dimension(:,:),allocatable::mask
 	end type
 	
@@ -18,7 +18,7 @@ module pair_mod
 		real(wp),dimension(:),allocatable::px,py
 		real(wp),dimension(:),allocatable::vx,vy
 		
-		type(ad_t),dimension(:,:),allocatable::A,B
+		type(ad1_t),dimension(:,:),allocatable::A,B
 		real(wp)::dt
 		
 		type(pass_t),dimension(:),allocatable::passes

@@ -31,14 +31,14 @@ contains
 			!! Total number of particles generated
 		real(wp),intent(in)::dt
 			!! Time between images
-		type(ad_t),dimension(2),intent(in)::R
+		type(ad1_t),dimension(2),intent(in)::R
 			!! Particle size parameter
 		type(pair_t)::o
 			!! Output
 		
 		type::particle_t
 			real(wp),dimension(2)::x
-			type(ad_t)::r
+			type(ad1_t)::r
 		end type
 		
 		type(particle_t),dimension(:),allocatable::particles
@@ -49,8 +49,8 @@ contains
 		
 		call random_number(o%A%x)
 		call random_number(o%B%x)
-		o%A = o%A%x*diff(noise_level,4)
-		o%B = o%B%x*diff(noise_level,4)
+		o%A = o%A%x*diff1(noise_level,4)
+		o%B = o%B%x*diff1(noise_level,4)
 		
 		allocate(particles(Np))
 		
@@ -75,7 +75,7 @@ contains
 		function integrate(x0,dt) result(o)
 			real(wp),dimension(2),intent(in)::x0
 			real(wp),intent(in)::dt
-			type(ad_t),dimension(2)::o
+			type(ad1_t),dimension(2)::o
 			
 			integer,parameter::Ns = 10
 			
@@ -98,16 +98,16 @@ contains
 			!! Loop over ranges:
 			!! - Compute gaussian contribution to this pixel
 			!! - Add to current value in image
-			type(ad_t),dimension(2),intent(in)::x0
+			type(ad1_t),dimension(2),intent(in)::x0
 				!! Central position for particle
 			type(particle_t),intent(in)::p
 				!! Particle data
-			type(ad_t),dimension(:,:),intent(inout)::F
+			type(ad1_t),dimension(:,:),intent(inout)::F
 				!! Field to which the particle is added
 			integer,dimension(2),intent(in)::omp
 				!! Thread information [thread_id, thread_count]
 			
-			type(ad_t)::x,y
+			type(ad1_t)::x,y
 			integer::il,ih,i
 			integer::jl,jh,j
 			
@@ -132,9 +132,9 @@ contains
 		end subroutine project
 	
 		pure function gauss(x,y,x0,y0,xs,ys) result(o)
-			type(ad_t),intent(in)::x,y,xs,ys
-			type(ad_t),intent(in)::x0,y0
-			type(ad_t)::o
+			type(ad1_t),intent(in)::x,y,xs,ys
+			type(ad1_t),intent(in)::x0,y0
+			type(ad1_t)::o
 			
 			o = exp(-((x-x0)/xs)**2)*exp(-((y-y0)/ys)**2)
 		end function gauss
@@ -144,15 +144,17 @@ contains
 	subroutine doTrue(p)
 		class(pair_t),intent(inout)::p
 		
-		type(ad_t),dimension(2)::x,ul
+		type(ad1_t),dimension(2)::x,ul
 		integer::i,j
 		
 		do j=1,p%Nv(2)
 			do i=1,p%Nv(1)
 				x = [p%vx(i),p%vy(j)]
 				ul = uf(x)*real(p%N,wp)/p%L
-				p%passes(0)%u(i,j) = ul(1)
-				p%passes(0)%v(i,j) = ul(2)
+				p%passes(0)%u(i,j)%x = ul(1)%x
+				p%passes(0)%u(i,j)%d = ul(1)%d
+				p%passes(0)%v(i,j)%x = ul(2)%x
+				p%passes(0)%v(i,j)%d = ul(2)%d
 			end do
 		end do
 	end subroutine doTrue

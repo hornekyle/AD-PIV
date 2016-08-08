@@ -322,7 +322,7 @@ contains
 		type(pair_t),intent(inout)::p
 		real(wp),intent(in)::tol
 		
-		type(ad_t),dimension(2)::u,t
+		type(ad3_t),dimension(2)::u,t
 		integer::i,j,k
 		
 		do k=1,size(p%passes)-1

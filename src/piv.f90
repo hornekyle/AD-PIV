@@ -10,7 +10,7 @@ module piv_mod
 	implicit none
 	
 	type::map_t
-		type(ad_t),dimension(:,:),allocatable::C
+		type(ad3_t),dimension(:,:),allocatable::C
 		real(wp),dimension(:),allocatable::dx,dy
 	contains
 		procedure::dispInt
@@ -87,7 +87,7 @@ contains
 		integer,intent(in),optional::reference
 		
 		integer::tid
-		type(ad_t),dimension(2)::d
+		type(ad3_t),dimension(2)::d
 		integer::i,j
 		
 		!$omp parallel private(i,j,d,tid)
@@ -128,10 +128,11 @@ contains
 		function firstPass(i,j) result(o)
 			integer,intent(in)::i,j
 				!! Corrdinates of vector
-			type(ad_t),dimension(2)::o
+			type(ad3_t),dimension(2)::o
 				!! Result
 			
-			type(ad_t),dimension(:,:),allocatable::A,B
+			type(ad1_t),dimension(:,:),allocatable::A1,B1
+			type(ad3_t),dimension(:,:),allocatable::A,B
 			real(wp),dimension(2)::ps
 			type(map_t)::M
 			integer::il,ih
@@ -144,11 +145,11 @@ contains
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
-			A = p%A(il:ih,jl:jh)
-			B = p%B(il:ih,jl:jh)
+			A1 = p%A(il:ih,jl:jh)
+			B1 = p%B(il:ih,jl:jh)
 			
-			call pixelize(A,1)
-			call pixelize(B,2)
+			A  = pixelize(A1,1)
+			B  = pixelize(B1,2)
 			
 			select case(method)
 			case('map')
@@ -167,14 +168,15 @@ contains
 				!! Corrdinates of vector
 			integer,intent(in)::r
 				!! Reference pass for window shifting
-			type(ad_t),dimension(2)::o
+			type(ad3_t),dimension(2)::o
 				!! Result
 			
-			type(ad_t),dimension(:,:),allocatable::A,B
+			type(ad1_t),dimension(:,:),allocatable::A1,B1
+			type(ad3_t),dimension(:,:),allocatable::A,B
 			real(wp),dimension(2)::ps
 			integer,dimension(2)::sp,sm,s
 			real(wp),dimension(2)::up
-			type(ad_t),dimension(2)::d
+			type(ad3_t),dimension(2)::d
 			type(map_t)::M
 			integer::il,ih
 			integer::jl,jh
@@ -198,11 +200,11 @@ contains
 			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]>p%N(1)) ) return
 			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]>p%N(2)) ) return
 			
-			A = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
-			B = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
+			A1 = p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2))
+			B1 = p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2))
 			
-			call pixelize(A,1)
-			call pixelize(B,2)
+			A  = pixelize(A1,1)
+			B  = pixelize(B1,2)
 			
 			select case(method)
 			case('map')
@@ -217,18 +219,33 @@ contains
 			o = real(sp+sm,wp)+d
 		end function secondPass
 	
-		subroutine pixelize(A,f)
-			type(ad_t),dimension(:,:),intent(inout)::A
+		function pixelize(A,f) result(o)
+			type(ad1_t),dimension(:,:),intent(in)::A
+			type(ad3_t),dimension(size(A,1),size(A,2))::o
 			integer::f
+			integer::i,j,k
 			
-			integer::i,j
 			
 			do j=1,size(A,2)
 				do i=1,size(A,1)
-					A(i,j)%I(i,j,f) = 1.0_wp
+					
+					o(i,j)%x=A(i,j)%x
+					
+					
+					do k=1,size(A(1,1)%d)
+						o(i,j)%d(k)=A(i,j)%d(k)
+					end do
+					
 				end do
 			end do
-		end subroutine pixelize
+			
+			
+			do j=1,size(A,2)
+				do i=1,size(A,1)
+					o(i,j)%I(i,j,f) = 1.0_wp
+				end do
+			end do
+		end function pixelize
 	
 	end subroutine doPass
 	
@@ -239,8 +256,8 @@ contains
 	function crossCorrelateDirect(A,B,F) result(o)
 		!! Compute cross correlation between A and B
 		!! Mandates that they are the same shape
-		type(ad_t),dimension(:,:),intent(in)::A
-		type(ad_t),dimension(size(A,1),size(A,2)),intent(in)::B
+		type(ad3_t),dimension(:,:),intent(in)::A
+		type(ad3_t),dimension(size(A,1),size(A,2)),intent(in)::B
 		real(wp),intent(in)::F
 		type(map_t)::o
 		
@@ -267,7 +284,7 @@ contains
 
 	function dispInt(self) result(o)
 		class(map_t),intent(in)::self
-		type(ad_t),dimension(2)::o
+		type(ad3_t),dimension(2)::o
 		
 		integer,dimension(2)::Ni,Nj
 		real(wp),dimension(:,:),allocatable::W
@@ -290,10 +307,10 @@ contains
 
 	function dispGauss(self) result(o)
 		class(map_t),intent(in)::self
-		type(ad_t),dimension(2)::o
+		type(ad3_t),dimension(2)::o
 		
-		type(ad_t),dimension(-1:1)::h
-		type(ad_t),dimension(2)::s
+		type(ad3_t),dimension(-1:1)::h
+		type(ad3_t),dimension(2)::s
 		integer,dimension(2)::N,m
 		integer::i
 		
@@ -311,13 +328,13 @@ contains
 	end function dispGauss
 
 	function leastSquares(A,B) result(o)
-		type(ad_t),dimension(:,:),intent(in)::A
-		type(ad_t),dimension(size(A,1),size(A,2)),intent(in)::B
-		type(ad_t),dimension(2)::o
+		type(ad3_t),dimension(:,:),intent(in)::A
+		type(ad3_t),dimension(size(A,1),size(A,2)),intent(in)::B
+		type(ad3_t),dimension(2)::o
 		
-		type(ad_t),dimension(:,:),allocatable::fx,fy,ft
-		type(ad_t),dimension(2,2)::As,Ai
-		type(ad_t),dimension(2)::bs
+		type(ad3_t),dimension(:,:),allocatable::fx,fy,ft
+		type(ad3_t),dimension(2,2)::As,Ai
+		type(ad3_t),dimension(2)::bs
 		real(wp),dimension(2)::d
 		integer,dimension(2)::N
 		
@@ -340,13 +357,13 @@ contains
 	contains
 	
 		function grad(f,r,h) result(o)
-			type(ad_t),dimension(:,:),intent(in)::f
+			type(ad3_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
-			type(ad_t),dimension(:,:),allocatable::o
+			type(ad3_t),dimension(:,:),allocatable::o
 			
 			integer,dimension(2)::N,d
-			type(ad_t),dimension(-2:2)::l
+			type(ad3_t),dimension(-2:2)::l
 			integer::i,j,k
 			
 			N = shape(f)
@@ -366,13 +383,13 @@ contains
 		end function grad
 	
 		function grad2(f,r,h) result(o)
-			type(ad_t),dimension(:,:),intent(in)::f
+			type(ad3_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
-			type(ad_t),dimension(:,:),allocatable::o
+			type(ad3_t),dimension(:,:),allocatable::o
 			
 			integer,dimension(2)::N,d
-			type(ad_t),dimension(-2:2)::l
+			type(ad3_t),dimension(-2:2)::l
 			integer::i,j,k
 			
 			N = shape(f)
@@ -405,7 +422,7 @@ contains
 		real(wp),intent(in)::tol
 			!! Tolerance before culling [0,1]
 		
-		type(ad_t),dimension(2)::u,m,t
+		type(ad3_t),dimension(2)::u,m,t
 		integer,dimension(2)::N
 		integer::i,j
 		
@@ -427,7 +444,7 @@ contains
 	
 		function tryMean(i,j) result(o)
 			integer,intent(in)::i,j
-			type(ad_t),dimension(2)::o
+			type(ad3_t),dimension(2)::o
 			
 			integer::c,ii,jj
 			
@@ -451,7 +468,7 @@ contains
 
 	subroutine writeVector(fn,v)
 		character(*),intent(in)::fn
-		type(ad_t),dimension(2)::v
+		type(ad3_t),dimension(2)::v
 		
 		real(wp),dimension(:),allocatable::x,y
 		real(wp),dimension(:,:),allocatable::var
