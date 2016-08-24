@@ -5,9 +5,8 @@ exclude: plplotlib.f90
 display: public
 graph: true
 output_dir: ./doc
-author: Dr. Kyle Horne
-author_description: Assistant Professor; Mechanical and Energy Engineering; University of North Texas
-email: kyle.horne@unt.edu
+author: Dr. Kyle Horne, Rodolfo Grullon Varela
+email: hornek@uwplatt.edu
 summary: AD-PIV
 display: public
 
