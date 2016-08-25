@@ -46,6 +46,7 @@ module settings_mod
 	character(3),dimension(:),allocatable::pass_types
 	
 	real(wp)::correlationFactor = 0.5
+	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
 	
@@ -53,7 +54,6 @@ module settings_mod
 	integer::write_map_k = 1
 	
 	logical::per_pixel = .true.
-	integer::per_pixel_k = 1
 	
 contains
 

@@ -44,12 +44,14 @@ contains
 		if(amRoot()) write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))
-		pair = createFullPair()
+		pair = createFullPair(k)
+		
 		if(write_pair) call pair%writePair('./results/'//prefix//'/pair-'//trim(buf)//'.nc')
 		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc',px=.true.)
 	end subroutine doPair
 
-	function createFullPair() result(p)
+	function createFullPair(idx) result(p)
+		integer,intent(in)::idx
 		type(pair_t)::p
 			!! Result
 		
@@ -71,8 +73,9 @@ contains
 		Ly = L(2)
 		
 		p = generatePair(N,L,Np,dt,R)
-		call p%setupPasses(N_passes,buffer_window_size,spacing_window_size)
+		p%idx = idx
 		
+		call p%setupPasses(N_passes,buffer_window_size,spacing_window_size)
 		call doTrue(p)
 		
 		do k=1,N_passes

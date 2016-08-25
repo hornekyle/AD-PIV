@@ -30,6 +30,7 @@ contains
 		integer::tid
 		type(regions_t)::R
 		type(ad3_t),dimension(2)::d
+		character(:),allocatable::fn
 		integer::i,j
 		
 		!$omp parallel private(i,j,d,tid)
@@ -53,16 +54,19 @@ contains
 				
 				select case(method)
 				case('map')
-					d = R%crossCorrelateDirect(correlationFactor)
+					d = R%crossCorrelateDirect(correlationFactor,p%idx)
 				case('lsq')
-					d = R%leastSquares()
+					d = R%leastSquares(lsqOrder)
 				end select
 				
 				p%passes(k)%u(i,j) = d(1)
 				p%passes(k)%v(i,j) = d(2)
 				
-				call writeVector('./results/'//prefix//'/vector-'//int2char(per_pixel_k)//'.nc',d)
-				per_pixel_k = per_pixel_k+1
+				fn = './results/'//prefix//'/vector'
+				fn = fn//'-'//int2char(p%idx)
+				fn = fn//'-['//int2char(i)//','//int2char(j)//']'
+				fn = fn//'.nc'
+				call writeVector(fn,d)
 			end do
 		end do
 		!$omp end do
@@ -90,7 +94,7 @@ contains
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
-			o = regions_t( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) )
+			o = regions_t( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) , [i,j] )
 		end function firstPass
 	
 		function secondPass(i,j,ref) result(o)
@@ -107,6 +111,9 @@ contains
 			integer::il,ih
 			integer::jl,jh
 			
+			integer::ilA,ihA,ilB,ihB
+			integer::jlA,jhA,jlB,jhB
+			
 			ps = p%L/real(p%N,wp)
 			
 			up = real([p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)])
@@ -120,12 +127,22 @@ contains
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
-			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]<1) ) return
-			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]<1) ) return
-			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]>p%N(1)) ) return
-			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]>p%N(2)) ) return
+			ilA = il-sm(1)
+			ihA = ih-sm(1)
+			ilB = il+sp(1)
+			ihB = ih+sp(1)
 			
-			o = regions_t( p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2)) , p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2)) , s )
+			jlA = jl-sm(2)
+			jhA = jh-sm(2)
+			jlB = jl+sp(2)
+			jhB = jh+sp(2)
+			
+			if( any([ilA,ihA,ilB,ihB]<1) ) return
+			if( any([jlA,jhA,jlB,jhB]<1) ) return
+			if( any([ilA,ihA,ilB,ihB]>p%N(1)) ) return
+			if( any([jlA,jhA,jlB,jhB]>p%N(2)) ) return
+			
+			o = regions_t( p%A(ilA:ihA,jlA:jhA) , p%B(ilB:ihB,jlB:jhB) , [i,j] , s )
 		end function secondPass
 	
 	end subroutine doPass

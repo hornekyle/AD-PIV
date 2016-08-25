@@ -1,6 +1,7 @@
 module cluster_mod
 	use kinds_mod
 	use mpi
+	use utilities_mod
 	implicit none
 	
 	integer::mpi_size = 0
@@ -20,6 +21,8 @@ contains
 		call MPI_Init(mpi_err)
 		call MPI_Comm_Rank(MPI_COMM_WORLD,mpi_rank,mpi_err)
 		call MPI_Comm_Size(MPI_COMM_WORLD,mpi_size,mpi_err)
+		
+		call setRandomSeed(mpi_rank)
 	end subroutine setupMPI
 
 	subroutine finalizeMPI

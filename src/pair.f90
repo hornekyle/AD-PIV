@@ -13,6 +13,8 @@ module pair_mod
 	end type
 	
 	type::pair_t
+		integer::idx = 0
+		
 		real(wp),dimension(2)::L
 		integer,dimension(2)::N,Nv
 		
@@ -43,32 +45,32 @@ contains
 	!= Pair Routines =!
 	!=================!
 
-	function newPair(N,L,dt) result(o)
+	function newPair(N,L,dt) result(self)
 		integer,dimension(2),intent(in)::N
 		real(wp),dimension(2),intent(in),optional::L
 		real(wp),intent(in),optional::dt
-		type(pair_t)::o
+		type(pair_t)::self
 		
-		allocate(o%px(N(1)))
-		allocate(o%py(N(2)))
-		allocate(o%A(N(1),N(2)))
-		allocate(o%B(N(1),N(2)))
-		o%N = N
+		allocate(self%px(N(1)))
+		allocate(self%py(N(2)))
+		allocate(self%A(N(1),N(2)))
+		allocate(self%B(N(1),N(2)))
+		self%N = N
 		
 		if(present(L)) then
-			o%px = linspace(0.0_wp,L(1),N(1))
-			o%py = linspace(0.0_wp,L(2),N(2))
-			o%L = L
+			self%px = linspace(0.0_wp,L(1),N(1))
+			self%py = linspace(0.0_wp,L(2),N(2))
+			self%L = L
 		else
-			o%px = linspace(0.0_wp,1.0_wp,N(1))
-			o%py = linspace(0.0_wp,1.0_wp,N(1))
-			o%L = 1.0_wp
+			self%px = linspace(0.0_wp,1.0_wp,N(1))
+			self%py = linspace(0.0_wp,1.0_wp,N(1))
+			self%L = 1.0_wp
 		end if
 		
 		if(present(dt)) then
-			o%dt = dt
+			self%dt = dt
 		else
-			o%dt = 1.0_wp
+			self%dt = 1.0_wp
 		end if
 	end function newPair
 

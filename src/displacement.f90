@@ -10,6 +10,7 @@ module displacement_mod
 	type::regions_t
 		type(ad1_t),dimension(:,:),allocatable::A,B
 		integer,dimension(2)::shift = 0
+		integer,dimension(2)::ij
 	contains
 		procedure::crossCorrelateDirect
 		procedure::leastSquares
@@ -38,22 +39,26 @@ contains
 	!= Regions Routines =!
 	!====================!
 
-	function newRegions(A,B,shift) result(self)
+	function newRegions(A,B,ij,shift) result(self)
 		type(ad1_t),dimension(:,:),intent(in)::A,B
+		integer,dimension(2),intent(in)::ij
 		integer,dimension(2),intent(in),optional::shift
 		type(regions_t)::self
 		
 		self%A = A
 		self%B = B
 		
+		self%ij = ij
+		
 		if(present(shift)) self%shift = shift
 	end function newRegions
 
-	function crossCorrelateDirect(self,F) result(o)
+	function crossCorrelateDirect(self,F,idx) result(o)
 		!! Compute cross correlation between A and B
 		!! Mandates that they are the same shape
 		class(regions_t),intent(in)::self
 		real(wp),intent(in)::F
+		integer,intent(in)::idx
 		type(ad3_t),dimension(2)::o
 		
 		type(map_t)::M
@@ -61,6 +66,7 @@ contains
 		integer,dimension(2)::N
 		integer::Ail,Aih,Bil,Bih,i
 		integer::Ajl,Ajh,Bjl,Bjh,j
+		character(:),allocatable::fn
 		
 		A = pixelize(self%A,1)
 		B = pixelize(self%B,2)
@@ -83,15 +89,20 @@ contains
 		end do
 		
 		if(write_map) then
-			call M%writeMap('./results/'//prefix//'/map-'//int2char(write_map_k)//'.nc')
+			fn = './results/'//prefix//'/map'
+			fn = fn//'-'//int2char(idx)
+			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//']'
+			fn = fn//'.nc'
+			call M%writeMap(fn)
 			write_map_k = write_map_k+1
 		end if
 		
 		o = real(self%shift,wp)+M%dispGauss()
 	end function crossCorrelateDirect
 
-	function leastSquares(self) result(o)
+	function leastSquares(self,order) result(o)
 		class(regions_t),intent(in)::self
+		integer,intent(in)::order
 		type(ad3_t),dimension(2)::o
 		
 		type(ad3_t),dimension(:,:),allocatable::A,B
@@ -141,9 +152,15 @@ contains
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
 					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-					o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
-! 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-! 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					
+					select case(order)
+					case(1)
+						o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
+					case(2)
+						o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+					case(3)
+						o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					end select
 				end do
 			end do
 		end function grad
@@ -167,9 +184,15 @@ contains
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
 					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-					o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
-! 					o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-! 					o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					
+					select case(order)
+					case(1)
+						o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
+					case(2)
+						o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
+					case(3)
+						o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
+					end select
 				end do
 			end do
 		end function grad2
