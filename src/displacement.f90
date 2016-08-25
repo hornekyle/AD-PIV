@@ -8,6 +8,7 @@ module displacement_mod
 	
 	type::regions_t
 		type(ad1_t),dimension(:,:),allocatable::A,B
+		integer,dimension(2)::shift = 0
 	contains
 		procedure::crossCorrelateDirect
 		procedure::leastSquares
@@ -29,12 +30,15 @@ contains
 	!= Regions Routines =!
 	!====================!
 
-	function newRegions(A,B) result(o)
+	function newRegions(A,B,shift) result(self)
 		type(ad1_t),dimension(:,:),intent(in)::A,B
-		type(regions_t)::o
+		integer,dimension(2),intent(in),optional::shift
+		type(regions_t)::self
 		
-		o%A = A
-		o%B = B
+		self%A = A
+		self%B = B
+		
+		if(present(shift)) self%shift = shift
 	end function newRegions
 
 	function crossCorrelateDirect(self,F) result(o)
@@ -75,7 +79,7 @@ contains
 			write_map_k = write_map_k+1
 		end if
 		
-		o = M%dispGauss()
+		o = real(self%shift,wp)+M%dispGauss()
 	end function crossCorrelateDirect
 
 	function leastSquares(self) result(o)
@@ -106,7 +110,7 @@ contains
 		Ai(1,1:2) = [ As(2,2),-As(1,2)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
 		Ai(2,1:2) = [-As(2,1), As(1,1)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
 		
-		o = matmul(Ai,-bs)
+		o = real(self%shift,wp)+matmul(Ai,-bs)
 		
 	contains
 	

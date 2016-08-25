@@ -28,6 +28,7 @@ contains
 		integer,intent(in),optional::reference
 		
 		integer::tid
+		type(regions_t)::R
 		type(ad3_t),dimension(2)::d
 		integer::i,j
 		
@@ -42,13 +43,20 @@ contains
 			do i=1,p%Nv(1)
 				if(present(reference)) then
 					if(reference>=0) then
-						d = secondPass(i,j,reference)
+						R = secondPass(i,j,reference)
 					else
-						d = firstPass(i,j)
+						R = firstPass(i,j)
 					end if
 				else
-					d = firstPass(i,j)
+					R = firstPass(i,j)
 				end if
+				
+				select case(method)
+				case('map')
+					d = R%crossCorrelateDirect(0.5_wp)
+				case('lsq')
+					d = R%leastSquares()
+				end select
 				
 				p%passes(k)%u(i,j) = d(1)
 				p%passes(k)%v(i,j) = d(2)
@@ -68,10 +76,9 @@ contains
 		function firstPass(i,j) result(o)
 			integer,intent(in)::i,j
 				!! Corrdinates of vector
-			type(ad3_t),dimension(2)::o
+			type(regions_t)::o
 				!! Result
 			
-			type(regions_t)::R
 			real(wp),dimension(2)::ps
 			integer::il,ih
 			integer::jl,jh
@@ -83,14 +90,7 @@ contains
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
-			R = newRegions( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) )
-			
-			select case(method)
-			case('map')
-				o = R%crossCorrelateDirect(0.5_wp)
-			case('lsq')
-				o = R%leastSquares()
-			end select
+			o = newRegions( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) )
 		end function firstPass
 	
 		function secondPass(i,j,ref) result(o)
@@ -98,10 +98,9 @@ contains
 				!! Corrdinates of vector
 			integer,intent(in)::ref
 				!! Reference pass for window shifting
-			type(ad3_t),dimension(2)::o
+			type(regions_t)::o
 				!! Result
 			
-			type(regions_t)::R
 			real(wp),dimension(2)::ps
 			integer,dimension(2)::sp,sm,s
 			real(wp),dimension(2)::up
@@ -111,7 +110,6 @@ contains
 			ps = p%L/real(p%N,wp)
 			
 			up = real([p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)])
-			o  = [p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)]
 			
 			s  = nint(up)
 			sp = s/2
@@ -127,14 +125,7 @@ contains
 			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]>p%N(1)) ) return
 			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]>p%N(2)) ) return
 			
-			R = newRegions( p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2)) , p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2)) )
-			
-			select case(method)
-			case('map')
-				o = real(s,wp)+R%crossCorrelateDirect(0.5_wp)
-			case('lsq')
-				o = real(s,wp)+R%leastSquares()
-			end select
+			o = newRegions( p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2)) , p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2)) , s )
 		end function secondPass
 	
 	end subroutine doPass
