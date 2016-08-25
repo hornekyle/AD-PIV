@@ -65,8 +65,9 @@ contains
 				fn = './results/'//prefix//'/vector'
 				fn = fn//'-'//int2char(p%idx)
 				fn = fn//'-['//int2char(i)//','//int2char(j)//']'
+				fn = fn//'-('//int2char(k)//')'
 				fn = fn//'.nc'
-				call writeVector(fn,d)
+				call writeVector(fn,d,R)
 			end do
 		end do
 		!$omp end do
@@ -203,9 +204,10 @@ contains
 	
 	end subroutine filter
 
-	subroutine writeVector(fn,v)
+	subroutine writeVector(fn,v,R)
 		character(*),intent(in)::fn
 		type(ad3_t),dimension(2)::v
+		type(regions_t),intent(in)::R
 		
 		real(wp),dimension(:),allocatable::x,y
 		real(wp),dimension(:,:),allocatable::var
@@ -218,24 +220,37 @@ contains
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
 		
-		call write_grid(fn,['U','V'],x,y)
+		call write_grid(fn,['I   ','dudI','dvdI','dIdU','dIdV','dIdR','dIdN'],x,y)
 		
 		! First Image
 		
+		call write_step(fn,0.0_wp,1,'I',real(R%A))
+		
 		var = v(1)%I(1:N(1),1:N(2),1)
-		call write_step(fn,0.0_wp,1,'U',var)
+		call write_step(fn,0.0_wp,1,'dudI',var)
 		
 		var = v(2)%I(1:N(1),1:N(2),1)
-		call write_step(fn,0.0_wp,1,'V',var)
+		call write_step(fn,0.0_wp,1,'dvdI',var)
+		
+		call write_step(fn,0.0_wp,1,'dIdU',der(R%A,ADS_U))
+		call write_step(fn,0.0_wp,1,'dIdV',der(R%A,ADS_V))
+		call write_step(fn,0.0_wp,1,'dIdR',der(R%A,ADS_R))
+		call write_step(fn,0.0_wp,1,'dIdN',der(R%A,ADS_N))
 		
 		! Second Image
 		
+		call write_step(fn,1.0_wp,2,'I',real(R%B))
+		
 		var = v(1)%I(1:N(1),1:N(2),2)
-		call write_step(fn,1.0_wp,2,'U',var)
+		call write_step(fn,1.0_wp,2,'dudI',var)
 		
 		var = v(2)%I(1:N(1),1:N(2),2)
-		call write_step(fn,1.0_wp,2,'V',var)
+		call write_step(fn,1.0_wp,2,'dvdI',var)
 		
+		call write_step(fn,1.0_wp,2,'dIdU',der(R%B,ADS_U))
+		call write_step(fn,1.0_wp,2,'dIdV',der(R%B,ADS_V))
+		call write_step(fn,1.0_wp,2,'dIdR',der(R%B,ADS_R))
+		call write_step(fn,1.0_wp,2,'dIdN',der(R%B,ADS_N))
 	end subroutine writeVector
 
 end module piv_mod
