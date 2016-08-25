@@ -1,9 +1,23 @@
 module settings_mod
+	!! Module containting global settings
 	use kinds_mod
 	use autodiff_mod
 	use utilities_mod
 	use config_mod
 	implicit none
+	
+	!==============!
+	!= Parameters =!
+	!==============!
+	
+	integer,parameter::ADS_U = 1
+	integer,parameter::ADS_V = 2
+	integer,parameter::ADS_R = 3
+	integer,parameter::ADS_N = 4
+	
+	!=============!
+	!= Variables =!
+	!=============!
 	
 	character(:),allocatable::prefix
 	
@@ -90,14 +104,14 @@ contains
 		
 		select case(velocity_mode)
 		case('uniform')
-			o(1) = Sx*diff1(Ux0,1)
-			o(2) = Sy*diff1(Uy0,2)
+			o(1) = Sx*diff1(Ux0,ADS_U)
+			o(2) = Sy*diff1(Uy0,ADS_V)
 		case('shear')
-			o(1) =  Sx*diff1(Ux0*real(x(2)/R0),1)
-			o(2) =  Sy*diff1(Uy0,2)
+			o(1) =  Sx*diff1(Ux0*real(x(2)/R0),ADS_U)
+			o(2) =  Sy*diff1(Uy0,ADS_V)
 		case('vortex')
-			o(1) =  Sx*diff1(real( Ux0*r/R0*s),1)
-			o(2) =  Sy*diff1(real(-Uy0*r/R0*c),2)
+			o(1) =  Sx*diff1(real( Ux0*r/R0*s),ADS_U)
+			o(2) =  Sy*diff1(real(-Uy0*r/R0*c),ADS_V)
 		end select
 	end function uf
 

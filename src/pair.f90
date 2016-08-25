@@ -3,6 +3,7 @@ module pair_mod
 	use utilities_mod
 	use autodiff_mod
 	use netCDF_mod
+	use settings_mod
 	implicit none
 	private
 	
@@ -91,28 +92,26 @@ contains
 	end subroutine setupPasses
 
 	subroutine writePair(self,fn)
-		!! FIXME: Need global derivative table
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
 		call write_grid(fn,['I','U','V','R','N'],self%px,self%py)
 		
 		call write_step(fn,0.0_wp,1,'I',real(self%A))
-		call write_step(fn,0.0_wp,1,'U',der(self%A,1))
-		call write_step(fn,0.0_wp,1,'V',der(self%A,2))
-		call write_step(fn,0.0_wp,1,'R',der(self%A,3))
-		call write_step(fn,0.0_wp,1,'N',der(self%A,4))
+		call write_step(fn,0.0_wp,1,'U',der(self%A,ADS_U))
+		call write_step(fn,0.0_wp,1,'V',der(self%A,ADS_V))
+		call write_step(fn,0.0_wp,1,'R',der(self%A,ADS_R))
+		call write_step(fn,0.0_wp,1,'N',der(self%A,ADS_N))
 		
 		
 		call write_step(fn,self%dt,2,'I',real(self%B))
-		call write_step(fn,self%dt,2,'U',der(self%B,1))
-		call write_step(fn,self%dt,2,'V',der(self%B,2))
-		call write_step(fn,self%dt,2,'R',der(self%B,3))
-		call write_step(fn,self%dt,2,'N',der(self%B,4))
+		call write_step(fn,self%dt,2,'U',der(self%B,ADS_U))
+		call write_step(fn,self%dt,2,'V',der(self%B,ADS_V))
+		call write_step(fn,self%dt,2,'R',der(self%B,ADS_R))
+		call write_step(fn,self%dt,2,'N',der(self%B,ADS_N))
 	end subroutine writePair
 
 	subroutine readPair(self,pfn,vfn)
-		!! FIXME: Need global derivative table
 		class(pair_t)::self
 		character(*),intent(in),optional::pfn
 			!! Filename of pair
@@ -145,10 +144,10 @@ contains
 			if(allocated(self%A)) deallocate(self%A)
 			allocate(self%A( M(1) , M(2) ))
 			self%A%x = I
-			self%A%d(1) = U
-			self%A%d(2) = V
-			self%A%d(3) = R
-			self%A%d(4) = N
+			self%A%d(ADS_U) = U
+			self%A%d(ADS_V) = V
+			self%A%d(ADS_R) = R
+			self%A%d(ADS_N) = N
 			
 			call read_step(pfn,'I',I,2)
 			call read_step(pfn,'U',U,2)
@@ -158,10 +157,10 @@ contains
 			if(allocated(self%B)) deallocate(self%B)
 			allocate(self%B( M(1) , M(2) ))
 			self%B%x = I
-			self%B%d(1) = U
-			self%B%d(2) = V
-			self%B%d(3) = R
-			self%B%d(4) = N
+			self%B%d(ADS_U) = U
+			self%B%d(ADS_V) = V
+			self%B%d(ADS_R) = R
+			self%B%d(ADS_N) = N
 			deallocate(vars,x,y,t)
 			deallocate(I,U,V,R,N)
 		end if
@@ -194,10 +193,10 @@ contains
 				call read_step(vfn,'dudN',N,k+1)
 				
 				self%passes(k)%u%x    = I
-				self%passes(k)%u%d(1) = U
-				self%passes(k)%u%d(2) = V
-				self%passes(k)%u%d(3) = R
-				self%passes(k)%u%d(4) = N
+				self%passes(k)%u%d(ADS_U) = U
+				self%passes(k)%u%d(ADS_V) = V
+				self%passes(k)%u%d(ADS_R) = R
+				self%passes(k)%u%d(ADS_N) = N
 				
 				call read_step(vfn,'v',I,k+1)
 				call read_step(vfn,'dvdU',U,k+1)
@@ -206,10 +205,10 @@ contains
 				call read_step(vfn,'dvdN',N,k+1)
 				
 				self%passes(k)%v%x    = I
-				self%passes(k)%v%d(1) = U
-				self%passes(k)%v%d(2) = V
-				self%passes(k)%v%d(3) = R
-				self%passes(k)%v%d(4) = N
+				self%passes(k)%v%d(ADS_U) = U
+				self%passes(k)%v%d(ADS_V) = V
+				self%passes(k)%v%d(ADS_R) = R
+				self%passes(k)%v%d(ADS_N) = N
 			end do
 		end if
 		
@@ -258,15 +257,15 @@ contains
 		
 		do k=lbound(self%passes,1),ubound(self%passes,1)
 			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
-			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,1))
-			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,2))
-			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,3))
-			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,4))
+			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,ADS_U))
+			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,ADS_V))
+			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,ADS_R))
+			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,ADS_N))
 			call write_step(fn,real(k,wp),k+1,'v',  real(self%passes(k)%v  ))
-			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,1))
-			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,2))
-			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,3))
-			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,4))
+			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,ADS_U))
+			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,ADS_V))
+			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,ADS_R))
+			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,ADS_N))
 		end do
 		
 	end subroutine writeVectors

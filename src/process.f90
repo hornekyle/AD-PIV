@@ -63,7 +63,7 @@ contains
 		L = 0.0512_wp
 		Np = nint( real(2*4**(image_scale-2),wp)*particles_scale )
 		dt = 1.0_wp
-		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,3)
+		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
 		
 		Sx = L(1)/real(N(1),wp)
 		Sy = L(2)/real(N(2),wp)

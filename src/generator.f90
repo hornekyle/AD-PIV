@@ -49,8 +49,8 @@ contains
 		
 		call random_number(o%A%x)
 		call random_number(o%B%x)
-		o%A = o%A%x*diff1(noise_level,4)
-		o%B = o%B%x*diff1(noise_level,4)
+		o%A = o%A%x*diff1(noise_level,ADS_N)
+		o%B = o%B%x*diff1(noise_level,ADS_N)
 		
 		allocate(particles(Np))
 		
