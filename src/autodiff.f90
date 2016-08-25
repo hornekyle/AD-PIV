@@ -484,7 +484,7 @@ contains
 			o(k) = sum_1a1(A(k,:)*x(:))
 		end do
 	end function matmul_11
-	
+
 	function matmul_13(A,x) result(o)
 		type(ad1_t),dimension(:,:),intent(in)::A
 		type(ad3_t),dimension(size(A,2)),intent(in)::x

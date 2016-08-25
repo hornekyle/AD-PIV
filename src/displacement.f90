@@ -303,20 +303,15 @@ contains
 
 	function pixelize(A,f) result(o)
 		type(ad1_t),dimension(:,:),intent(in)::A
-		type(ad3_t),dimension(size(A,1),size(A,2))::o
+		type(ad3_t),dimension(:,:),allocatable::o
 		integer::f
 		integer::i,j,k
 		
+		allocate(o(size(A,1),size(A,2)))
+		
 		do j=1,size(A,2)
 			do i=1,size(A,1)
-				
-				o(i,j)%x=A(i,j)%x
-				
-				
-				do k=1,size(A(1,1)%d)
-					o(i,j)%d(k)=A(i,j)%d(k)
-				end do
-				
+				o(i,j) = A(i,j)
 			end do
 		end do
 		

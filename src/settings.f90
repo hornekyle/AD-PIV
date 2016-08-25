@@ -45,7 +45,7 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
-	real(wp)::correlationFactor = 0.5
+	real(wp)::correlationFactor = 0.8
 	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
