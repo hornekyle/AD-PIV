@@ -53,7 +53,7 @@ contains
 				
 				select case(method)
 				case('map')
-					d = R%crossCorrelateDirect(0.5_wp)
+					d = R%crossCorrelateDirect(correlationFactor)
 				case('lsq')
 					d = R%leastSquares()
 				end select

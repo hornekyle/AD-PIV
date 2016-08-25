@@ -31,6 +31,8 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
+	real(wp)::correlationFactor = 0.5
+	
 	logical::write_pair = .true.
 	
 	logical::write_map = .true.
