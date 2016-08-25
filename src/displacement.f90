@@ -5,6 +5,7 @@ module displacement_mod
 	use netCDF_mod
 	use settings_mod
 	implicit none
+	private
 	
 	type::regions_t
 		type(ad1_t),dimension(:,:),allocatable::A,B
@@ -13,6 +14,10 @@ module displacement_mod
 		procedure::crossCorrelateDirect
 		procedure::leastSquares
 	end type
+	
+	interface regions_t
+		module procedure newRegions
+	end interface
 	
 	type::map_t
 		type(ad3_t),dimension(:,:),allocatable::C
@@ -23,6 +28,9 @@ module displacement_mod
 		procedure::writeMap
 		procedure::readMap
 	end type
+	
+	public::regions_t
+	public::map_t
 	
 contains
 

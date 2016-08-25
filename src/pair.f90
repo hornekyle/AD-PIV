@@ -24,17 +24,24 @@ module pair_mod
 		
 		type(pass_t),dimension(:),allocatable::passes
 	contains
-		procedure::writePair
-		procedure::readPair
-		procedure::writeVectors
 		procedure::setupPasses
+		procedure::writePair
+		procedure::writeVectors
+		procedure::readPair
 	end type
+	
+	interface pair_t
+		module procedure newPair
+	end interface
 	
 	public::pass_t
 	public::pair_t
-	public::newPair
 	
 contains
+
+	!=================!
+	!= Pair Routines =!
+	!=================!
 
 	function newPair(N,L,dt) result(o)
 		integer,dimension(2),intent(in)::N
@@ -91,6 +98,10 @@ contains
 		end do
 	end subroutine setupPasses
 
+	!====================!
+	!= Pair-IO Routines =!
+	!====================!
+
 	subroutine writePair(self,fn)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
@@ -110,6 +121,61 @@ contains
 		call write_step(fn,self%dt,2,'R',der(self%B,ADS_R))
 		call write_step(fn,self%dt,2,'N',der(self%B,ADS_N))
 	end subroutine writePair
+
+	subroutine writeVectors(self,fn,px)
+		class(pair_t),intent(in)::self
+		character(*),intent(in)::fn
+		logical,intent(in),optional::px
+		
+		character(64),dimension(:),allocatable::vars
+		real(wp),dimension(:),allocatable::x,y
+		logical::pxl
+		integer::Nd,k
+		Nd = 4
+		
+		allocate(vars( 2*(1+Nd) ))
+		
+		vars( 1) = 'u'
+		vars( 2) = 'dudU'
+		vars( 3) = 'dudV'
+		vars( 4) = 'dudR'
+		vars( 5) = 'dudN'
+		vars( 6) = 'v'
+		vars( 7) = 'dvdU'
+		vars( 8) = 'dvdV'
+		vars( 9) = 'dvdR'
+		vars(10) = 'dvdN'
+		
+		if(present(px)) then
+			pxl = px
+		else
+			pxl = .false.
+		end if
+		
+		if(pxl) then
+			x = self%vx*real(size(self%px),wp)/span(self%px)
+			y = self%vy*real(size(self%py),wp)/span(self%py)
+		else
+			x = self%vx
+			y = self%vy
+		end if
+		
+		call write_grid(fn,vars,x,y)
+		
+		do k=lbound(self%passes,1),ubound(self%passes,1)
+			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
+			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,ADS_U))
+			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,ADS_V))
+			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,ADS_R))
+			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,ADS_N))
+			call write_step(fn,real(k,wp),k+1,'v',  real(self%passes(k)%v  ))
+			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,ADS_U))
+			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,ADS_V))
+			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,ADS_R))
+			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,ADS_N))
+		end do
+		
+	end subroutine writeVectors
 
 	subroutine readPair(self,pfn,vfn)
 		class(pair_t)::self
@@ -213,61 +279,5 @@ contains
 		end if
 		
 	end subroutine readPair
-
-	subroutine writeVectors(self,fn,px)
-		!! FIXME: Need global derivative table
-		class(pair_t),intent(in)::self
-		character(*),intent(in)::fn
-		logical,intent(in),optional::px
-		
-		character(64),dimension(:),allocatable::vars
-		real(wp),dimension(:),allocatable::x,y
-		logical::pxl
-		integer::Nd,k
-		Nd = 4
-		
-		allocate(vars( 2*(1+Nd) ))
-		
-		vars( 1) = 'u'
-		vars( 2) = 'dudU'
-		vars( 3) = 'dudV'
-		vars( 4) = 'dudR'
-		vars( 5) = 'dudN'
-		vars( 6) = 'v'
-		vars( 7) = 'dvdU'
-		vars( 8) = 'dvdV'
-		vars( 9) = 'dvdR'
-		vars(10) = 'dvdN'
-		
-		if(present(px)) then
-			pxl = px
-		else
-			pxl = .false.
-		end if
-		
-		if(pxl) then
-			x = self%vx*real(size(self%px),wp)/span(self%px)
-			y = self%vy*real(size(self%py),wp)/span(self%py)
-		else
-			x = self%vx
-			y = self%vy
-		end if
-		
-		call write_grid(fn,vars,x,y)
-		
-		do k=lbound(self%passes,1),ubound(self%passes,1)
-			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
-			call write_step(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,ADS_U))
-			call write_step(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,ADS_V))
-			call write_step(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,ADS_R))
-			call write_step(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,ADS_N))
-			call write_step(fn,real(k,wp),k+1,'v',  real(self%passes(k)%v  ))
-			call write_step(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,ADS_U))
-			call write_step(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,ADS_V))
-			call write_step(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,ADS_R))
-			call write_step(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,ADS_N))
-		end do
-		
-	end subroutine writeVectors
 
 end module pair_mod

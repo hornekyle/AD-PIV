@@ -90,7 +90,7 @@ contains
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
-			o = newRegions( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) )
+			o = regions_t( p%A(il:ih,jl:jh),p%B(il:ih,jl:jh) )
 		end function firstPass
 	
 		function secondPass(i,j,ref) result(o)
@@ -125,7 +125,7 @@ contains
 			if( any([il-sm(1),ih-sm(1),il+sp(1),ih+sp(1)]>p%N(1)) ) return
 			if( any([jl-sm(2),jh-sm(2),jl+sp(2),jh+sp(2)]>p%N(2)) ) return
 			
-			o = newRegions( p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2)) , p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2)) , s )
+			o = regions_t( p%A(il-sm(1):ih-sm(1),jl-sm(2):jh-sm(2)) , p%B(il+sp(1):ih+sp(1),jl+sp(2):jh+sp(2)) , s )
 		end function secondPass
 	
 	end subroutine doPass

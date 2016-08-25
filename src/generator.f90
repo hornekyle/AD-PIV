@@ -45,7 +45,7 @@ contains
 		integer::tid,tct
 		integer::k
 		
-		o = newPair(N,L,dt)
+		o = pair_t(N,L,dt)
 		
 		call random_number(o%A%x)
 		call random_number(o%B%x)
