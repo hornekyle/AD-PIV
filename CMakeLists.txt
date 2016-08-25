@@ -17,6 +17,7 @@ set(common_src
 	"src/autodiff.f90"
 	"src/cluster.f90"
 	"src/config.f90"
+	"src/displacement.f90"
 	"src/kinds.f90"
 	"src/netCDF.f90"
 	"src/pair.f90"
