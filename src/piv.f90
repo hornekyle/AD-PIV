@@ -131,9 +131,9 @@ contains
 			
 			select case(method)
 			case('map')
-				o = R%crossCorrelateDirect(0.5_wp)
+				o = real(s,wp)+R%crossCorrelateDirect(0.5_wp)
 			case('lsq')
-				o = R%leastSquares()
+				o = real(s,wp)+R%leastSquares()
 			end select
 		end function secondPass
 	
