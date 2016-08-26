@@ -57,18 +57,20 @@ contains
 				case('map')
 					d = R%crossCorrelateDirect(correlationFactor,p%idx,k)
 				case('lsq')
-					d = R%leastSquares(lsqOrder)
+					d = R%leastSquares(lsqOrder,p%idx,k)
 				end select
 				
 				p%passes(k)%u(i,j) = d(1)
 				p%passes(k)%v(i,j) = d(2)
 				
-				fn = './results/'//prefix//'/vector'
-				fn = fn//'-'//int2char(p%idx)
-				fn = fn//'-['//int2char(i)//','//int2char(j)//'|'
-				fn = fn//''//int2char(k)//')'
-				fn = fn//'.nc'
-				call writeVector(fn,d,R)
+				if(per_pixel) then
+					fn = './results/'//prefix//'/vector'
+					fn = fn//'-'//int2char(p%idx)
+					fn = fn//'-['//int2char(i)//','//int2char(j)//'|'
+					fn = fn//''//int2char(k)//')'
+					fn = fn//'.nc'
+					call writeVector(fn,d,R)
+				end if
 			end do
 		end do
 		!$omp end do

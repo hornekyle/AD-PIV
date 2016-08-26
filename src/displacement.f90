@@ -100,9 +100,10 @@ contains
 		o = real(self%shift,wp)+M%dispGauss()
 	end function crossCorrelateDirect
 
-	function leastSquares(self,order) result(o)
+	function leastSquares(self,order,idx,pass) result(o)
 		class(regions_t),intent(in)::self
 		integer,intent(in)::order
+		integer,intent(in)::idx,pass
 		type(ad3_t),dimension(2)::o
 		
 		type(ad3_t),dimension(:,:),allocatable::A,B
@@ -118,8 +119,8 @@ contains
 		N = shape(A)
 		d = 1.0_wp
 		
-		fx = (grad(A,1,d(1))+grad2(B,1,d(1)))/2.0_wp
-		fy = (grad(A,2,d(2))+grad2(B,2,d(2)))/2.0_wp
+		fx = (grad_f(A,1,d(1))+grad_b(B,1,d(1)))/2.0_wp
+		fy = (grad_f(A,2,d(2))+grad_b(B,2,d(2)))/2.0_wp
 		ft = B-A
 		
 		As(1,1:2) = [sum(fx*fx),sum(fx*fy)]
@@ -131,9 +132,10 @@ contains
 		
 		o = real(self%shift,wp)+matmul(Ai,-bs)
 		
+		if(write_map) call writeFields
 	contains
 	
-		function grad(f,r,h) result(o)
+		function grad_f(f,r,h) result(o)
 			type(ad3_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
@@ -163,9 +165,9 @@ contains
 					end select
 				end do
 			end do
-		end function grad
+		end function grad_f
 	
-		function grad2(f,r,h) result(o)
+		function grad_b(f,r,h) result(o)
 			type(ad3_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
@@ -195,8 +197,27 @@ contains
 					end select
 				end do
 			end do
-		end function grad2
-	
+		end function grad_b
+		
+		subroutine writeFields
+			character(:),allocatable::fn
+			real(wp),dimension(:),allocatable::x,y
+			
+			x = linspace(1.0_wp,real(N(1),wp),N(1))
+			y = linspace(1.0_wp,real(N(2),wp),N(2))
+			
+			fn = './results/'//prefix//'/fields'
+			fn = fn//'-'//int2char(idx)
+			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
+			fn = fn//''//int2char(pass)//')'
+			fn = fn//'.nc'
+			
+			call write_grid(fn,['fx','fy','ft'],x,y)
+			call write_step(fn,0.0_wp,1,'fx',real(fx))
+			call write_step(fn,0.0_wp,1,'fy',real(fy))
+			call write_step(fn,0.0_wp,1,'ft',real(ft))
+		end subroutine writeFields
+		
 	end function leastSquares
 
 	!================!
@@ -204,17 +225,16 @@ contains
 	!================!
 
 	subroutine writeMap(self,fn)
-		!! FIXME: Need global derivative table
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
 		call write_grid(fn,['I','U','V','R','N'],self%dx,self%dy)
 		
 		call write_step(fn,0.0_wp,1,'I',real(self%C))
-		call write_step(fn,0.0_wp,1,'U',der(self%C,1))
-		call write_step(fn,0.0_wp,1,'V',der(self%C,2))
-		call write_step(fn,0.0_wp,1,'R',der(self%C,3))
-		call write_step(fn,0.0_wp,1,'N',der(self%C,4))
+		call write_step(fn,0.0_wp,1,'U',der(self%C,ADS_U))
+		call write_step(fn,0.0_wp,1,'V',der(self%C,ADS_V))
+		call write_step(fn,0.0_wp,1,'R',der(self%C,ADS_R))
+		call write_step(fn,0.0_wp,1,'N',der(self%C,ADS_N))
 	end subroutine writeMap
 
 	subroutine readMap(self,fn)
@@ -260,9 +280,6 @@ contains
 		integer,dimension(2)::Ni,Nj
 		real(wp),dimension(:,:),allocatable::W
 		integer::i,j
-		
-! 		W = real(self%C)
-! 		o = real(maxloc(W)+lbound(self%C)-1,wp)
 		
 		Ni = [ lbound(self%C,1),ubound(self%C,1) ]
 		Nj = [ lbound(self%C,2),ubound(self%C,2) ]
