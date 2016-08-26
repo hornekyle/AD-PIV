@@ -28,10 +28,14 @@ contains
 		integer,intent(in),optional::reference
 		
 		integer::tid
+		integer::lref
 		type(regions_t)::R
 		type(ad3_t),dimension(2)::d
 		character(:),allocatable::fn
 		integer::i,j
+		
+		lref = -1
+		if(present(reference)) lref = reference
 		
 		!$omp parallel private(i,j,d,tid)
 		tid = omp_get_thread_num()
@@ -42,19 +46,16 @@ contains
 				call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
 			end if
 			do i=1,p%Nv(1)
-				if(present(reference)) then
-					if(reference>=0) then
-						R = secondPass(i,j,reference)
-					else
-						R = firstPass(i,j)
-					end if
-				else
+				select case(lref)
+				case(0:)
+					R = secondPass(i,j,lref)
+				case default
 					R = firstPass(i,j)
-				end if
+				end select
 				
 				select case(method)
 				case('map')
-					d = R%crossCorrelateDirect(correlationFactor,p%idx)
+					d = R%crossCorrelateDirect(correlationFactor,p%idx,k)
 				case('lsq')
 					d = R%leastSquares(lsqOrder)
 				end select
@@ -64,8 +65,8 @@ contains
 				
 				fn = './results/'//prefix//'/vector'
 				fn = fn//'-'//int2char(p%idx)
-				fn = fn//'-['//int2char(i)//','//int2char(j)//']'
-				fn = fn//'-('//int2char(k)//')'
+				fn = fn//'-['//int2char(i)//','//int2char(j)//'|'
+				fn = fn//''//int2char(k)//')'
 				fn = fn//'.nc'
 				call writeVector(fn,d,R)
 			end do

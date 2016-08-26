@@ -45,15 +45,12 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
-	real(wp)::correlationFactor = 0.8
+	real(wp)::correlationFactor = 0.5
 	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
-	
-	logical::write_map = .true.
-	integer::write_map_k = 1
-	
-	logical::per_pixel = .true.
+	logical::write_map  = .true.
+	logical::per_pixel  = .true.
 	
 contains
 
@@ -87,7 +84,6 @@ contains
 		pass_types = [character(3):: ( cfg%getString('pass_types['//int2char(k)//']') , k=1,N_passes )]
 		
 		write_map = cfg%getLogical('write_map')
-		write_map_k = cfg%getInteger('write_map_k')
 		per_pixel = cfg%getLogical('per_pixel')
 	end subroutine readConfig
 

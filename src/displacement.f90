@@ -53,12 +53,12 @@ contains
 		if(present(shift)) self%shift = shift
 	end function newRegions
 
-	function crossCorrelateDirect(self,F,idx) result(o)
+	function crossCorrelateDirect(self,F,idx,pass) result(o)
 		!! Compute cross correlation between A and B
 		!! Mandates that they are the same shape
 		class(regions_t),intent(in)::self
 		real(wp),intent(in)::F
-		integer,intent(in)::idx
+		integer,intent(in)::idx,pass
 		type(ad3_t),dimension(2)::o
 		
 		type(map_t)::M
@@ -91,10 +91,10 @@ contains
 		if(write_map) then
 			fn = './results/'//prefix//'/map'
 			fn = fn//'-'//int2char(idx)
-			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//']'
+			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
+			fn = fn//''//int2char(pass)//')'
 			fn = fn//'.nc'
 			call M%writeMap(fn)
-			write_map_k = write_map_k+1
 		end if
 		
 		o = real(self%shift,wp)+M%dispGauss()

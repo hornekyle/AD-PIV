@@ -7,6 +7,7 @@ program figures_prg
 	use generator_mod
 	use piv_mod
 	use plplotlib_mod
+	implicit none
 	
 	character(:),allocatable::fn
 	type(pair_t)::p
@@ -24,11 +25,12 @@ program figures_prg
 	
 	call plotPair(p)
 	
-	do k=1,write_map_k-1
-		fn = './results/'//prefix//'/map-'//int2char(k)//'.nc'
-		call m%readMap(fn)
-		call plotMap(m)
-	end do
+	!! @todo: Better tracking of maps
+! 	do k=1,write_map_k-1
+! 		fn = './results/'//prefix//'/map-'//int2char(k)//'.nc'
+! 		call m%readMap(fn)
+! 		call plotMap(m)
+! 	end do
 	
 	call show()
 contains
