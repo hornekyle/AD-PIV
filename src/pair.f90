@@ -108,20 +108,20 @@ contains
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I','U','V','R','N'],self%px,self%py)
+		call write_grid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%px,self%py)
 		
 		call write_step(fn,0.0_wp,1,'I',real(self%A))
-		call write_step(fn,0.0_wp,1,'U',der(self%A,ADS_U))
-		call write_step(fn,0.0_wp,1,'V',der(self%A,ADS_V))
-		call write_step(fn,0.0_wp,1,'R',der(self%A,ADS_R))
-		call write_step(fn,0.0_wp,1,'N',der(self%A,ADS_N))
+		call write_step(fn,0.0_wp,1,'dIdU',der(self%A,ADS_U))
+		call write_step(fn,0.0_wp,1,'dIdV',der(self%A,ADS_V))
+		call write_step(fn,0.0_wp,1,'dIdR',der(self%A,ADS_R))
+		call write_step(fn,0.0_wp,1,'dIdN',der(self%A,ADS_N))
 		
 		
 		call write_step(fn,self%dt,2,'I',real(self%B))
-		call write_step(fn,self%dt,2,'U',der(self%B,ADS_U))
-		call write_step(fn,self%dt,2,'V',der(self%B,ADS_V))
-		call write_step(fn,self%dt,2,'R',der(self%B,ADS_R))
-		call write_step(fn,self%dt,2,'N',der(self%B,ADS_N))
+		call write_step(fn,self%dt,2,'dIdU',der(self%B,ADS_U))
+		call write_step(fn,self%dt,2,'dIdV',der(self%B,ADS_V))
+		call write_step(fn,self%dt,2,'dIdR',der(self%B,ADS_R))
+		call write_step(fn,self%dt,2,'dIdN',der(self%B,ADS_N))
 	end subroutine writePair
 
 	subroutine writeVectors(self,fn,px)
@@ -205,10 +205,10 @@ contains
 			allocate(N( M(1) , M(2) ))
 			
 			call read_step(pfn,'I',I,1)
-			call read_step(pfn,'U',U,1)
-			call read_step(pfn,'V',V,1)
-			call read_step(pfn,'R',R,1)
-			call read_step(pfn,'N',N,1)
+			call read_step(pfn,'dIdU',U,1)
+			call read_step(pfn,'dIdV',V,1)
+			call read_step(pfn,'dIdR',R,1)
+			call read_step(pfn,'dIdN',N,1)
 			if(allocated(self%A)) deallocate(self%A)
 			allocate(self%A( M(1) , M(2) ))
 			self%A%x = I
@@ -218,10 +218,10 @@ contains
 			self%A%d(ADS_N) = N
 			
 			call read_step(pfn,'I',I,2)
-			call read_step(pfn,'U',U,2)
-			call read_step(pfn,'V',V,2)
-			call read_step(pfn,'R',R,2)
-			call read_step(pfn,'N',N,2)
+			call read_step(pfn,'dIdU',U,2)
+			call read_step(pfn,'dIdV',V,2)
+			call read_step(pfn,'dIdR',R,2)
+			call read_step(pfn,'dIdN',N,2)
 			if(allocated(self%B)) deallocate(self%B)
 			allocate(self%B( M(1) , M(2) ))
 			self%B%x = I
