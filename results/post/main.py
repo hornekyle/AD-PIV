@@ -17,7 +17,7 @@ def plotVar(f,vn):
 	
 	R = (I.data.min(),I.data.max())
 
-	fig = pl.figure(vn,figsize=[10.8,5])
+	fig = pl.figure(vn,figsize=[11,5])
 
 	ax = fig.add_subplot(1,2,1,aspect=1.0)
 	pc = ax.pcolormesh(x,y,I[0,:,:],vmin=R[0],vmax=R[1])
@@ -38,10 +38,15 @@ def plotVar(f,vn):
 
 	fig.tight_layout(w_pad=-3)
 
-f = netcdf_file('./results/pixels-3.0/pair-1.nc')
+#f = netcdf_file('./results/pixels-3.0/pair-1.nc')
+f = netcdf_file('./results/pixels-3.0/vector-1-[1,1|2).nc')
 plotVar(f,'I')
-plotVar(f,'U')
-plotVar(f,'V')
-plotVar(f,'R')
+plotVar(f,'dudI')
+plotVar(f,'dIdU')
+plotVar(f,'dvdI')
+plotVar(f,'dIdV')
+#plotVar(f,'dIdU')
+#plotVar(f,'dIdV')
+#plotVar(f,'dIdR')
 pl.show()
 f.close()
