@@ -29,20 +29,6 @@ set(process_src
 	"src/generator.f90"
 	"src/process.f90")
 
-set(post_src
-	"src/plplotlib.f90"
-	"src/post.f90")
-
-set(figures_src
-	"src/generator.f90"
-	"src/plplotlib.f90"
-	"src/figures.f90")
-
-include(FindPkgConfig)
-pkg_search_module(PLPLOT REQUIRED plplot-f95 plplotd-f95)
-include_directories(${PLPLOT_INCLUDE_DIRS})
-link_directories(${PLPLOT_LIBRARY_DIRS})
-
 find_library(NETCDF_LIBRARY netcdff "/usr/lib")
 find_path(NETCDF_INCLUDE "netcdf.mod" "/usr/include")
 
@@ -57,18 +43,6 @@ add_executable(process ${common_src} ${process_src})
 target_link_libraries(process "gomp")
 target_link_libraries(process ${NETCDF_LIBRARY})
 add_dependencies(process symlink)
-
-add_executable(post ${common_src} ${post_src})
-target_link_libraries(post "gomp")
-target_link_libraries(post ${NETCDF_LIBRARY})
-target_link_libraries(post ${PLPLOT_LIBRARIES})
-add_dependencies(post symlink)
-
-add_executable(figures ${common_src} ${figures_src})
-target_link_libraries(figures "gomp")
-target_link_libraries(figures ${NETCDF_LIBRARY})
-target_link_libraries(figures ${PLPLOT_LIBRARIES})
-add_dependencies(figures symlink)
 
 set(FORD_EXECUTABLE "ford")
 add_custom_target(ford
