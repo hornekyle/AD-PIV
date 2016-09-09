@@ -47,7 +47,7 @@ contains
 		pair = createFullPair(k)
 		
 		if(write_pair) call pair%writePair('./results/'//prefix//'/pair-'//trim(buf)//'.nc')
-		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc',px=.true.)
+		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc')
 	end subroutine doPair
 
 	function createFullPair(idx) result(p)
@@ -56,23 +56,14 @@ contains
 			!! Result
 		
 		integer,dimension(2)::N
-		real(wp),dimension(2)::L
 		type(ad1_t),dimension(2)::R
-		real(wp)::dt
 		integer::Np,k
 		
 		N = image_size
-		L = real(image_size,wp)/real(image_size(1),wp)
 		Np = particle_count
-		dt = 1.0_wp
-		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
+		R = [particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
 		
-		Sx = L(1)/real(N(1),wp)
-		Sy = L(2)/real(N(2),wp)
-		Lx = L(1)
-		Ly = L(2)
-		
-		p = generatePair(N,L,Np,dt,R)
+		p = generatePair(N,Np,R)
 		p%idx = idx
 		
 		call p%setupPasses(N_passes,buffer_window_size,spacing_window_size)

@@ -87,14 +87,11 @@ contains
 			type(regions_t)::o
 				!! Result
 			
-			real(wp),dimension(2)::ps
 			integer::il,ih
 			integer::jl,jh
 			
-			ps = p%L/real(p%N,wp)
-			
-			il = minloc( abs(p%px-(p%vx(i)-real(N(1),wp)*ps(1)/2.0_wp)) , 1 )
-			jl = minloc( abs(p%py-(p%vy(j)-real(N(2),wp)*ps(2)/2.0_wp)) , 1 )
+			il = nint( p%vx(i)-real(N(1),wp)/2.0_wp )
+			jl = nint( p%vy(j)-real(N(2),wp)/2.0_wp )
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
@@ -111,7 +108,6 @@ contains
 			type(regions_t)::o
 				!! Result
 			
-			real(wp),dimension(2)::ps
 			integer,dimension(2)::sp,sm,s
 			real(wp),dimension(2)::up
 			integer::il,ih
@@ -121,16 +117,13 @@ contains
 			integer::jlA,jhA,jlB,jhB
 			logical::ok
 			
-			ps = p%L/real(p%N,wp)
-			
 			up = real([p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)])
-			
 			s  = nint(up)
-			sp = s/2
-			sm = s-sp
+			sm = s/2
+			sp = s-sm
 			
-			il = minloc( abs(p%px-(p%vx(i)-real(N(1),wp)*ps(1)/2.0_wp)) , 1 )
-			jl = minloc( abs(p%py-(p%vy(j)-real(N(2),wp)*ps(2)/2.0_wp)) , 1 )
+			il = nint( p%vx(i)-real(N(1),wp)/2.0_wp )
+			jl = nint( p%vy(j)-real(N(2),wp)/2.0_wp )
 			ih = il+N(1)-1
 			jh = jl+N(2)-1
 			
@@ -144,7 +137,7 @@ contains
 			jlB = jl+sp(2)
 			jhB = jh+sp(2)
 			
-			ok = checkBoundsError([ilA,ihA],[jlA,jhA],[ilB,ihB],[jlB,ihB],p%N)
+			ok = checkBoundsError([ilA,ihA],[jlA,jhA],[ilB,ihB],[jlB,jhB],p%N)
 			
 			o = regions_t( p%A(ilA:ihA,jlA:jhA) , p%B(ilB:ihB,jlB:jhB) , [i,j] , s )
 		end function secondPass

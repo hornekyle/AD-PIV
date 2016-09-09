@@ -24,12 +24,6 @@ module settings_mod
 	real(wp)::Ux0
 	real(wp)::Uy0
 	
-	real(wp)::Sx
-	real(wp)::Sy
-	
-	real(wp)::Lx
-	real(wp)::Ly
-	
 	character(16)::velocity_mode
 	real(wp)::noise_level
 	
@@ -65,13 +59,11 @@ contains
 		
 		Ux0 = cfg%getReal('Ux0')
 		Uy0 = cfg%getReal('Uy0')
-		Lx = cfg%getReal('Lx')
-		Ly = cfg%getReal('Ly')
 		
 		velocity_mode = trim(cfg%getString('velocity_mode'))
 		noise_level   = cfg%getReal('noise_level')
 		
-		image_size      = cfg%getVector('image_size')
+		image_size      = nint(cfg%getVector('image_size'))
 		particle_count  = cfg%getInteger('particle_count')
 		particle_radius = cfg%getReal('particle_radius')
 		N_pairs         = cfg%getInteger('N_pairs')
@@ -91,23 +83,10 @@ contains
 		type(ad1_t),dimension(2),intent(in)::x
 		type(ad1_t),dimension(2)::o
 		
-		type(ad1_t)::r,s,c,R0
-		
-		r = sqrt(sum( [x(1)-Lx,x(2)]**2 ))
-		R0 = (Lx+Ly)/2.0_wp
-		c = (x(1)-Lx)/r
-		s = x(2)/r
-		
 		select case(velocity_mode)
 		case('uniform')
-			o(1) = Sx*diff1(Ux0,ADS_U)
-			o(2) = Sy*diff1(Uy0,ADS_V)
-		case('shear')
-			o(1) =  Sx*diff1(Ux0*real(x(2)/R0),ADS_U)
-			o(2) =  Sy*diff1(Uy0,ADS_V)
-		case('vortex')
-			o(1) =  Sx*diff1(real( Ux0*r/R0*s),ADS_U)
-			o(2) =  Sy*diff1(real(-Uy0*r/R0*c),ADS_V)
+			o(1) = diff1(Ux0,ADS_U)
+			o(2) = diff1(Uy0,ADS_V)
 		end select
 	end function uf
 

@@ -15,14 +15,11 @@ module pair_mod
 	type::pair_t
 		integer::idx = 0
 		
-		real(wp),dimension(2)::L
 		integer,dimension(2)::N,Nv
 		
-		real(wp),dimension(:),allocatable::px,py
 		real(wp),dimension(:),allocatable::vx,vy
 		
 		type(ad1_t),dimension(:,:),allocatable::A,B
-		real(wp)::dt
 		
 		type(pass_t),dimension(:),allocatable::passes
 	contains
@@ -45,33 +42,13 @@ contains
 	!= Pair Routines =!
 	!=================!
 
-	function newPair(N,L,dt) result(self)
+	function newPair(N) result(self)
 		integer,dimension(2),intent(in)::N
-		real(wp),dimension(2),intent(in),optional::L
-		real(wp),intent(in),optional::dt
 		type(pair_t)::self
 		
-		allocate(self%px(N(1)))
-		allocate(self%py(N(2)))
 		allocate(self%A(N(1),N(2)))
 		allocate(self%B(N(1),N(2)))
 		self%N = N
-		
-		if(present(L)) then
-			self%px = linspace(0.0_wp,L(1),N(1))
-			self%py = linspace(0.0_wp,L(2),N(2))
-			self%L = L
-		else
-			self%px = linspace(0.0_wp,1.0_wp,N(1))
-			self%py = linspace(0.0_wp,1.0_wp,N(1))
-			self%L = 1.0_wp
-		end if
-		
-		if(present(dt)) then
-			self%dt = dt
-		else
-			self%dt = 1.0_wp
-		end if
 	end function newPair
 
 	subroutine setupPasses(self,Np,B,S)
@@ -88,8 +65,8 @@ contains
 		
 		N = floor(real(self%N-2*B,wp)/real(S,wp))
 		self%Nv = N
-		self%vx = linspace(self%px(B(1)),self%px(self%N(1)-B(1)),N(1))
-		self%vy = linspace(self%py(B(2)),self%py(self%N(2)-B(2)),N(2))
+		self%vx = linspace(real(B(1),wp),real(self%N(1)-B(1),wp),N(1))
+		self%vy = linspace(real(B(2),wp),real(self%N(2)-B(2),wp),N(2))
 		
 		allocate(self%passes(0:Np))
 		do k=0,Np
@@ -108,7 +85,12 @@ contains
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%px,self%py)
+		real(wp),dimension(:),allocatable::x,y
+		
+		x = linspace(1.0_wp,real(self%N(1),wp),self%N(1))
+		y = linspace(1.0_wp,real(self%N(2),wp),self%N(2))
+		
+		call write_grid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],x,y)
 		
 		call write_step(fn,0.0_wp,1,'I',real(self%A))
 		call write_step(fn,0.0_wp,1,'dIdU',der(self%A,ADS_U))
@@ -117,21 +99,18 @@ contains
 		call write_step(fn,0.0_wp,1,'dIdN',der(self%A,ADS_N))
 		
 		
-		call write_step(fn,self%dt,2,'I',real(self%B))
-		call write_step(fn,self%dt,2,'dIdU',der(self%B,ADS_U))
-		call write_step(fn,self%dt,2,'dIdV',der(self%B,ADS_V))
-		call write_step(fn,self%dt,2,'dIdR',der(self%B,ADS_R))
-		call write_step(fn,self%dt,2,'dIdN',der(self%B,ADS_N))
+		call write_step(fn,1.0_wp,2,'I',real(self%B))
+		call write_step(fn,1.0_wp,2,'dIdU',der(self%B,ADS_U))
+		call write_step(fn,1.0_wp,2,'dIdV',der(self%B,ADS_V))
+		call write_step(fn,1.0_wp,2,'dIdR',der(self%B,ADS_R))
+		call write_step(fn,1.0_wp,2,'dIdN',der(self%B,ADS_N))
 	end subroutine writePair
 
-	subroutine writeVectors(self,fn,px)
+	subroutine writeVectors(self,fn)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
-		logical,intent(in),optional::px
 		
 		character(64),dimension(:),allocatable::vars
-		real(wp),dimension(:),allocatable::x,y
-		logical::pxl
 		integer::Nd,k
 		Nd = 4
 		
@@ -148,21 +127,7 @@ contains
 		vars( 9) = 'dvdR'
 		vars(10) = 'dvdN'
 		
-		if(present(px)) then
-			pxl = px
-		else
-			pxl = .false.
-		end if
-		
-		if(pxl) then
-			x = self%vx*real(size(self%px),wp)/span(self%px)
-			y = self%vy*real(size(self%py),wp)/span(self%py)
-		else
-			x = self%vx
-			y = self%vy
-		end if
-		
-		call write_grid(fn,vars,x,y)
+		call write_grid(fn,vars,self%vx,self%vy)
 		
 		do k=lbound(self%passes,1),ubound(self%passes,1)
 			call write_step(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
@@ -195,8 +160,6 @@ contains
 		if(present(pfn)) then
 			call read_grid(pfn,vars,x,y,z,t)
 			M = [size(x),size(y)]
-			self%px = x
-			self%py = y
 			
 			allocate(I( M(1) , M(2) ))
 			allocate(U( M(1) , M(2) ))

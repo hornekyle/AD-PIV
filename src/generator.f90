@@ -14,7 +14,7 @@ module generator_mod
 	
 contains
 
-	function generatePair(N,L,Np,dt,R) result(o)
+	function generatePair(N,Np,R) result(o)
 		!! Generate particle list
 		!! - Random initial positions (x,y)
 		!! - Random sizes (r)
@@ -25,12 +25,8 @@ contains
 		!! - Add particle image to o%B
 		integer,dimension(2),intent(in)::N
 			!! Number of pixels in each axis
-		real(wp),dimension(2),intent(in)::L
-			!! Physical size in each axis
 		integer,intent(in)::Np
 			!! Total number of particles generated
-		real(wp),intent(in)::dt
-			!! Time between images
 		type(ad1_t),dimension(2),intent(in)::R
 			!! Particle size parameter
 		type(pair_t)::o
@@ -45,7 +41,7 @@ contains
 		integer::tid,tct
 		integer::k
 		
-		o = pair_t(N,L,dt)
+		o = pair_t(N)
 		
 		call random_number(o%A%x)
 		call random_number(o%B%x)
@@ -55,7 +51,7 @@ contains
 		allocate(particles(Np))
 		
 		do k=1,Np
-			particles(k)%x = (([randomUniform(),randomUniform()]+1.0_wp)/2.0_wp*1.2_wp-0.1_wp)*L
+			particles(k)%x = (([randomUniform(),randomUniform()]+1.0_wp)/2.0_wp*1.2_wp-0.1_wp)*real(N,wp)
 			particles(k)%r = R(1)+R(2)*randomNormal()
 		end do
 		
@@ -65,8 +61,8 @@ contains
 		!$omp barrier
 		do k=1,Np
 			if(tid==0 .and. amRoot()) call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
-			call project( integrate(particles(k)%x,-dt/2.0_wp) , particles(k) , o%A , [tid,tct])
-			call project( integrate(particles(k)%x,+dt/2.0_wp) , particles(k) , o%B , [tid,tct])
+			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A , [tid,tct])
+			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B , [tid,tct])
 		end do
 		!$omp end parallel
 		
@@ -116,16 +112,16 @@ contains
 			tid = omp(1)
 			tct = omp(2)
 			
-			il = max( minloc(abs( o%px-(x0(1)%x-3.0_wp*real(p%r)) ),1) , 1)
-			ih = min( minloc(abs( o%px-(x0(1)%x+3.0_wp*real(p%r)) ),1) , N(1))
-			jl = max( minloc(abs( o%py-(x0(2)%x-3.0_wp*real(p%r)) ),1) , 1)
-			jh = min( minloc(abs( o%py-(x0(2)%x+3.0_wp*real(p%r)) ),1) , N(2))
+			il = max( nint(real(x0(1)-3.0_wp*p%r)) ,1   )
+			ih = min( nint(real(x0(1)+3.0_wp*p%r)) ,N(1))
+			jl = max( nint(real(x0(2)-3.0_wp*p%r)) ,1   )
+			jh = min( nint(real(x0(2)+3.0_wp*p%r)) ,N(2))
 			
 			do j=jl,jh
 				if(.not. mod(j,tct)==tid) cycle
 				do i=il,ih
-					x = o%px(i)
-					y = o%py(j)
+					x = real(i,wp)
+					y = real(j,wp)
 					F(i,j) = F(i,j)+gauss(x,y,x0(1),x0(2),p%r,p%r)
 				end do
 			end do
@@ -150,7 +146,7 @@ contains
 		do j=1,p%Nv(2)
 			do i=1,p%Nv(1)
 				x = [p%vx(i),p%vy(j)]
-				ul = uf(x)*real(p%N,wp)/p%L
+				ul = uf(x)
 				p%passes(0)%u(i,j)%x = ul(1)%x
 				p%passes(0)%u(i,j)%d = ul(1)%d
 				p%passes(0)%v(i,j)%x = ul(2)%x
