@@ -3,15 +3,9 @@ enable_language(Fortran)
 set(PROJECT "AD-PIV")
 project(${PROJECT})
 
-if(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
-	set(WTABS "-Wno-tabs")
-else(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
-	set(WTABS "-Wtabs")
-endif(CMAKE_FORTRAN_COMPILER_VERSION VERSION_GREATER 5.0)
-
-set(CMAKE_Fortran_FLAGS "")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall ${WTABS} -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mtune=native -march=native")
+set(CMAKE_Fortran_FLAGS "-fopenmp")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan -fopenmp")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -fopenmp")
 
 set(common_src
 	"src/autodiff.f90"
@@ -52,3 +46,4 @@ add_custom_target(ford
 	COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_BINARY_DIR}"
 	COMMAND ${FORD_EXECUTABLE} "project.md"
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+
