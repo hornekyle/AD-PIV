@@ -102,6 +102,8 @@ contains
 		end function firstPass
 	
 		function secondPass(i,j,ref) result(o)
+			!! @todo
+			!! Re-evaluation of algorithm is needed
 			integer,intent(in)::i,j
 				!! Corrdinates of vector
 			integer,intent(in)::ref
@@ -117,6 +119,7 @@ contains
 			
 			integer::ilA,ihA,ilB,ihB
 			integer::jlA,jhA,jlB,jhB
+			logical::ok
 			
 			ps = p%L/real(p%N,wp)
 			
@@ -141,13 +144,37 @@ contains
 			jlB = jl+sp(2)
 			jhB = jh+sp(2)
 			
-			if( any([ilA,ihA,ilB,ihB]<1) ) return
-			if( any([jlA,jhA,jlB,jhB]<1) ) return
-			if( any([ilA,ihA,ilB,ihB]>p%N(1)) ) return
-			if( any([jlA,jhA,jlB,jhB]>p%N(2)) ) return
+			ok = checkBoundsError([ilA,ihA],[jlA,jhA],[ilB,ihB],[jlB,ihB],p%N)
 			
 			o = regions_t( p%A(ilA:ihA,jlA:jhA) , p%B(ilB:ihB,jlB:jhB) , [i,j] , s )
 		end function secondPass
+	
+		function checkBoundsError(iA,jA,iB,jB,N) result(ok)
+			integer,dimension(2),intent(in)::iA,jA
+			integer,dimension(2),intent(in)::iB,jB
+			integer,dimension(2),intent(in)::N
+			logical::ok
+			
+			ok = .true.
+			
+			if( any([iA,iB]<1) ) ok = .false.
+			if( any([jA,jB]<1) ) ok = .false.
+			if( any([iA,iB]>N(1)) ) ok = .false.
+			if( any([jA,jB]>N(2)) ) ok = .false.
+			
+			if(.not.ok) then
+				write(*,*) ''
+				write(*,*) N(1),N(2)
+				write(*,*) 'A('// & 
+					& int2char( iA(1) )//':'//int2char( iA(2) )//','// &
+					& int2char( jA(1) )//':'//int2char( jA(2) )//')'
+				write(*,*) 'B('// &
+					& int2char( iB(1) )//':'//int2char( iB(2) )//','// &
+					& int2char( jB(1) )//':'//int2char( jB(2) )//')'
+				write(*,*) ''
+				stop 1
+			end if
+		end function checkBoundsError
 	
 	end subroutine doPass
 

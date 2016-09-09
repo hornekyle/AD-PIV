@@ -3,9 +3,9 @@ enable_language(Fortran)
 set(PROJECT "AD-PIV")
 project(${PROJECT})
 
-set(CMAKE_Fortran_FLAGS "-fopenmp")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan -fopenmp")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -fopenmp")
+set(CMAKE_Fortran_FLAGS "")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
 
 set(common_src
 	"src/autodiff.f90"

@@ -62,7 +62,7 @@ contains
 		integer::Np,k
 		
 		N = image_size
-		L = 1.0_wp
+		L = real(image_size,wp)/real(image_size(1),wp)
 		Np = particle_count
 		dt = 1.0_wp
 		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
