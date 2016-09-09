@@ -67,7 +67,7 @@ contains
 					fn = './results/'//prefix//'/vector'
 					fn = fn//'-'//int2char(p%idx)
 					fn = fn//'-['//int2char(i)//','//int2char(j)//'|'
-					fn = fn//''//int2char(k)//')'
+					fn = fn//''//int2char(k)//']'
 					fn = fn//'.nc'
 					call writeVector(fn,d,R)
 				end if

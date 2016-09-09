@@ -92,7 +92,7 @@ contains
 			fn = './results/'//prefix//'/map'
 			fn = fn//'-'//int2char(idx)
 			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
-			fn = fn//''//int2char(pass)//')'
+			fn = fn//''//int2char(pass)//']'
 			fn = fn//'.nc'
 			call M%writeMap(fn)
 		end if
@@ -133,6 +133,7 @@ contains
 		o = real(self%shift,wp)+matmul(Ai,-bs)
 		
 		if(write_map) call writeFields
+		
 	contains
 	
 		function grad_f(f,r,h) result(o)
@@ -209,7 +210,7 @@ contains
 			fn = './results/'//prefix//'/fields'
 			fn = fn//'-'//int2char(idx)
 			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
-			fn = fn//''//int2char(pass)//')'
+			fn = fn//''//int2char(pass)//']'
 			fn = fn//'.nc'
 			
 			call write_grid(fn,['fx','fy','ft'],x,y)
@@ -228,13 +229,13 @@ contains
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I','U','V','R','N'],self%dx,self%dy)
+		call write_grid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%dx,self%dy)
 		
 		call write_step(fn,0.0_wp,1,'I',real(self%C))
-		call write_step(fn,0.0_wp,1,'U',der(self%C,ADS_U))
-		call write_step(fn,0.0_wp,1,'V',der(self%C,ADS_V))
-		call write_step(fn,0.0_wp,1,'R',der(self%C,ADS_R))
-		call write_step(fn,0.0_wp,1,'N',der(self%C,ADS_N))
+		call write_step(fn,0.0_wp,1,'dIdU',der(self%C,ADS_U))
+		call write_step(fn,0.0_wp,1,'dIdV',der(self%C,ADS_V))
+		call write_step(fn,0.0_wp,1,'dIdR',der(self%C,ADS_R))
+		call write_step(fn,0.0_wp,1,'dIdN',der(self%C,ADS_N))
 	end subroutine writeMap
 
 	subroutine readMap(self,fn)
@@ -260,10 +261,10 @@ contains
 		allocate(N( M(1) , M(2) ))
 		
 		call read_step(fn,'I',I,1)
-		call read_step(fn,'U',U,1)
-		call read_step(fn,'V',V,1)
-		call read_step(fn,'R',R,1)
-		call read_step(fn,'N',N,1)
+		call read_step(fn,'dIdU',U,1)
+		call read_step(fn,'dIdV',V,1)
+		call read_step(fn,'dIdR',R,1)
+		call read_step(fn,'dIdN',N,1)
 		if(allocated(self%C)) deallocate(self%C)
 		allocate(self%C( M(1) , M(2) ))
 		self%C%x = I
