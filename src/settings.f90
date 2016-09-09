@@ -33,8 +33,8 @@ module settings_mod
 	character(16)::velocity_mode
 	real(wp)::noise_level
 	
-	integer::image_scale
-	real(wp)::particles_scale
+	integer,dimension(2)::image_size
+	integer::particle_count
 	real(wp)::particle_radius
 	integer::N_pairs
 	
@@ -71,8 +71,8 @@ contains
 		velocity_mode = trim(cfg%getString('velocity_mode'))
 		noise_level   = cfg%getReal('noise_level')
 		
-		image_scale     = cfg%getInteger('image_scale')
-		particles_scale = cfg%getReal('particles_scale')
+		image_size      = cfg%getVector('image_size')
+		particle_count  = cfg%getInteger('particle_count')
 		particle_radius = cfg%getReal('particle_radius')
 		N_pairs         = cfg%getInteger('N_pairs')
 		

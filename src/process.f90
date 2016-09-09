@@ -61,9 +61,9 @@ contains
 		real(wp)::dt
 		integer::Np,k
 		
-		N = 2**image_scale
-		L = 0.0512_wp
-		Np = nint( real(2*4**(image_scale-2),wp)*particles_scale )
+		N = image_size
+		L = 1.0_wp
+		Np = particle_count
 		dt = 1.0_wp
 		R = L/real(N,wp)*[particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
 		

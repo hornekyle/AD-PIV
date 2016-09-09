@@ -322,7 +322,7 @@ contains
 		type(ad1_t),dimension(:,:),intent(in)::A
 		type(ad3_t),dimension(:,:),allocatable::o
 		integer::f
-		integer::i,j,k
+		integer::i,j
 		
 		allocate(o(size(A,1),size(A,2)))
 		
