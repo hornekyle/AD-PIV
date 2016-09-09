@@ -8,6 +8,7 @@ set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -fcheck=all -ffpe-trap=invali
 set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
 
 set(common_src
+	"src/array.f90"
 	"src/autodiff.f90"
 	"src/cluster.f90"
 	"src/config.f90"
@@ -17,7 +18,10 @@ set(common_src
 	"src/pair.f90"
 	"src/piv.f90"
 	"src/settings.f90"
-	"src/utilities.f90")
+	"src/stats.f90"
+	"src/text.f90"
+	"src/time.f90"
+	)
 
 set(process_src
 	"src/generator.f90"

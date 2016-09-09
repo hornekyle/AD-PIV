@@ -1,28 +1,47 @@
-! TODO: make code fault tolerant
 module config_mod
+	!! Module for reading variables from config files
+	!! @todo
+	!! Make code fault tolerant  
+	!! Check type of pair when accessing
+	!! Cange pair_t%s to allocatable
 	use kinds_mod
-	use utilities_mod
+	use text_mod
 	implicit none
 	private
-
+	
+	integer,parameter::PT_LOGICAL = 0
+	integer,parameter::PT_INTEGER = 1
+	integer,parameter::PT_REAL    = 2
+	integer,parameter::PT_COMPLEX = 3
+	integer,parameter::PT_VECTOR  = 4
+	integer,parameter::PT_MATRIX  = 5
+	integer,parameter::PT_STRING  = 6
+	
+	!=========!
+	!= Types =!
+	!=========!
+	
 	type::pair_t
+		!! Type to store a single key-value pair and the data's type
 		character(100)::key
 		
 		integer::pType
 		
-		logical::l = .false.                      ! 0
-		integer::i = 0                            ! 1
-		real(wp)::r = 0.0_wp                      ! 2
-		complex(wp)::c = 0.0_wp                   ! 3
-		real(wp),dimension(:),allocatable::v      ! 4
-		real(wp),dimension(:,:),allocatable::m    ! 5
-		character(str_short)::s = ' '             ! 6
+		logical::l = .false.
+		integer::i = 0
+		real(wp)::r = 0.0_wp
+		complex(wp)::c = 0.0_wp
+		real(wp),dimension(:),allocatable::v
+		real(wp),dimension(:,:),allocatable::m
+		character(strShort)::s = ' '
 	end type
-
+	
 	type::config_t
-		character(str_long)::fn
+		!! Type to store a set of pairs and access their data
+		character(strLong)::fn
+			!! Filename data was read from
 		type(pair_t),dimension(:),allocatable::pairs
-		logical::loaded = .false.
+			!! Pairs of data
 	contains
 		procedure::readFile
 		procedure::writeContents
@@ -42,12 +61,24 @@ module config_mod
 		procedure,private::sortKeys
 	end type
 	
+	!==============!
+	!= Interfaces =!
+	!==============!
+	
+	interface config_t
+		module procedure newConfig
+	end interface
+	
+	!===========!
+	!= Exports =!
+	!===========!
+	
 	public::config_t
-	public::newConfig
 	
 contains
 
 	function newConfig(fn) result(o)
+		!! Read a config file and return it in memory
 		character(*),intent(in)::fn
 		type(config_t)::o
 		
@@ -64,7 +95,7 @@ contains
 		character(*),intent(in)::fn
 		
 		integer::ios
-		character(str_long)::buf
+		character(strLong)::buf
 		type(node_t),target::head
 		type(node_t),pointer::cur,next,tail
 		integer::N,k
@@ -75,7 +106,7 @@ contains
 		tail => head
 		open(100,file=fn,status='old',iostat=ios)
 		if(ios/=0) return
-		read(100,fmt_long,iostat=ios) buf
+		read(100,fmtLong,iostat=ios) buf
 		do while(ios==0)
 			buf = adjustl(buf)
 			if(buf(1:1) /= '#' .and. buf(1:1) /= '[' .and. buf(1:1) /= ' ') then
@@ -84,7 +115,7 @@ contains
 				tail => tail%next
 				tail%obj = newPair(buf)
 			end if
-			read(100,fmt_long,iostat=ios) buf
+			read(100,fmtLong,iostat=ios) buf
 		end do
 		close(100)
 		if(allocated(self%pairs)) deallocate(self%pairs)
@@ -99,8 +130,6 @@ contains
 			cur => next
 		end do
 		call self%sortKeys()
-		
-		self%loaded = .true.
 	end subroutine readFile
 
 	function newPair(b) result(p)
@@ -170,21 +199,21 @@ contains
 		N = len(v)
 
 		if(v(1:1)=='[' .and. v(N:N)==']' .and. verify(v,' +-.E0123456789[,]')==0) then
-			t = 4
+			t = PT_VECTOR
 		else if(v(1:1)=='(' .and. v(N:N)==')' .and. verify(v,' +-.E0123456789(,)')==0) then
-			t = 3
+			t = PT_COMPLEX
 		else if(v(1:1)=='''' .and. v(N:N)=='''') then
-			t = 6
+			t = PT_STRING
 		else if(v(1:1)=='"' .and. v(N:N)=='"') then
-			t = 6
+			t = PT_STRING
 		else if(verify(v,' +-0123456789')==0) then
-			t = 1
+			t = PT_INTEGER
 		else if(verify(v,' +-.E0123456789')==0) then
-			t = 2
+			t = PT_REAL
 		else if(verify(v,' MATRIXmatrix0123456789(,)')==0) then
-			t = 5
+			t = PT_MATRIX
 		else if(verify(v,' .TRUEtrueFALSEfalse')==0) then
-			t = 0
+			t = PT_LOGICAL
 		else
 			t = -1
 		end if
@@ -223,7 +252,7 @@ contains
 			write(iou,'(1A)',advance='no') trim(self%pairs(k)%key)//' = '
 			select case(self%pairs(k)%ptype)
 			case(0)
-				if(self%pairs(k)%l) then
+				if(self%pairs(k)%l) then              ! 6
 					write(iou,*) 'TRUE'
 				else
 					write(iou,*) 'FALSE'
@@ -331,13 +360,13 @@ contains
 		character(*),intent(in)::key
 		integer::idx
 		
-		integer::L,M,H
+		integer::L,M,H,k
 		logical::found
 		
 		L = 1
 		M = size(self%pairs)/2+1
 		H = size(self%pairs)
-		found = .false.
+		found = .false.              ! 6
 		
 		idx = 0
 		do while(.not.found)
@@ -354,13 +383,30 @@ contains
 				exit
 			else if(key<self%pairs(M)%key) then
 				H = M
-				M = (L+H)/2
+				M = (L+H)/2+1
 			else if(key>self%pairs(M)%key) then
 				L = M
-				M = (L+H)/2
+				M = (L+H)/2+1
 			end if
 		end do
-		if(idx==0) write(*,'(1A)') colorize('Key not found: ',[5,5,0])//key
+		
+		! In case the fast method fails
+		!! @todo
+		!! Look into more robust search
+		if(idx==0) then
+			do k=1,size(self%pairs)
+				if(key==self%pairs(k)%key) then
+					idx = k
+					found = .true.
+					exit
+				end if
+			end do
+		end if
+		
+		if(idx==0) then
+			write(*,*) 'Key: ',trim(key)
+			error stop 'Key not found'
+		end if
 	end function findKey
 
 end module config_mod

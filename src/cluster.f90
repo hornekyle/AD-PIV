@@ -1,7 +1,7 @@
 module cluster_mod
 	use kinds_mod
 	use mpi
-	use utilities_mod
+	use stats_mod
 	implicit none
 	
 	integer::mpi_size = 0

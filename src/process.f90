@@ -2,7 +2,7 @@ program process_prg
 	use kinds_mod
 	use autodiff_mod
 	use settings_mod
-	use utilities_mod
+	use text_mod
 	use cluster_mod
 	use pair_mod
 	use generator_mod
@@ -41,7 +41,7 @@ contains
 		type(pair_t)::pair
 		character(64)::buf
 		
-		if(amRoot()) write(*,'(1A)') colorize('Processing pair: '//int2char(k),[5,5,5])
+		if(amRoot()) write(*,'(1A)') colorize('Processing pair: '//intToChar(k),[5,5,5])
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair(k)

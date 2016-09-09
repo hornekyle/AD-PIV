@@ -1,11 +1,11 @@
 module generator_mod
 	use kinds_mod
 	use settings_mod
-	use utilities_mod
-	use autodiff_mod
+	use stats_mod
 	use pair_mod
 	use omp_lib
 	use cluster_mod
+	use autodiff_mod
 	implicit none
 	private
 	
@@ -60,7 +60,7 @@ contains
 		tct = omp_get_num_threads()
 		!$omp barrier
 		do k=1,Np
-			if(tid==0 .and. amRoot()) call showProgress('Generating '//int2char(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
+			if(tid==0 .and. amRoot()) call showProgress('Generating '//intToChar(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
 			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A , [tid,tct])
 			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B , [tid,tct])
 		end do
@@ -128,6 +128,7 @@ contains
 		end subroutine project
 	
 		pure function gauss(x,y,x0,y0,xs,ys) result(o)
+			use autodiff_mod
 			type(ad1_t),intent(in)::x,y,xs,ys
 			type(ad1_t),intent(in)::x0,y0
 			type(ad1_t)::o

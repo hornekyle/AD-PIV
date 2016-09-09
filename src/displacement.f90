@@ -1,7 +1,8 @@
 module displacement_mod
 	use kinds_mod
 	use autodiff_mod
-	use utilities_mod
+	use array_mod
+	use text_mod
 	use netCDF_mod
 	use settings_mod
 	implicit none
@@ -90,9 +91,9 @@ contains
 		
 		if(write_map) then
 			fn = './results/'//prefix//'/map'
-			fn = fn//'-'//int2char(idx)
-			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
-			fn = fn//''//int2char(pass)//']'
+			fn = fn//'-'//intToChar(idx)
+			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
+			fn = fn//''//intToChar(pass)//']'
 			fn = fn//'.nc'
 			call M%writeMap(fn)
 		end if
@@ -208,15 +209,15 @@ contains
 			y = linspace(1.0_wp,real(N(2),wp),N(2))
 			
 			fn = './results/'//prefix//'/fields'
-			fn = fn//'-'//int2char(idx)
-			fn = fn//'-['//int2char(self%ij(1))//','//int2char(self%ij(2))//'|'
-			fn = fn//''//int2char(pass)//']'
+			fn = fn//'-'//intToChar(idx)
+			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
+			fn = fn//''//intToChar(pass)//']'
 			fn = fn//'.nc'
 			
-			call write_grid(fn,['fx','fy','ft'],x,y)
-			call write_step(fn,0.0_wp,1,'fx',real(fx))
-			call write_step(fn,0.0_wp,1,'fy',real(fy))
-			call write_step(fn,0.0_wp,1,'ft',real(ft))
+			call writeGrid(fn,['fx','fy','ft'],x,y)
+			call writeStep(fn,0.0_wp,1,'fx',real(fx))
+			call writeStep(fn,0.0_wp,1,'fy',real(fy))
+			call writeStep(fn,0.0_wp,1,'ft',real(ft))
 		end subroutine writeFields
 		
 	end function leastSquares
@@ -229,13 +230,13 @@ contains
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call write_grid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%dx,self%dy)
+		call writeGrid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%dx,self%dy)
 		
-		call write_step(fn,0.0_wp,1,'I',real(self%C))
-		call write_step(fn,0.0_wp,1,'dIdU',der(self%C,ADS_U))
-		call write_step(fn,0.0_wp,1,'dIdV',der(self%C,ADS_V))
-		call write_step(fn,0.0_wp,1,'dIdR',der(self%C,ADS_R))
-		call write_step(fn,0.0_wp,1,'dIdN',der(self%C,ADS_N))
+		call writeStep(fn,0.0_wp,1,'I',real(self%C))
+		call writeStep(fn,0.0_wp,1,'dIdU',der(self%C,ADS_U))
+		call writeStep(fn,0.0_wp,1,'dIdV',der(self%C,ADS_V))
+		call writeStep(fn,0.0_wp,1,'dIdR',der(self%C,ADS_R))
+		call writeStep(fn,0.0_wp,1,'dIdN',der(self%C,ADS_N))
 	end subroutine writeMap
 
 	subroutine readMap(self,fn)
@@ -249,7 +250,7 @@ contains
 		real(wp),dimension(:,:),allocatable::I,U,V,R,N
 		integer,dimension(2)::M
 		
-		call read_grid(fn,vars,dx,dy,z,t)
+		call readGrid(fn,vars,dx,dy,z,t)
 		M = [size(dx),size(dy)]
 		self%dx = dx
 		self%dy = dy
@@ -260,11 +261,11 @@ contains
 		allocate(R( M(1) , M(2) ))
 		allocate(N( M(1) , M(2) ))
 		
-		call read_step(fn,'I',I,1)
-		call read_step(fn,'dIdU',U,1)
-		call read_step(fn,'dIdV',V,1)
-		call read_step(fn,'dIdR',R,1)
-		call read_step(fn,'dIdN',N,1)
+		call readStep(fn,'I',I,1)
+		call readStep(fn,'dIdU',U,1)
+		call readStep(fn,'dIdV',V,1)
+		call readStep(fn,'dIdR',R,1)
+		call readStep(fn,'dIdN',N,1)
 		if(allocated(self%C)) deallocate(self%C)
 		allocate(self%C( M(1) , M(2) ))
 		self%C%x = I

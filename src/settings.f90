@@ -2,8 +2,8 @@ module settings_mod
 	!! Module containting global settings
 	use kinds_mod
 	use autodiff_mod
-	use utilities_mod
 	use config_mod
+	use text_mod
 	implicit none
 	
 	!==============!
@@ -53,7 +53,7 @@ contains
 		type(config_t)::cfg
 		integer::k
 		
-		cfg = newConfig(fn)
+		cfg = config_t(fn)
 		
 		prefix = trim(cfg%getString('prefix'))
 		
@@ -73,7 +73,7 @@ contains
 		spacing_window_size = nint(cfg%getVector('spacing_window_size'))
 		pass_guesses        = nint(cfg%getVector('pass_guesses'))
 		pass_sizes          = nint(cfg%getMatrix('pass_sizes'))
-		pass_types = [character(3):: ( cfg%getString('pass_types['//int2char(k)//']') , k=1,N_passes )]
+		pass_types = [character(3):: ( cfg%getString('pass_types['//intToChar(k)//']') , k=1,N_passes )]
 		
 		write_map = cfg%getLogical('write_map')
 		per_pixel = cfg%getLogical('per_pixel')

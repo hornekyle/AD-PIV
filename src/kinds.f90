@@ -1,7 +1,6 @@
 module kinds_mod
-	!! Module to manage kinds for the program
+	!! Module to manage real kinds and basic constants
 	implicit none
-	private
 	
 	!==============!
 	!= Real Kinds =!
@@ -15,6 +14,10 @@ module kinds_mod
 		!! Extended precision
 	integer,parameter::qp = selected_real_kind(32)
 		!! Quad precision
+	
+	integer,dimension(4),parameter::rkinds = [sp,dp,ep,qp]
+		!! List of real kinds
+	
 	integer,parameter::wp = dp
 		!! Set working precision to double
 	
@@ -27,15 +30,6 @@ module kinds_mod
 	real(wp),parameter::E  = exp(1.0_wp)
 		!! Euler's constant
 	
-	!==================!
-	!= Buffer Lengths =!
-	!==================!
-	
-	integer,parameter::str_long = 128
-	character(:),parameter::fmt_long = '(1A128)'
-	integer,parameter::str_short = 32
-	character(:),parameter::fmt_short = '(1A32)'
-	
 	!===========!
 	!= Exports =!
 	!===========!
@@ -43,10 +37,8 @@ module kinds_mod
 	public::sp,dp,ep,qp,wp
 	public::PI,E
 	
-	public::str_long,str_short
-	public::fmt_long,fmt_short
-	
 	public::printTypes
+	public::arg
 	
 contains
 
@@ -58,6 +50,14 @@ contains
 		write(*,*) 'qp: ',qp
 		write(*,*) 'wp: ',wp
 	end subroutine printTypes
+
+	elemental function arg(z) result(v)
+		!! Compute the argument of a complex number
+		complex(wp),intent(in)::z
+		real(wp)::v
+		
+		v = atan2(aimag(z),real(z))
+	end function arg
 
 end module kinds_mod
  

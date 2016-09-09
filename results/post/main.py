@@ -39,7 +39,7 @@ def plotVar(f,vn):
 	fig.tight_layout(w_pad=-3)
 
 #f = netcdf_file('./results/pixels-3.0/pair-1.nc')
-f = netcdf_file('./results/pixels-3.0/vector-1-[1,1|2).nc')
+f = netcdf_file('./results/pixels-3.0/vector-1-[1,1|2].nc')
 plotVar(f,'I')
 plotVar(f,'dudI')
 plotVar(f,'dIdU')

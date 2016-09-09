@@ -1,7 +1,8 @@
 module piv_mod
 	use kinds_mod
 	use settings_mod
-	use utilities_mod
+	use text_mod
+	use array_mod
 	use autodiff_mod
 	use displacement_mod
 	use pair_mod
@@ -43,7 +44,7 @@ contains
 		!$omp do schedule(static,1)
 		do j=1,p%Nv(2)
 			if(tid==0 .and. j/=p%Nv(2) .and. amRoot()) then
-				call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
+				call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
 			end if
 			do i=1,p%Nv(1)
 				select case(lref)
@@ -65,9 +66,9 @@ contains
 				
 				if(per_pixel) then
 					fn = './results/'//prefix//'/vector'
-					fn = fn//'-'//int2char(p%idx)
-					fn = fn//'-['//int2char(i)//','//int2char(j)//'|'
-					fn = fn//''//int2char(k)//']'
+					fn = fn//'-'//intToChar(p%idx)
+					fn = fn//'-['//intToChar(i)//','//intToChar(j)//'|'
+					fn = fn//''//intToChar(k)//']'
 					fn = fn//'.nc'
 					call writeVector(fn,d,R)
 				end if
@@ -75,7 +76,7 @@ contains
 		end do
 		!$omp end do
 		!$omp barrier
-		if(tid==0 .and. amRoot()) call showProgress('Correlating '//int2char(product(p%Nv))//' vectors',1.0_wp)
+		if(tid==0 .and. amRoot()) call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',1.0_wp)
 		!$omp barrier
 		!$omp end parallel
 		
@@ -159,11 +160,11 @@ contains
 				write(*,*) ''
 				write(*,*) N(1),N(2)
 				write(*,*) 'A('// & 
-					& int2char( iA(1) )//':'//int2char( iA(2) )//','// &
-					& int2char( jA(1) )//':'//int2char( jA(2) )//')'
+					& intToChar( iA(1) )//':'//intToChar( iA(2) )//','// &
+					& intToChar( jA(1) )//':'//intToChar( jA(2) )//')'
 				write(*,*) 'B('// &
-					& int2char( iB(1) )//':'//int2char( iB(2) )//','// &
-					& int2char( jB(1) )//':'//int2char( jB(2) )//')'
+					& intToChar( iB(1) )//':'//intToChar( iB(2) )//','// &
+					& intToChar( jB(1) )//':'//intToChar( jB(2) )//')'
 				write(*,*) ''
 				stop 1
 			end if
@@ -243,37 +244,37 @@ contains
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
 		
-		call write_grid(fn,['I   ','dudI','dvdI','dIdU','dIdV','dIdR','dIdN'],x,y)
+		call writeGrid(fn,['I   ','dudI','dvdI','dIdU','dIdV','dIdR','dIdN'],x,y)
 		
 		! First Image
 		
-		call write_step(fn,0.0_wp,1,'I',real(R%A))
+		call writeStep(fn,0.0_wp,1,'I',real(R%A))
 		
 		var = v(1)%I(1:N(1),1:N(2),1)
-		call write_step(fn,0.0_wp,1,'dudI',var)
+		call writeStep(fn,0.0_wp,1,'dudI',var)
 		
 		var = v(2)%I(1:N(1),1:N(2),1)
-		call write_step(fn,0.0_wp,1,'dvdI',var)
+		call writeStep(fn,0.0_wp,1,'dvdI',var)
 		
-		call write_step(fn,0.0_wp,1,'dIdU',der(R%A,ADS_U))
-		call write_step(fn,0.0_wp,1,'dIdV',der(R%A,ADS_V))
-		call write_step(fn,0.0_wp,1,'dIdR',der(R%A,ADS_R))
-		call write_step(fn,0.0_wp,1,'dIdN',der(R%A,ADS_N))
+		call writeStep(fn,0.0_wp,1,'dIdU',der(R%A,ADS_U))
+		call writeStep(fn,0.0_wp,1,'dIdV',der(R%A,ADS_V))
+		call writeStep(fn,0.0_wp,1,'dIdR',der(R%A,ADS_R))
+		call writeStep(fn,0.0_wp,1,'dIdN',der(R%A,ADS_N))
 		
 		! Second Image
 		
-		call write_step(fn,1.0_wp,2,'I',real(R%B))
+		call writeStep(fn,1.0_wp,2,'I',real(R%B))
 		
 		var = v(1)%I(1:N(1),1:N(2),2)
-		call write_step(fn,1.0_wp,2,'dudI',var)
+		call writeStep(fn,1.0_wp,2,'dudI',var)
 		
 		var = v(2)%I(1:N(1),1:N(2),2)
-		call write_step(fn,1.0_wp,2,'dvdI',var)
+		call writeStep(fn,1.0_wp,2,'dvdI',var)
 		
-		call write_step(fn,1.0_wp,2,'dIdU',der(R%B,ADS_U))
-		call write_step(fn,1.0_wp,2,'dIdV',der(R%B,ADS_V))
-		call write_step(fn,1.0_wp,2,'dIdR',der(R%B,ADS_R))
-		call write_step(fn,1.0_wp,2,'dIdN',der(R%B,ADS_N))
+		call writeStep(fn,1.0_wp,2,'dIdU',der(R%B,ADS_U))
+		call writeStep(fn,1.0_wp,2,'dIdV',der(R%B,ADS_V))
+		call writeStep(fn,1.0_wp,2,'dIdR',der(R%B,ADS_R))
+		call writeStep(fn,1.0_wp,2,'dIdN',der(R%B,ADS_N))
 	end subroutine writeVector
 
 end module piv_mod
