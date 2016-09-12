@@ -111,17 +111,15 @@ contains
 		type(ad3_t),dimension(:,:),allocatable::fx,fy,ft
 		type(ad3_t),dimension(2,2)::As,Ai
 		type(ad3_t),dimension(2)::bs
-		real(wp),dimension(2)::d
 		integer,dimension(2)::N
 		
 		A = pixelize(self%A,1)
 		B = pixelize(self%B,2)
 		
 		N = shape(A)
-		d = 1.0_wp
 		
-		fx = (grad_f(A,1,d(1))+grad_b(B,1,d(1)))/2.0_wp
-		fy = (grad_f(A,2,d(2))+grad_b(B,2,d(2)))/2.0_wp
+		fx = (grad_f(A,1,1.0_wp)+grad_b(B,1,1.0_wp))/2.0_wp
+		fy = (grad_f(A,2,1.0_wp)+grad_b(B,2,1.0_wp))/2.0_wp
 		ft = B-A
 		
 		As(1,1:2) = [sum(fx*fx),sum(fx*fy)]

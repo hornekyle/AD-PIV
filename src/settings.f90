@@ -21,10 +21,9 @@ module settings_mod
 	
 	character(:),allocatable::prefix
 	
-	real(wp)::Ux0
-	real(wp)::Uy0
+	real(wp),dimension(:),allocatable::Ux0
+	real(wp),dimension(:),allocatable::Uy0
 	
-	character(16)::velocity_mode
 	real(wp)::noise_level
 	
 	integer,dimension(2)::image_size
@@ -39,7 +38,7 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
-	real(wp)::correlationFactor = 0.5
+	real(wp)::correlationFactor = 0.4
 	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
@@ -57,10 +56,9 @@ contains
 		
 		prefix = trim(cfg%getString('prefix'))
 		
-		Ux0 = cfg%getReal('Ux0')
-		Uy0 = cfg%getReal('Uy0')
+		Ux0 = cfg%getVector('Ux0')
+		Uy0 = cfg%getVector('Uy0')
 		
-		velocity_mode = trim(cfg%getString('velocity_mode'))
 		noise_level   = cfg%getReal('noise_level')
 		
 		image_size      = nint(cfg%getVector('image_size'))
@@ -83,11 +81,12 @@ contains
 		type(ad1_t),dimension(2),intent(in)::x
 		type(ad1_t),dimension(2)::o
 		
-		select case(velocity_mode)
-		case('uniform')
-			o(1) = diff1(Ux0,ADS_U)
-			o(2) = diff1(Uy0,ADS_V)
-		end select
+		type(ad1_t),dimension(2)::xl
+		
+		xl = x-real(image_size,wp)/2.0_wp
+		
+		o(1) = diff1(Ux0(1),ADS_U)+Ux0(2)*xl(1)
+		o(2) = diff1(Uy0(1),ADS_V)+Uy0(2)*xl(2)
 	end function uf
 
 end module settings_mod

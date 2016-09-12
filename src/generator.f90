@@ -34,6 +34,7 @@ contains
 		
 		type::particle_t
 			real(wp),dimension(2)::x
+			real(wp)::z
 			type(ad1_t)::r
 		end type
 		
@@ -52,6 +53,7 @@ contains
 		
 		do k=1,Np
 			particles(k)%x = (([randomUniform(),randomUniform()]+1.0_wp)/2.0_wp*1.2_wp-0.1_wp)*real(N,wp)
+			particles(k)%z = randomNormal()
 			particles(k)%r = R(1)+R(2)*randomNormal()
 		end do
 		
@@ -104,6 +106,7 @@ contains
 				!! Thread information [thread_id, thread_count]
 			
 			type(ad1_t)::x,y
+			real(wp)::L
 			integer::il,ih,i
 			integer::jl,jh,j
 			
@@ -117,12 +120,14 @@ contains
 			jl = max( nint(real(x0(2)-3.0_wp*p%r)) ,1   )
 			jh = min( nint(real(x0(2)+3.0_wp*p%r)) ,N(2))
 			
+			L = exp(-p%z**2)
+			
 			do j=jl,jh
 				if(.not. mod(j,tct)==tid) cycle
 				do i=il,ih
 					x = real(i,wp)
 					y = real(j,wp)
-					F(i,j) = F(i,j)+gauss(x,y,x0(1),x0(2),p%r,p%r)
+					F(i,j) = F(i,j)+L*gauss(x,y,x0(1),x0(2),p%r,p%r)
 				end do
 			end do
 		end subroutine project
