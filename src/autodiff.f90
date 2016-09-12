@@ -4,12 +4,12 @@ module autodiff_mod
 
 	private
 
-	integer,parameter::Sl = 4
+	integer,parameter::Sl = 8
 	integer,parameter::Sf = 2
 	integer,parameter::Si = 64
 	integer,parameter::Sj = 64
 	
-	integer::Nl = 4
+	integer::Nl = 8
 	integer::Nf = 2
 	integer::Ni = 2
 	integer::Nj = 2

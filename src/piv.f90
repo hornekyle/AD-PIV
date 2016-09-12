@@ -247,7 +247,12 @@ contains
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
 		
-		call writeGrid(fn,['I   ','dudI','dvdI','dIdU','dIdV','dIdR','dIdN'],x,y)
+		call writeGrid(fn, &
+			& ['I    ','dudI ','dvdI ', &
+			& 'dIdU ','dIdUx','dIdUy', &
+			& 'dIdV ','dIdVx','dIdVy', &
+			& 'dIdR ','dIdN '], &
+			& x,y)
 		
 		! First Image
 		
@@ -259,10 +264,14 @@ contains
 		var = v(2)%I(1:N(1),1:N(2),1)
 		call writeStep(fn,0.0_wp,1,'dvdI',var)
 		
-		call writeStep(fn,0.0_wp,1,'dIdU',der(R%A,ADS_U))
-		call writeStep(fn,0.0_wp,1,'dIdV',der(R%A,ADS_V))
-		call writeStep(fn,0.0_wp,1,'dIdR',der(R%A,ADS_R))
-		call writeStep(fn,0.0_wp,1,'dIdN',der(R%A,ADS_N))
+		call writeStep(fn,0.0_wp,1,'dIdU ',der(R%A,ADS_U ))
+		call writeStep(fn,0.0_wp,1,'dIdUx',der(R%A,ADS_Ux))
+		call writeStep(fn,0.0_wp,1,'dIdUy',der(R%A,ADS_Uy))
+		call writeStep(fn,0.0_wp,1,'dIdV ',der(R%A,ADS_V ))
+		call writeStep(fn,0.0_wp,1,'dIdVx',der(R%A,ADS_Vx))
+		call writeStep(fn,0.0_wp,1,'dIdVy',der(R%A,ADS_Vy))
+		call writeStep(fn,0.0_wp,1,'dIdR ',der(R%A,ADS_R ))
+		call writeStep(fn,0.0_wp,1,'dIdN ',der(R%A,ADS_N ))
 		
 		! Second Image
 		
@@ -274,10 +283,14 @@ contains
 		var = v(2)%I(1:N(1),1:N(2),2)
 		call writeStep(fn,1.0_wp,2,'dvdI',var)
 		
-		call writeStep(fn,1.0_wp,2,'dIdU',der(R%B,ADS_U))
-		call writeStep(fn,1.0_wp,2,'dIdV',der(R%B,ADS_V))
-		call writeStep(fn,1.0_wp,2,'dIdR',der(R%B,ADS_R))
-		call writeStep(fn,1.0_wp,2,'dIdN',der(R%B,ADS_N))
+		call writeStep(fn,1.0_wp,2,'dIdU ',der(R%B,ADS_U ))
+		call writeStep(fn,1.0_wp,2,'dIdUx',der(R%B,ADS_Ux))
+		call writeStep(fn,1.0_wp,2,'dIdUy',der(R%B,ADS_Uy))
+		call writeStep(fn,1.0_wp,2,'dIdV ',der(R%B,ADS_V ))
+		call writeStep(fn,1.0_wp,2,'dIdVx',der(R%B,ADS_Vx))
+		call writeStep(fn,1.0_wp,2,'dIdVy',der(R%B,ADS_Vy))
+		call writeStep(fn,1.0_wp,2,'dIdR ',der(R%B,ADS_R ))
+		call writeStep(fn,1.0_wp,2,'dIdN ',der(R%B,ADS_N ))
 	end subroutine writeVector
 
 end module piv_mod

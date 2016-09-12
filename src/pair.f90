@@ -90,56 +90,82 @@ contains
 		x = linspace(1.0_wp,real(self%N(1),wp),self%N(1))
 		y = linspace(1.0_wp,real(self%N(2),wp),self%N(2))
 		
-		call writeGrid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],x,y)
+		call writeGrid(fn, &
+			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
+			& x,y)
 		
 		call writeStep(fn,0.0_wp,1,'I',real(self%A))
-		call writeStep(fn,0.0_wp,1,'dIdU',der(self%A,ADS_U))
-		call writeStep(fn,0.0_wp,1,'dIdV',der(self%A,ADS_V))
-		call writeStep(fn,0.0_wp,1,'dIdR',der(self%A,ADS_R))
-		call writeStep(fn,0.0_wp,1,'dIdN',der(self%A,ADS_N))
+		call writeStep(fn,0.0_wp,1,'dIdU ',der(self%A,ADS_U ))
+		call writeStep(fn,0.0_wp,1,'dIdUx',der(self%A,ADS_Ux))
+		call writeStep(fn,0.0_wp,1,'dIdUy',der(self%A,ADS_Uy))
+		call writeStep(fn,0.0_wp,1,'dIdV ',der(self%A,ADS_V ))
+		call writeStep(fn,0.0_wp,1,'dIdVx',der(self%A,ADS_Vx))
+		call writeStep(fn,0.0_wp,1,'dIdVy',der(self%A,ADS_Vy))
+		call writeStep(fn,0.0_wp,1,'dIdR ',der(self%A,ADS_R ))
+		call writeStep(fn,0.0_wp,1,'dIdN ',der(self%A,ADS_N ))
 		
 		
 		call writeStep(fn,1.0_wp,2,'I',real(self%B))
-		call writeStep(fn,1.0_wp,2,'dIdU',der(self%B,ADS_U))
-		call writeStep(fn,1.0_wp,2,'dIdV',der(self%B,ADS_V))
-		call writeStep(fn,1.0_wp,2,'dIdR',der(self%B,ADS_R))
-		call writeStep(fn,1.0_wp,2,'dIdN',der(self%B,ADS_N))
+		call writeStep(fn,1.0_wp,2,'dIdU ',der(self%B,ADS_U ))
+		call writeStep(fn,1.0_wp,2,'dIdUx',der(self%B,ADS_Ux))
+		call writeStep(fn,1.0_wp,2,'dIdUy',der(self%B,ADS_Uy))
+		call writeStep(fn,1.0_wp,2,'dIdV ',der(self%B,ADS_V ))
+		call writeStep(fn,1.0_wp,2,'dIdVx',der(self%B,ADS_Vx))
+		call writeStep(fn,1.0_wp,2,'dIdVy',der(self%B,ADS_Vy))
+		call writeStep(fn,1.0_wp,2,'dIdR ',der(self%B,ADS_R ))
+		call writeStep(fn,1.0_wp,2,'dIdN ',der(self%B,ADS_N ))
 	end subroutine writePair
 
 	subroutine writeVectors(self,fn)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		character(64),dimension(:),allocatable::vars
+		character(5),dimension(:),allocatable::vars
 		integer::Nd,k
-		Nd = 4
+		Nd = 8
 		
 		allocate(vars( 2*(1+Nd) ))
 		
 		vars( 1) = 'u'
 		vars( 2) = 'dudU'
-		vars( 3) = 'dudV'
-		vars( 4) = 'dudR'
-		vars( 5) = 'dudN'
-		vars( 6) = 'v'
-		vars( 7) = 'dvdU'
-		vars( 8) = 'dvdV'
-		vars( 9) = 'dvdR'
-		vars(10) = 'dvdN'
+		vars( 3) = 'dudUx'
+		vars( 4) = 'dudUy'
+		vars( 5) = 'dudV'
+		vars( 6) = 'dudVx'
+		vars( 7) = 'dudVy'
+		vars( 8) = 'dudR'
+		vars( 9) = 'dudN'
+		vars(10) = 'v'
+		vars(11) = 'dvdU'
+		vars(12) = 'dvdUx'
+		vars(13) = 'dvdUy'
+		vars(14) = 'dvdV'
+		vars(15) = 'dvdVx'
+		vars(16) = 'dvdVy'
+		vars(17) = 'dvdR'
+		vars(18) = 'dvdN'
 		
 		call writeGrid(fn,vars,self%vx,self%vy)
 		
 		do k=lbound(self%passes,1),ubound(self%passes,1)
 			call writeStep(fn,real(k,wp),k+1,'u',  real(self%passes(k)%u  ))
-			call writeStep(fn,real(k,wp),k+1,'dudU',der(self%passes(k)%u,ADS_U))
-			call writeStep(fn,real(k,wp),k+1,'dudV',der(self%passes(k)%u,ADS_V))
-			call writeStep(fn,real(k,wp),k+1,'dudR',der(self%passes(k)%u,ADS_R))
-			call writeStep(fn,real(k,wp),k+1,'dudN',der(self%passes(k)%u,ADS_N))
+			call writeStep(fn,real(k,wp),k+1,'dudU ',der(self%passes(k)%u,ADS_U ))
+			call writeStep(fn,real(k,wp),k+1,'dudUx',der(self%passes(k)%u,ADS_Ux))
+			call writeStep(fn,real(k,wp),k+1,'dudUy',der(self%passes(k)%u,ADS_Uy))
+			call writeStep(fn,real(k,wp),k+1,'dudV ',der(self%passes(k)%u,ADS_V ))
+			call writeStep(fn,real(k,wp),k+1,'dudVx',der(self%passes(k)%u,ADS_Vx))
+			call writeStep(fn,real(k,wp),k+1,'dudVy',der(self%passes(k)%u,ADS_Vy))
+			call writeStep(fn,real(k,wp),k+1,'dudR ',der(self%passes(k)%u,ADS_R ))
+			call writeStep(fn,real(k,wp),k+1,'dudN ',der(self%passes(k)%u,ADS_N ))
 			call writeStep(fn,real(k,wp),k+1,'v',  real(self%passes(k)%v  ))
-			call writeStep(fn,real(k,wp),k+1,'dvdU',der(self%passes(k)%v,ADS_U))
-			call writeStep(fn,real(k,wp),k+1,'dvdV',der(self%passes(k)%v,ADS_V))
-			call writeStep(fn,real(k,wp),k+1,'dvdR',der(self%passes(k)%v,ADS_R))
-			call writeStep(fn,real(k,wp),k+1,'dvdN',der(self%passes(k)%v,ADS_N))
+			call writeStep(fn,real(k,wp),k+1,'dvdU ',der(self%passes(k)%v,ADS_U ))
+			call writeStep(fn,real(k,wp),k+1,'dvdUx',der(self%passes(k)%v,ADS_Ux))
+			call writeStep(fn,real(k,wp),k+1,'dvdUy',der(self%passes(k)%v,ADS_Uy))
+			call writeStep(fn,real(k,wp),k+1,'dvdV ',der(self%passes(k)%v,ADS_V ))
+			call writeStep(fn,real(k,wp),k+1,'dvdVx',der(self%passes(k)%v,ADS_Vx))
+			call writeStep(fn,real(k,wp),k+1,'dvdVy',der(self%passes(k)%v,ADS_Vy))
+			call writeStep(fn,real(k,wp),k+1,'dvdR ',der(self%passes(k)%v,ADS_R ))
+			call writeStep(fn,real(k,wp),k+1,'dvdN ',der(self%passes(k)%v,ADS_N ))
 		end do
 		
 	end subroutine writeVectors
@@ -153,7 +179,7 @@ contains
 		
 		character(64),dimension(:),allocatable::vars
 		real(wp),dimension(:),allocatable::x,y,z,t
-		real(wp),dimension(:,:),allocatable::I,U,V,R,N
+		real(wp),dimension(:,:),allocatable::I,U,Ux,Uy,V,Vx,Vy,R,N
 		integer,dimension(2)::M
 		integer::Np,k
 		
@@ -161,39 +187,59 @@ contains
 			call readGrid(pfn,vars,x,y,z,t)
 			M = [size(x),size(y)]
 			
-			allocate(I( M(1) , M(2) ))
-			allocate(U( M(1) , M(2) ))
-			allocate(V( M(1) , M(2) ))
-			allocate(R( M(1) , M(2) ))
-			allocate(N( M(1) , M(2) ))
+			allocate( I( M(1) , M(2) ))
+			allocate( U( M(1) , M(2) ))
+			allocate(Ux( M(1) , M(2) ))
+			allocate(Uy( M(1) , M(2) ))
+			allocate( V( M(1) , M(2) ))
+			allocate(Vx( M(1) , M(2) ))
+			allocate(Vy( M(1) , M(2) ))
+			allocate( R( M(1) , M(2) ))
+			allocate( N( M(1) , M(2) ))
 			
 			call readStep(pfn,'I',I,1)
-			call readStep(pfn,'dIdU',U,1)
-			call readStep(pfn,'dIdV',V,1)
-			call readStep(pfn,'dIdR',R,1)
-			call readStep(pfn,'dIdN',N,1)
+			call readStep(pfn,'dIdU ',U ,1)
+			call readStep(pfn,'dIdUx',Ux,1)
+			call readStep(pfn,'dIdUy',Uy,1)
+			call readStep(pfn,'dIdV ',V ,1)
+			call readStep(pfn,'dIdVx',Vx,1)
+			call readStep(pfn,'dIdVy',Vy,1)
+			call readStep(pfn,'dIdR ',R ,1)
+			call readStep(pfn,'dIdN ',N ,1)
 			if(allocated(self%A)) deallocate(self%A)
 			allocate(self%A( M(1) , M(2) ))
 			self%A%x = I
-			self%A%d(ADS_U) = U
-			self%A%d(ADS_V) = V
-			self%A%d(ADS_R) = R
-			self%A%d(ADS_N) = N
+			self%A%d(ADS_U ) = U
+			self%A%d(ADS_Ux) = Ux
+			self%A%d(ADS_Uy) = Uy
+			self%A%d(ADS_V ) = V
+			self%A%d(ADS_Vx) = Vx
+			self%A%d(ADS_Vy) = Vy
+			self%A%d(ADS_R ) = R
+			self%A%d(ADS_N ) = N
 			
 			call readStep(pfn,'I',I,2)
-			call readStep(pfn,'dIdU',U,2)
-			call readStep(pfn,'dIdV',V,2)
-			call readStep(pfn,'dIdR',R,2)
-			call readStep(pfn,'dIdN',N,2)
+			call readStep(pfn,'dIdU ',U ,2)
+			call readStep(pfn,'dIdUx',Ux,2)
+			call readStep(pfn,'dIdUy',Uy,2)
+			call readStep(pfn,'dIdV ',V ,2)
+			call readStep(pfn,'dIdVx',Vx,2)
+			call readStep(pfn,'dIdVy',Vy,2)
+			call readStep(pfn,'dIdR ',R ,2)
+			call readStep(pfn,'dIdN ',N ,2)
 			if(allocated(self%B)) deallocate(self%B)
 			allocate(self%B( M(1) , M(2) ))
 			self%B%x = I
-			self%B%d(ADS_U) = U
-			self%B%d(ADS_V) = V
-			self%B%d(ADS_R) = R
-			self%B%d(ADS_N) = N
+			self%B%d(ADS_U ) = U
+			self%B%d(ADS_Ux) = Ux
+			self%B%d(ADS_Uy) = Uy
+			self%B%d(ADS_V ) = V
+			self%B%d(ADS_Vx) = Vx
+			self%B%d(ADS_Vy) = Vy
+			self%B%d(ADS_R ) = R
+			self%B%d(ADS_N ) = N
 			deallocate(vars,x,y,t)
-			deallocate(I,U,V,R,N)
+			deallocate(I,U,Ux,Uy,V,Vx,Vy,R,N)
 		end if
 		
 		if(present(vfn)) then
@@ -206,11 +252,15 @@ contains
 			if(allocated(self%passes)) deallocate(self%passes)
 			allocate(self%passes(0:Np))
 			
-			allocate(I(size(x),size(y)))
-			allocate(U(size(x),size(y)))
-			allocate(V(size(x),size(y)))
-			allocate(R(size(x),size(y)))
-			allocate(N(size(x),size(y)))
+			allocate( I(size(x),size(y)))
+			allocate( U(size(x),size(y)))
+			allocate(Ux(size(x),size(y)))
+			allocate(Uy(size(x),size(y)))
+			allocate( V(size(x),size(y)))
+			allocate(Vx(size(x),size(y)))
+			allocate(Vy(size(x),size(y)))
+			allocate( R(size(x),size(y)))
+			allocate( N(size(x),size(y)))
 			
 			! Read each pass
 			do k=0,Np
@@ -218,28 +268,44 @@ contains
 				allocate(self%passes(k)%v(size(x),size(y)))
 				
 				call readStep(vfn,'u',I,k+1)
-				call readStep(vfn,'dudU',U,k+1)
-				call readStep(vfn,'dudV',V,k+1)
-				call readStep(vfn,'dudR',R,k+1)
-				call readStep(vfn,'dudN',N,k+1)
+				call readStep(vfn,'dudU ',U ,k+1)
+				call readStep(vfn,'dudUx',Ux,k+1)
+				call readStep(vfn,'dudUy',Uy,k+1)
+				call readStep(vfn,'dudV ',V ,k+1)
+				call readStep(vfn,'dudVx',Vx,k+1)
+				call readStep(vfn,'dudVy',Vy,k+1)
+				call readStep(vfn,'dudR ',R ,k+1)
+				call readStep(vfn,'dudN ',N ,k+1)
 				
 				self%passes(k)%u%x    = I
-				self%passes(k)%u%d(ADS_U) = U
-				self%passes(k)%u%d(ADS_V) = V
-				self%passes(k)%u%d(ADS_R) = R
-				self%passes(k)%u%d(ADS_N) = N
+				self%passes(k)%u%d(ADS_U ) = U
+				self%passes(k)%u%d(ADS_Ux) = Ux
+				self%passes(k)%u%d(ADS_Uy) = Uy
+				self%passes(k)%u%d(ADS_V ) = V
+				self%passes(k)%u%d(ADS_Vx) = Vx
+				self%passes(k)%u%d(ADS_Vy) = Vy
+				self%passes(k)%u%d(ADS_R ) = R
+				self%passes(k)%u%d(ADS_N ) = N
 				
 				call readStep(vfn,'v',I,k+1)
-				call readStep(vfn,'dvdU',U,k+1)
-				call readStep(vfn,'dvdV',V,k+1)
-				call readStep(vfn,'dvdR',R,k+1)
-				call readStep(vfn,'dvdN',N,k+1)
+				call readStep(vfn,'dvdU ',U ,k+1)
+				call readStep(vfn,'dvdUx',Ux,k+1)
+				call readStep(vfn,'dvdUy',Uy,k+1)
+				call readStep(vfn,'dvdV ',V ,k+1)
+				call readStep(vfn,'dvdVx',Vx,k+1)
+				call readStep(vfn,'dvdVy',Vy,k+1)
+				call readStep(vfn,'dvdR ',R ,k+1)
+				call readStep(vfn,'dvdN ',N ,k+1)
 				
 				self%passes(k)%v%x    = I
-				self%passes(k)%v%d(ADS_U) = U
-				self%passes(k)%v%d(ADS_V) = V
-				self%passes(k)%v%d(ADS_R) = R
-				self%passes(k)%v%d(ADS_N) = N
+				self%passes(k)%v%d(ADS_U ) = U
+				self%passes(k)%v%d(ADS_Ux) = Ux
+				self%passes(k)%v%d(ADS_Uy) = Uy
+				self%passes(k)%v%d(ADS_V ) = V
+				self%passes(k)%v%d(ADS_Vx) = Vx
+				self%passes(k)%v%d(ADS_Vy) = Vy
+				self%passes(k)%v%d(ADS_R ) = R
+				self%passes(k)%v%d(ADS_N ) = N
 			end do
 		end if
 		

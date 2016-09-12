@@ -18,9 +18,9 @@ program process_prg
 	call readConfig(cfn)
 	
 	if(per_pixel) then
-		call set_adN(4, maxval(pass_sizes(1,:)) , maxval(pass_sizes(2,:)) ,2)
+		call set_adN(8, maxval(pass_sizes(1,:)) , maxval(pass_sizes(2,:)) ,2)
 	else
-		call set_adN(4,0,0,0)
+		call set_adN(8,0,0,0)
 	end if
 	
 	if(amRoot()) call execute_command_line('mkdir -p ./results/'//prefix)

@@ -228,13 +228,19 @@ contains
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call writeGrid(fn,['I   ','dIdU','dIdV','dIdR','dIdN'],self%dx,self%dy)
+		call writeGrid(fn, &
+			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
+			& self%dx,self%dy)
 		
 		call writeStep(fn,0.0_wp,1,'I',real(self%C))
-		call writeStep(fn,0.0_wp,1,'dIdU',der(self%C,ADS_U))
-		call writeStep(fn,0.0_wp,1,'dIdV',der(self%C,ADS_V))
-		call writeStep(fn,0.0_wp,1,'dIdR',der(self%C,ADS_R))
-		call writeStep(fn,0.0_wp,1,'dIdN',der(self%C,ADS_N))
+		call writeStep(fn,0.0_wp,1,'dIdU ',der(self%C,ADS_U ))
+		call writeStep(fn,0.0_wp,1,'dIdUx',der(self%C,ADS_Ux))
+		call writeStep(fn,0.0_wp,1,'dIdUy',der(self%C,ADS_Uy))
+		call writeStep(fn,0.0_wp,1,'dIdV ',der(self%C,ADS_V ))
+		call writeStep(fn,0.0_wp,1,'dIdVx',der(self%C,ADS_Vx))
+		call writeStep(fn,0.0_wp,1,'dIdVy',der(self%C,ADS_Vy))
+		call writeStep(fn,0.0_wp,1,'dIdR ',der(self%C,ADS_R ))
+		call writeStep(fn,0.0_wp,1,'dIdN ',der(self%C,ADS_N ))
 	end subroutine writeMap
 
 	subroutine readMap(self,fn)
@@ -245,7 +251,7 @@ contains
 		
 		character(64),dimension(:),allocatable::vars
 		real(wp),dimension(:),allocatable::dx,dy,z,t
-		real(wp),dimension(:,:),allocatable::I,U,V,R,N
+		real(wp),dimension(:,:),allocatable::I,U,Ux,Uy,V,Vx,Vy,R,N
 		integer,dimension(2)::M
 		
 		call readGrid(fn,vars,dx,dy,z,t)
@@ -253,24 +259,36 @@ contains
 		self%dx = dx
 		self%dy = dy
 		
-		allocate(I( M(1) , M(2) ))
-		allocate(U( M(1) , M(2) ))
-		allocate(V( M(1) , M(2) ))
-		allocate(R( M(1) , M(2) ))
-		allocate(N( M(1) , M(2) ))
+		allocate( I( M(1) , M(2) ))
+		allocate( U( M(1) , M(2) ))
+		allocate(Ux( M(1) , M(2) ))
+		allocate(Uy( M(1) , M(2) ))
+		allocate( V( M(1) , M(2) ))
+		allocate(Vx( M(1) , M(2) ))
+		allocate(Vy( M(1) , M(2) ))
+		allocate( R( M(1) , M(2) ))
+		allocate( N( M(1) , M(2) ))
 		
 		call readStep(fn,'I',I,1)
-		call readStep(fn,'dIdU',U,1)
-		call readStep(fn,'dIdV',V,1)
-		call readStep(fn,'dIdR',R,1)
-		call readStep(fn,'dIdN',N,1)
+		call readStep(fn,'dIdU ',U ,1)
+		call readStep(fn,'dIdUx',Ux,1)
+		call readStep(fn,'dIdUy',Uy,1)
+		call readStep(fn,'dIdV ',V ,1)
+		call readStep(fn,'dIdVx',Vx,1)
+		call readStep(fn,'dIdVy',Vy,1)
+		call readStep(fn,'dIdR ',R ,1)
+		call readStep(fn,'dIdN ',N ,1)
 		if(allocated(self%C)) deallocate(self%C)
 		allocate(self%C( M(1) , M(2) ))
 		self%C%x = I
-		self%C%d(1) = U
-		self%C%d(2) = V
-		self%C%d(3) = R
-		self%C%d(4) = N
+		self%C%d(ADS_U ) = U
+		self%C%d(ADS_Ux) = Ux
+		self%C%d(ADS_Uy) = Uy
+		self%C%d(ADS_V ) = V
+		self%C%d(ADS_Vx) = Vx
+		self%C%d(ADS_Vy) = Vy
+		self%C%d(ADS_R ) = R
+		self%C%d(ADS_N ) = N
 	end subroutine readMap
 
 	function dispInt(self) result(o)

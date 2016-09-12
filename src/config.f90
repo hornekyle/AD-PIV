@@ -456,4 +456,5 @@ contains
 		write(*,*) msg
 		stop 'Error in config_mod'
 	end subroutine doError
+
 end module config_mod
