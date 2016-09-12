@@ -6,8 +6,8 @@ module autodiff_mod
 
 	integer,parameter::Sl = 4
 	integer,parameter::Sf = 2
-	integer,parameter::Si = 48
-	integer,parameter::Sj = 48
+	integer,parameter::Si = 64
+	integer,parameter::Sj = 64
 	
 	integer::Nl = 4
 	integer::Nf = 2

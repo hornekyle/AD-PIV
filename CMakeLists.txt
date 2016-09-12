@@ -4,7 +4,7 @@ set(PROJECT "AD-PIV")
 project(${PROJECT})
 
 set(CMAKE_Fortran_FLAGS "")
-set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g2 -Wall -Wno-tabs -Wno-maybe-uninitialized -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
 set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
 
 set(common_src
