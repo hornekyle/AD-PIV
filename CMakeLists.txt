@@ -34,6 +34,7 @@ include_directories(${NETCDF_INCLUDE})
 
 add_custom_target(symlink
 	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/results" "${CMAKE_BINARY_DIR}/results"
+	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/figures" "${CMAKE_BINARY_DIR}/figures"
 	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/config" "${CMAKE_BINARY_DIR}/config"
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 

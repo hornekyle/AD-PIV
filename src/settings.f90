@@ -46,7 +46,8 @@ module settings_mod
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
 	
-	real(wp)::correlationFactor = 0.4
+	real(wp),dimension(:),allocatable::correlationFactors
+	
 	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
@@ -80,6 +81,7 @@ contains
 		pass_guesses        = nint(cfg%getVector('pass_guesses'))
 		pass_sizes          = nint(cfg%getMatrix('pass_sizes'))
 		pass_types = [character(3):: ( cfg%getString('pass_types['//intToChar(k)//']') , k=1,N_passes )]
+		correlationFactors = cfg%getVector('correlationFactors')
 		
 		write_map = cfg%getLogical('write_map')
 		per_pixel = cfg%getLogical('per_pixel')

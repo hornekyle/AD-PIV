@@ -33,7 +33,6 @@ contains
 		type(regions_t)::R
 		type(ad3_t),dimension(2)::d
 		character(:),allocatable::fn
-		real(wp)::F
 		integer::i,j
 		
 		lref = -1
@@ -51,15 +50,13 @@ contains
 				select case(lref)
 				case(0:)
 					R = secondPass(i,j,lref)
-					F = 0.1_wp
 				case default
 					R = firstPass(i,j)
-					F = correlationFactor
 				end select
 				
 				select case(method)
 				case('map')
-					d = R%crossCorrelateDirect(F,p%idx,k)
+					d = R%crossCorrelateDirect(correlationFactors(k),p%idx,k)
 				case('lsq')
 					d = R%leastSquares(lsqOrder,p%idx,k)
 				end select
