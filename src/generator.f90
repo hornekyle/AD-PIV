@@ -70,23 +70,38 @@ contains
 		
 	contains
 	
-		function integrate(x0,dt) result(o)
+		function integrate(x0,T) result(o)
 			real(wp),dimension(2),intent(in)::x0
-			real(wp),intent(in)::dt
+				!! Initial position
+			real(wp),intent(in)::T
+				!! Integration period
 			type(ad1_t),dimension(2)::o
+				!! Final position
 			
 			integer,parameter::Ns = 10
+				!! Number of steps to take
 			
+			type(ad1_t),dimension(2)::h1,h2,h3,h4
+				!! Intermediate derivatives
+			type(ad1_t),dimension(2)::x
+				!! Intermediate position
+			real(wp)::dt
+				!! Time step
 			integer::k
-			real(wp)::h
 			
-			h = dt/real(Ns,wp)
+			dt = T/real(Ns,wp)
 			
-			! Explicit Euler's
-			o = x0
+			! RK4
+			x = x0
 			do k=1,Ns
-				o = o+uf(o)*h
+				h1 = uf(x)
+				h2 = uf(x+dt/2.0_wp*h1)
+				h3 = uf(x+dt/2.0_wp*h2)
+				h4 = uf(x+dt*h3)
+				x = x+dt/6.0_wp*(h1+2.0_wp*h2+2.0_wp*h3+h4)
 			end do
+			
+			o = x
 		end function integrate
 	
 		subroutine project(x0,p,F,omp)
