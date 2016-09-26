@@ -17,12 +17,6 @@ program process_prg
 	call get_command_argument(1,cfn)
 	call readConfig(cfn)
 	
-	if(per_pixel) then
-		call set_adN(8, maxval(pass_sizes(1,:)) , maxval(pass_sizes(2,:)) ,2)
-	else
-		call set_adN(8,0,0,0)
-	end if
-	
 	if(amRoot()) call execute_command_line('mkdir -p ./results/'//prefix)
 	call sleep(1)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
@@ -56,12 +50,12 @@ contains
 			!! Result
 		
 		integer,dimension(2)::N
-		type(ad1_t),dimension(2)::R
+		type(ad_t),dimension(2)::R
 		integer::Np,k
 		
 		N = image_size
 		Np = particle_count
-		R = [particle_radius,0.0_wp]*diff1(1.0_wp,ADS_R)
+		R = [particle_radius,0.0_wp]*ad_t(1.0_wp,ADS_COUNT,ADS_R)
 		
 		p = generatePair(N,Np,R)
 		p%idx = idx

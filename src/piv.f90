@@ -31,7 +31,7 @@ contains
 		integer::tid
 		integer::lref
 		type(regions_t)::R
-		type(ad3_t),dimension(2)::d
+		type(ad_t),dimension(2)::d
 		character(:),allocatable::fn
 		integer::i,j
 		
@@ -118,7 +118,7 @@ contains
 			integer::jlA,jhA,jlB,jhB
 			logical::ok
 			
-			up = real([p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)])
+			up = [p%passes(ref)%u(i,j),p%passes(ref)%v(i,j)]
 			s  = nint(up)
 			sm = s/2
 			sp = s-sm
@@ -184,7 +184,7 @@ contains
 		real(wp),intent(in)::tol
 			!! Tolerance before culling [0,1]
 		
-		type(ad3_t),dimension(2)::u,m,t
+		type(ad_t),dimension(2)::u,m,t
 		integer,dimension(2)::N
 		integer::i,j
 		
@@ -195,7 +195,7 @@ contains
 				u = [p%passes(k)%u(i,j),p%passes(k)%v(i,j)]
 				t = [p%passes(0)%u(i,j),p%passes(0)%v(i,j)]
 				m = tryMean(i,j)
-				if( norm2(real(u-t))/norm2(real(t)) > tol) then
+				if( norm2(u-t)/norm2(t) > tol) then
 					p%passes(k)%u(i,j) = m(1)
 					p%passes(k)%v(i,j) = m(2)
 				end if
@@ -206,11 +206,11 @@ contains
 	
 		function tryMean(i,j) result(o)
 			integer,intent(in)::i,j
-			type(ad3_t),dimension(2)::o
+			type(ad_t),dimension(2)::o
 			
 			integer::c,ii,jj
 			
-			o = 0.0_wp
+			o = ad_t(0.0_wp,ADN)
 			c = 0
 			do ii=-1,1,2
 				do jj=-1,1,2
@@ -230,64 +230,64 @@ contains
 
 	subroutine writeVector(fn,v,R)
 		character(*),intent(in)::fn
-		type(ad3_t),dimension(2)::v
+		type(ad_t),dimension(2)::v
 		type(regions_t),intent(in)::R
 		
-		real(wp),dimension(:),allocatable::x,y
-		real(wp),dimension(:,:),allocatable::var
-		integer,dimension(4)::adN
-		integer,dimension(2)::N
-		
-		adN = get_adN()
-		N = adN(2:3)
-		
-		x = linspace(1.0_wp,real(N(1),wp),N(1))
-		y = linspace(1.0_wp,real(N(2),wp),N(2))
-		
-		call writeGrid(fn, &
-			& ['I    ','dudI ','dvdI ', &
-			& 'dIdU ','dIdUx','dIdUy', &
-			& 'dIdV ','dIdVx','dIdVy', &
-			& 'dIdR ','dIdN '], &
-			& x,y)
-		
-		! First Image
-		
-		call writeStep(fn,0.0_wp,1,'I',real(R%A))
-		
-		var = v(1)%I(1:N(1),1:N(2),1)
-		call writeStep(fn,0.0_wp,1,'dudI',var)
-		
-		var = v(2)%I(1:N(1),1:N(2),1)
-		call writeStep(fn,0.0_wp,1,'dvdI',var)
-		
-		call writeStep(fn,0.0_wp,1,'dIdU ',der(R%A,ADS_U ))
-		call writeStep(fn,0.0_wp,1,'dIdUx',der(R%A,ADS_Ux))
-		call writeStep(fn,0.0_wp,1,'dIdUy',der(R%A,ADS_Uy))
-		call writeStep(fn,0.0_wp,1,'dIdV ',der(R%A,ADS_V ))
-		call writeStep(fn,0.0_wp,1,'dIdVx',der(R%A,ADS_Vx))
-		call writeStep(fn,0.0_wp,1,'dIdVy',der(R%A,ADS_Vy))
-		call writeStep(fn,0.0_wp,1,'dIdR ',der(R%A,ADS_R ))
-		call writeStep(fn,0.0_wp,1,'dIdN ',der(R%A,ADS_N ))
-		
-		! Second Image
-		
-		call writeStep(fn,1.0_wp,2,'I',real(R%B))
-		
-		var = v(1)%I(1:N(1),1:N(2),2)
-		call writeStep(fn,1.0_wp,2,'dudI',var)
-		
-		var = v(2)%I(1:N(1),1:N(2),2)
-		call writeStep(fn,1.0_wp,2,'dvdI',var)
-		
-		call writeStep(fn,1.0_wp,2,'dIdU ',der(R%B,ADS_U ))
-		call writeStep(fn,1.0_wp,2,'dIdUx',der(R%B,ADS_Ux))
-		call writeStep(fn,1.0_wp,2,'dIdUy',der(R%B,ADS_Uy))
-		call writeStep(fn,1.0_wp,2,'dIdV ',der(R%B,ADS_V ))
-		call writeStep(fn,1.0_wp,2,'dIdVx',der(R%B,ADS_Vx))
-		call writeStep(fn,1.0_wp,2,'dIdVy',der(R%B,ADS_Vy))
-		call writeStep(fn,1.0_wp,2,'dIdR ',der(R%B,ADS_R ))
-		call writeStep(fn,1.0_wp,2,'dIdN ',der(R%B,ADS_N ))
+! 		real(wp),dimension(:),allocatable::x,y
+! 		real(wp),dimension(:,:),allocatable::var
+! 		integer,dimension(4)::adN
+! 		integer,dimension(2)::N
+! 		
+! 		adN = get_adN()
+! 		N = adN(2:3)
+! 		
+! 		x = linspace(1.0_wp,real(N(1),wp),N(1))
+! 		y = linspace(1.0_wp,real(N(2),wp),N(2))
+! 		
+! 		call writeGrid(fn, &
+! 			& ['I    ','dudI ','dvdI ', &
+! 			& 'dIdU ','dIdUx','dIdUy', &
+! 			& 'dIdV ','dIdVx','dIdVy', &
+! 			& 'dIdR ','dIdN '], &
+! 			& x,y)
+! 		
+! 		! First Image
+! 		
+! 		call writeStep(fn,0.0_wp,1,'I',real(R%A))
+! 		
+! 		var = v(1)%I(1:N(1),1:N(2),1)
+! 		call writeStep(fn,0.0_wp,1,'dudI',var)
+! 		
+! 		var = v(2)%I(1:N(1),1:N(2),1)
+! 		call writeStep(fn,0.0_wp,1,'dvdI',var)
+! 		
+! 		call writeStep(fn,0.0_wp,1,'dIdU ',der(R%A,ADS_U ))
+! 		call writeStep(fn,0.0_wp,1,'dIdUx',der(R%A,ADS_Ux))
+! 		call writeStep(fn,0.0_wp,1,'dIdUy',der(R%A,ADS_Uy))
+! 		call writeStep(fn,0.0_wp,1,'dIdV ',der(R%A,ADS_V ))
+! 		call writeStep(fn,0.0_wp,1,'dIdVx',der(R%A,ADS_Vx))
+! 		call writeStep(fn,0.0_wp,1,'dIdVy',der(R%A,ADS_Vy))
+! 		call writeStep(fn,0.0_wp,1,'dIdR ',der(R%A,ADS_R ))
+! 		call writeStep(fn,0.0_wp,1,'dIdN ',der(R%A,ADS_N ))
+! 		
+! 		! Second Image
+! 		
+! 		call writeStep(fn,1.0_wp,2,'I',real(R%B))
+! 		
+! 		var = v(1)%I(1:N(1),1:N(2),2)
+! 		call writeStep(fn,1.0_wp,2,'dudI',var)
+! 		
+! 		var = v(2)%I(1:N(1),1:N(2),2)
+! 		call writeStep(fn,1.0_wp,2,'dvdI',var)
+! 		
+! 		call writeStep(fn,1.0_wp,2,'dIdU ',der(R%B,ADS_U ))
+! 		call writeStep(fn,1.0_wp,2,'dIdUx',der(R%B,ADS_Ux))
+! 		call writeStep(fn,1.0_wp,2,'dIdUy',der(R%B,ADS_Uy))
+! 		call writeStep(fn,1.0_wp,2,'dIdV ',der(R%B,ADS_V ))
+! 		call writeStep(fn,1.0_wp,2,'dIdVx',der(R%B,ADS_Vx))
+! 		call writeStep(fn,1.0_wp,2,'dIdVy',der(R%B,ADS_Vy))
+! 		call writeStep(fn,1.0_wp,2,'dIdR ',der(R%B,ADS_R ))
+! 		call writeStep(fn,1.0_wp,2,'dIdN ',der(R%B,ADS_N ))
 	end subroutine writeVector
 
 end module piv_mod

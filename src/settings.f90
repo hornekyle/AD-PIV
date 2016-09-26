@@ -45,6 +45,7 @@ module settings_mod
 	integer,dimension(:),allocatable::pass_guesses
 	integer,dimension(:,:),allocatable::pass_sizes
 	character(3),dimension(:),allocatable::pass_types
+	integer,dimension(2)::max_pass_sizes
 	
 	real(wp),dimension(:),allocatable::correlationFactors
 	
@@ -53,6 +54,8 @@ module settings_mod
 	logical::write_pair = .true.
 	logical::write_map  = .true.
 	logical::per_pixel  = .true.
+	
+	integer::adN = 8
 	
 contains
 
@@ -85,19 +88,24 @@ contains
 		
 		write_map = cfg%getLogical('write_map')
 		per_pixel = cfg%getLogical('per_pixel')
+		
+		max_pass_sizes = [(pass_sizes(1,:)) , maxval(pass_sizes(2,:))]
+		if(per_pixel) then
+			adN = 8+2*product(max_pass_sizes)
+		end if
 	end subroutine readConfig
 
 	function uf(x) result(o)
-		type(ad1_t),dimension(2),intent(in)::x
-		type(ad1_t),dimension(2)::o
+		type(ad_t),dimension(2),intent(in)::x
+		type(ad_t),dimension(2)::o
 		
-		type(ad1_t),dimension(2)::xl,U0l
-		type(ad1_t),dimension(2,2)::vUl
+		type(ad_t),dimension(2)::xl,U0l
+		type(ad_t),dimension(2,2)::vUl
 		
 		xl  = x-real(image_size,wp)/2.0_wp
-		U0l = [ diff1(U0(1),ADS_U) , diff1(U0(2),ADS_V) ]
-		vUl(1,1:2) = [ diff1(vU(1,1),ADS_Ux) , diff1(vU(1,2),ADS_Uy) ]
-		vUl(2,1:2) = [ diff1(vU(2,1),ADS_Vx) , diff1(vU(2,2),ADS_Vy) ]
+		U0l = [ ad_t(U0(1),ADS_COUNT,ADS_U) , ad_t(U0(2),ADS_COUNT,ADS_V) ]
+		vUl(1,1:2) = [ ad_t(vU(1,1),ADS_COUNT,ADS_Ux) , ad_t(vU(1,2),ADS_COUNT,ADS_Uy) ]
+		vUl(2,1:2) = [ ad_t(vU(2,1),ADS_COUNT,ADS_Vx) , ad_t(vU(2,2),ADS_COUNT,ADS_Vy) ]
 		
 		o = U0l+matmul(vUl,xl)
 	end function uf

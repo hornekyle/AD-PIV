@@ -1,6 +1,6 @@
 module displacement_mod
 	use kinds_mod
-	use autodiff_mod
+	use autoDiff_mod
 	use array_mod
 	use text_mod
 	use netCDF_mod
@@ -9,7 +9,7 @@ module displacement_mod
 	private
 	
 	type::regions_t
-		type(ad1_t),dimension(:,:),allocatable::A,B
+		type(ad_t),dimension(:,:),allocatable::A,B
 		integer,dimension(2)::shift = 0
 		integer,dimension(2)::ij
 	contains
@@ -22,7 +22,7 @@ module displacement_mod
 	end interface
 	
 	type::map_t
-		type(ad3_t),dimension(:,:),allocatable::C
+		type(ad_t),dimension(:,:),allocatable::C
 		real(wp),dimension(:),allocatable::dx,dy
 	contains
 		procedure::dispInt
@@ -41,7 +41,7 @@ contains
 	!====================!
 
 	function newRegions(A,B,ij,shift) result(self)
-		type(ad1_t),dimension(:,:),intent(in)::A,B
+		type(ad_t),dimension(:,:),intent(in)::A,B
 		integer,dimension(2),intent(in)::ij
 		integer,dimension(2),intent(in),optional::shift
 		type(regions_t)::self
@@ -60,10 +60,10 @@ contains
 		class(regions_t),intent(in)::self
 		real(wp),intent(in)::F
 		integer,intent(in)::idx,pass
-		type(ad3_t),dimension(2)::o
+		type(ad_t),dimension(2)::o
 		
 		type(map_t)::M
-		type(ad3_t),dimension(:,:),allocatable::A,B
+		type(ad_t),dimension(:,:),allocatable::A,B
 		integer,dimension(2)::N
 		integer::Ail,Aih,Bil,Bih,i
 		integer::Ajl,Ajh,Bjl,Bjh,j
@@ -105,12 +105,12 @@ contains
 		class(regions_t),intent(in)::self
 		integer,intent(in)::order
 		integer,intent(in)::idx,pass
-		type(ad3_t),dimension(2)::o
+		type(ad_t),dimension(2)::o
 		
-		type(ad3_t),dimension(:,:),allocatable::A,B
-		type(ad3_t),dimension(:,:),allocatable::fx,fy,ft
-		type(ad3_t),dimension(2,2)::As,Ai
-		type(ad3_t),dimension(2)::bs
+		type(ad_t),dimension(:,:),allocatable::A,B
+		type(ad_t),dimension(:,:),allocatable::fx,fy,ft
+		type(ad_t),dimension(2,2)::As,Ai
+		type(ad_t),dimension(2)::bs
 		integer,dimension(2)::N
 		
 		A = pixelize(self%A,1)
@@ -136,20 +136,20 @@ contains
 	contains
 	
 		function grad_f(f,r,h) result(o)
-			type(ad3_t),dimension(:,:),intent(in)::f
+			type(ad_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
-			type(ad3_t),dimension(:,:),allocatable::o
+			type(ad_t),dimension(:,:),allocatable::o
 			
 			integer,dimension(2)::N,d
-			type(ad3_t),dimension(-2:2)::l
+			type(ad_t),dimension(-2:2)::l
 			integer::i,j,k
 			
 			N = shape(f)
 			d = 0
 			d(r) = 1
 			allocate(o(N(1),N(2)))
-			o = 0.0_wp
+			o = ad_t(0.0_wp,ADN)
 			
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
@@ -168,20 +168,20 @@ contains
 		end function grad_f
 	
 		function grad_b(f,r,h) result(o)
-			type(ad3_t),dimension(:,:),intent(in)::f
+			type(ad_t),dimension(:,:),intent(in)::f
 			integer,intent(in)::r
 			real(wp),intent(in)::h
-			type(ad3_t),dimension(:,:),allocatable::o
+			type(ad_t),dimension(:,:),allocatable::o
 			
 			integer,dimension(2)::N,d
-			type(ad3_t),dimension(-2:2)::l
+			type(ad_t),dimension(-2:2)::l
 			integer::i,j,k
 			
 			N = shape(f)
 			d = 0
 			d(r) = 1
 			allocate(o(N(1),N(2)))
-			o = 0.0_wp
+			o = ad_t(0.0_wp,ADN)
 			
 			do j=1+2,N(2)-2
 				do i=1+2,N(1)-2
@@ -200,22 +200,22 @@ contains
 		end function grad_b
 		
 		subroutine writeFields
-			character(:),allocatable::fn
-			real(wp),dimension(:),allocatable::x,y
-			
-			x = linspace(1.0_wp,real(N(1),wp),N(1))
-			y = linspace(1.0_wp,real(N(2),wp),N(2))
-			
-			fn = './results/'//prefix//'/fields'
-			fn = fn//'-'//intToChar(idx)
-			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
-			fn = fn//''//intToChar(pass)//']'
-			fn = fn//'.nc'
-			
-			call writeGrid(fn,['fx','fy','ft'],x,y)
-			call writeStep(fn,0.0_wp,1,'fx',real(fx))
-			call writeStep(fn,0.0_wp,1,'fy',real(fy))
-			call writeStep(fn,0.0_wp,1,'ft',real(ft))
+! 			character(:),allocatable::fn
+! 			real(wp),dimension(:),allocatable::x,y
+! 			
+! 			x = linspace(1.0_wp,real(N(1),wp),N(1))
+! 			y = linspace(1.0_wp,real(N(2),wp),N(2))
+! 			
+! 			fn = './results/'//prefix//'/fields'
+! 			fn = fn//'-'//intToChar(idx)
+! 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
+! 			fn = fn//''//intToChar(pass)//']'
+! 			fn = fn//'.nc'
+! 			
+! 			call writeGrid(fn,['fx','fy','ft'],x,y)
+! 			call writeStep(fn,0.0_wp,1,'fx',real(fx))
+! 			call writeStep(fn,0.0_wp,1,'fy',real(fy))
+! 			call writeStep(fn,0.0_wp,1,'ft',real(ft))
 		end subroutine writeFields
 		
 	end function leastSquares
@@ -228,19 +228,19 @@ contains
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call writeGrid(fn, &
-			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
-			& self%dx,self%dy)
-		
-		call writeStep(fn,0.0_wp,1,'I',real(self%C))
-		call writeStep(fn,0.0_wp,1,'dIdU ',der(self%C,ADS_U ))
-		call writeStep(fn,0.0_wp,1,'dIdUx',der(self%C,ADS_Ux))
-		call writeStep(fn,0.0_wp,1,'dIdUy',der(self%C,ADS_Uy))
-		call writeStep(fn,0.0_wp,1,'dIdV ',der(self%C,ADS_V ))
-		call writeStep(fn,0.0_wp,1,'dIdVx',der(self%C,ADS_Vx))
-		call writeStep(fn,0.0_wp,1,'dIdVy',der(self%C,ADS_Vy))
-		call writeStep(fn,0.0_wp,1,'dIdR ',der(self%C,ADS_R ))
-		call writeStep(fn,0.0_wp,1,'dIdN ',der(self%C,ADS_N ))
+! 		call writeGrid(fn, &
+! 			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
+! 			& self%dx,self%dy)
+! 		
+! 		call writeStep(fn,0.0_wp,1,'I',real(self%C))
+! 		call writeStep(fn,0.0_wp,1,'dIdU ',der(self%C,ADS_U ))
+! 		call writeStep(fn,0.0_wp,1,'dIdUx',der(self%C,ADS_Ux))
+! 		call writeStep(fn,0.0_wp,1,'dIdUy',der(self%C,ADS_Uy))
+! 		call writeStep(fn,0.0_wp,1,'dIdV ',der(self%C,ADS_V ))
+! 		call writeStep(fn,0.0_wp,1,'dIdVx',der(self%C,ADS_Vx))
+! 		call writeStep(fn,0.0_wp,1,'dIdVy',der(self%C,ADS_Vy))
+! 		call writeStep(fn,0.0_wp,1,'dIdR ',der(self%C,ADS_R ))
+! 		call writeStep(fn,0.0_wp,1,'dIdN ',der(self%C,ADS_N ))
 	end subroutine writeMap
 
 	subroutine readMap(self,fn)
@@ -249,51 +249,51 @@ contains
 		character(*),intent(in),optional::fn
 			!! Filename of pair
 		
-		character(64),dimension(:),allocatable::vars
-		real(wp),dimension(:),allocatable::dx,dy,z,t
-		real(wp),dimension(:,:),allocatable::I,U,Ux,Uy,V,Vx,Vy,R,N
-		integer,dimension(2)::M
-		
-		call readGrid(fn,vars,dx,dy,z,t)
-		M = [size(dx),size(dy)]
-		self%dx = dx
-		self%dy = dy
-		
-		allocate( I( M(1) , M(2) ))
-		allocate( U( M(1) , M(2) ))
-		allocate(Ux( M(1) , M(2) ))
-		allocate(Uy( M(1) , M(2) ))
-		allocate( V( M(1) , M(2) ))
-		allocate(Vx( M(1) , M(2) ))
-		allocate(Vy( M(1) , M(2) ))
-		allocate( R( M(1) , M(2) ))
-		allocate( N( M(1) , M(2) ))
-		
-		call readStep(fn,'I',I,1)
-		call readStep(fn,'dIdU ',U ,1)
-		call readStep(fn,'dIdUx',Ux,1)
-		call readStep(fn,'dIdUy',Uy,1)
-		call readStep(fn,'dIdV ',V ,1)
-		call readStep(fn,'dIdVx',Vx,1)
-		call readStep(fn,'dIdVy',Vy,1)
-		call readStep(fn,'dIdR ',R ,1)
-		call readStep(fn,'dIdN ',N ,1)
-		if(allocated(self%C)) deallocate(self%C)
-		allocate(self%C( M(1) , M(2) ))
-		self%C%x = I
-		self%C%d(ADS_U ) = U
-		self%C%d(ADS_Ux) = Ux
-		self%C%d(ADS_Uy) = Uy
-		self%C%d(ADS_V ) = V
-		self%C%d(ADS_Vx) = Vx
-		self%C%d(ADS_Vy) = Vy
-		self%C%d(ADS_R ) = R
-		self%C%d(ADS_N ) = N
+! 		character(64),dimension(:),allocatable::vars
+! 		real(wp),dimension(:),allocatable::dx,dy,z,t
+! 		real(wp),dimension(:,:),allocatable::I,U,Ux,Uy,V,Vx,Vy,R,N
+! 		integer,dimension(2)::M
+! 		
+! 		call readGrid(fn,vars,dx,dy,z,t)
+! 		M = [size(dx),size(dy)]
+! 		self%dx = dx
+! 		self%dy = dy
+! 		
+! 		allocate( I( M(1) , M(2) ))
+! 		allocate( U( M(1) , M(2) ))
+! 		allocate(Ux( M(1) , M(2) ))
+! 		allocate(Uy( M(1) , M(2) ))
+! 		allocate( V( M(1) , M(2) ))
+! 		allocate(Vx( M(1) , M(2) ))
+! 		allocate(Vy( M(1) , M(2) ))
+! 		allocate( R( M(1) , M(2) ))
+! 		allocate( N( M(1) , M(2) ))
+! 		
+! 		call readStep(fn,'I',I,1)
+! 		call readStep(fn,'dIdU ',U ,1)
+! 		call readStep(fn,'dIdUx',Ux,1)
+! 		call readStep(fn,'dIdUy',Uy,1)
+! 		call readStep(fn,'dIdV ',V ,1)
+! 		call readStep(fn,'dIdVx',Vx,1)
+! 		call readStep(fn,'dIdVy',Vy,1)
+! 		call readStep(fn,'dIdR ',R ,1)
+! 		call readStep(fn,'dIdN ',N ,1)
+! 		if(allocated(self%C)) deallocate(self%C)
+! 		allocate(self%C( M(1) , M(2) ))
+! 		self%C%x = I
+! 		self%C%d(ADS_U ) = U
+! 		self%C%d(ADS_Ux) = Ux
+! 		self%C%d(ADS_Uy) = Uy
+! 		self%C%d(ADS_V ) = V
+! 		self%C%d(ADS_Vx) = Vx
+! 		self%C%d(ADS_Vy) = Vy
+! 		self%C%d(ADS_R ) = R
+! 		self%C%d(ADS_N ) = N
 	end subroutine readMap
 
 	function dispInt(self) result(o)
 		class(map_t),intent(in)::self
-		type(ad3_t),dimension(2)::o
+		integer,dimension(2)::o
 		
 		integer,dimension(2)::Ni,Nj
 		real(wp),dimension(:,:),allocatable::W
@@ -304,18 +304,18 @@ contains
 		allocate( W( Ni(1):Ni(2) , Nj(1):Nj(2) ) )
 		
 		forall(i=Ni(1):Ni(2),j=Nj(1):Nj(2))
-			W(i,j) = real(self%C(i,j))*(2.0_wp-real(abs(i),wp)/real(Ni(2),wp))*(1.0_wp-real(abs(j),wp)/real(Nj(2),wp))
+			W(i,j) = self%C(i,j)%val()*(2.0_wp-real(abs(i),wp)/real(Ni(2),wp))*(1.0_wp-real(abs(j),wp)/real(Nj(2),wp))
 		end forall
 		
-		o = real(maxloc(W)+[Ni(1),Nj(1)]-1,wp)
+		o = maxloc(W)+[Ni(1),Nj(1)]-1
 	end function dispInt
 
 	function dispGauss(self) result(o)
 		class(map_t),intent(in)::self
-		type(ad3_t),dimension(2)::o
+		type(ad_t),dimension(2)::o
 		
-		type(ad3_t),dimension(-1:1)::h
-		type(ad3_t),dimension(2)::s
+		type(ad_t),dimension(-1:1)::h
+		type(ad_t),dimension(2)::s
 		integer,dimension(2)::N,m
 		integer::i
 		
@@ -337,8 +337,8 @@ contains
 	!===================!
 
 	function pixelize(A,f) result(o)
-		type(ad1_t),dimension(:,:),intent(in)::A
-		type(ad3_t),dimension(:,:),allocatable::o
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(:,:),allocatable::o
 		integer::f
 		integer::i,j
 		
@@ -346,13 +346,8 @@ contains
 		
 		do j=1,size(A,2)
 			do i=1,size(A,1)
-				o(i,j) = A(i,j)
-			end do
-		end do
-		
-		do j=1,size(A,2)
-			do i=1,size(A,1)
-				o(i,j)%I(i,j,f) = 1.0_wp
+				o(i,j) = ad_t( A(i,j)%val() , ADN )
+				!! FIXME: initialize pixel location to 1 and copy old derivatives
 			end do
 		end do
 	end function pixelize
