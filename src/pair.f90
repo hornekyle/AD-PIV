@@ -120,16 +120,16 @@ contains
 		character(5),dimension( 2*(1+ADS_COUNT) )::varNames
 		integer::k,p
 		
-		varNames( 1) = 'u    '
+		varNames(  1  ) = 'u'
 		varNames( 2:9 ) = 'du'//ADS_CHS
-		varNames(10) = 'v    '
+		varNames( 10  ) = 'v'
 		varNames(11:18) = 'dv'//ADS_CHS
 		
 		call writeGrid(fn,varNames,self%vx,self%vy)
 		
 		do p=lbound(self%passes,1),ubound(self%passes,1)
-			call writeStep(fn,real(p,wp),p+1,'u    ',self%passes(p)%u%val())
-			call writeStep(fn,real(p,wp),p+1,'v    ',self%passes(p)%v%val())
+			call writeStep(fn,real(p,wp),p+1,'u',self%passes(p)%u%val())
+			call writeStep(fn,real(p,wp),p+1,'v',self%passes(p)%v%val())
 			
 			do k=1,ADS_COUNT
 				call writeStep(fn,real(p,wp),p+1,varNames(k+1 ),self%passes(p)%u%der(k))

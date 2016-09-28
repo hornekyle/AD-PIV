@@ -147,60 +147,39 @@ contains
 		character(*),intent(in)::fn
 		type(ad_t),dimension(2)::v
 		
+		character(5),dimension(3+ADS_COUNT)::varNames
 		real(wp),dimension(:),allocatable::x,y
-		real(wp),dimension(:,:),allocatable::var
 		integer,dimension(2)::N
+		integer::k
 		
 		N = max_pass_sizes
 		
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
 		
-		call writeGrid(fn, &
-			& ['I    ','dudI ','dvdI ', &
-			&  'dIdU ','dIdUx','dIdUy', &
-			&  'dIdV ','dIdVx','dIdVy', &
-			&  'dIdR ','dIdN ', &
-			&  'dIdu ','dIdv '], &
-			& x,y)
+		varNames(  1  ) = 'I'
+		varNames( 2:9 ) = 'dI'//ADS_CHS
+		varNames(10:11) = ['dudI','dvdI']
+		
+		call writeGrid(fn,varNames,x,y)
 		
 		! First Image
-		
-		call writeStep(fn,0.0_wp,1,'I',self%A%val())
-		
-		var = deIndex(v(1),1)
-		call writeStep(fn,0.0_wp,1,'dudI',var)
-		
-		var = deIndex(v(2),1)
-		call writeStep(fn,0.0_wp,1,'dvdI',var)
-		
-		call writeStep(fn,0.0_wp,1,'dIdU ',self%A%der(ADS_U ))
-		call writeStep(fn,0.0_wp,1,'dIdUx',self%A%der(ADS_Ux))
-		call writeStep(fn,0.0_wp,1,'dIdUy',self%A%der(ADS_Uy))
-		call writeStep(fn,0.0_wp,1,'dIdV ',self%A%der(ADS_V ))
-		call writeStep(fn,0.0_wp,1,'dIdVx',self%A%der(ADS_Vx))
-		call writeStep(fn,0.0_wp,1,'dIdVy',self%A%der(ADS_Vy))
-		call writeStep(fn,0.0_wp,1,'dIdR ',self%A%der(ADS_R ))
-		call writeStep(fn,0.0_wp,1,'dIdN ',self%A%der(ADS_N ))
+		call writeStep(fn,0.0_wp,1,varNames(1),self%A%val())
+		do k=1,ADS_COUNT
+			call writeStep(fn,0.0_wp,1,varNames(k+1),self%A%der(k))
+		end do
+		do k=1,2
+			call writeStep(fn,0.0_wp,1,varNames(k+9), deIndex(v(k),1) )
+		end do
 		
 		! Second Image
-		
-		call writeStep(fn,1.0_wp,2,'I',self%B%val())
-		
-		var = deIndex(v(1),2)
-		call writeStep(fn,1.0_wp,2,'dudI',var)
-		
-		var = deIndex(v(2),2)
-		call writeStep(fn,1.0_wp,2,'dvdI',var)
-		
-		call writeStep(fn,1.0_wp,2,'dIdU ',self%B%der(ADS_U ))
-		call writeStep(fn,1.0_wp,2,'dIdUx',self%B%der(ADS_Ux))
-		call writeStep(fn,1.0_wp,2,'dIdUy',self%B%der(ADS_Uy))
-		call writeStep(fn,1.0_wp,2,'dIdV ',self%B%der(ADS_V ))
-		call writeStep(fn,1.0_wp,2,'dIdVx',self%B%der(ADS_Vx))
-		call writeStep(fn,1.0_wp,2,'dIdVy',self%B%der(ADS_Vy))
-		call writeStep(fn,1.0_wp,2,'dIdR ',self%B%der(ADS_R ))
-		call writeStep(fn,1.0_wp,2,'dIdN ',self%B%der(ADS_N ))
+		call writeStep(fn,1.0_wp,2,varNames(1),self%B%val())
+		do k=1,ADS_COUNT
+			call writeStep(fn,1.0_wp,2,varNames(k+1),self%B%der(k))
+		end do
+		do k=1,2
+			call writeStep(fn,1.0_wp,2,varNames(k+9), deIndex(v(k),2) )
+		end do
 	end subroutine writeVector
 
 	!==================!
@@ -243,12 +222,12 @@ contains
 		character(5),dimension( 1+ADS_COUNT )::varNames
 		integer::k
 		
-		varNames( 1) = 'I    '
-		varNames( 2:9 ) = 'dI'//ADS_CHS
+		varNames( 1 ) = 'I'
+		varNames(2:9) = 'dI'//ADS_CHS
 		
 		call writeGrid(fn,varNames,self%dx,self%dy)
 		
-		call writeStep(fn,0.0_wp,1,'I    ',self%C%val(      ))
+		call writeStep(fn,0.0_wp,1,varNames(1),self%C%val(      ))
 		do k=1,ADS_COUNT
 			call writeStep(fn,0.0_wp,1,varNames(k+1),self%C%der(k))
 		end do
@@ -386,18 +365,18 @@ contains
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
 		
-		varNames( 1) = 'fx    '
+		varNames(  1  ) = 'fx'
 		varNames( 2:9 ) = 'dfx'//ADS_CHS
-		varNames(10) = 'fy    '
+		varNames( 10  ) = 'fy'
 		varNames(11:18) = 'dfy'//ADS_CHS
-		varNames(19) = 'ft    '
+		varNames( 19  ) = 'ft'
 		varNames(20:27) = 'dft'//ADS_CHS
 		
 		call writeGrid(fn,varNames,x,y)
 		
-		call writeStep(fn,0.0_wp,1,'fx    ',self%fx%val())
-		call writeStep(fn,0.0_wp,1,'fy    ',self%fy%val())
-		call writeStep(fn,0.0_wp,1,'ft    ',self%ft%val())
+		call writeStep(fn,0.0_wp,1,varNames( 1),self%fx%val())
+		call writeStep(fn,0.0_wp,1,varNames(10),self%fy%val())
+		call writeStep(fn,0.0_wp,1,varNames(19),self%ft%val())
 		
 		do k=1,ADS_COUNT
 			call writeStep(fn,0.0_wp,1,varNames(k+1 ),self%fx%der(k))

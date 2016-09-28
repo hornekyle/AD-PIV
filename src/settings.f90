@@ -25,7 +25,7 @@ module settings_mod
 	
 	
 	character(3),dimension(ADS_COUNT),parameter::ADS_CHS = &
-		& ['dU ','dUx','dUu','dV ','dVx','dVy','dR ','dN ']
+		& ['dU ','dUx','dUy','dV ','dVx','dVy','dR ','dN ']
 	
 	!=============!
 	!= Variables =!
