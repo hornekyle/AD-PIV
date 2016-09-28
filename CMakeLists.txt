@@ -25,12 +25,12 @@ if(NOT HAVE_RUN)
 	set(CMAKE_Fortran_FLAGS ${CMAKE_Fortran_FLAGS}
 		CACHE STRING "Fortran flags" FORCE)
 	
-	set(debug_flags "-Wall -Wno-tabs -Wno-maybe-uninitialized -Wno-unused-dummy-argument -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan -fopenmp")
+	set(debug_flags "-Wall -Wno-tabs -Wno-maybe-uninitialized -Wno-unused-dummy-argument -fcheck=all -ffpe-trap=invalid,zero,overflow -fbacktrace -finit-real=snan")
 	set(CMAKE_Fortran_FLAGS_DEBUG 
 		"${CMAKE_Fortran_FLAGS_DEBUG} ${debug_flags}"
 		CACHE STRING "Fortran debugging flags" FORCE)
 	
-	set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE}  -fopenmp"
+	set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE}"
 		CACHE STRING "Fortran release flags" FORCE)
 endif(NOT HAVE_RUN)
 
