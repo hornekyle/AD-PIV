@@ -28,11 +28,11 @@ module displacement_mod
 		procedure::dispInt
 		procedure::dispGauss
 		procedure::writeMap
-		procedure::readMap
 	end type
 	
 	public::regions_t
 	public::map_t
+	public::deIndex
 	
 contains
 
@@ -200,22 +200,22 @@ contains
 		end function grad_b
 		
 		subroutine writeFields
-! 			character(:),allocatable::fn
-! 			real(wp),dimension(:),allocatable::x,y
-! 			
-! 			x = linspace(1.0_wp,real(N(1),wp),N(1))
-! 			y = linspace(1.0_wp,real(N(2),wp),N(2))
-! 			
-! 			fn = './results/'//prefix//'/fields'
-! 			fn = fn//'-'//intToChar(idx)
-! 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
-! 			fn = fn//''//intToChar(pass)//']'
-! 			fn = fn//'.nc'
-! 			
-! 			call writeGrid(fn,['fx','fy','ft'],x,y)
-! 			call writeStep(fn,0.0_wp,1,'fx',real(fx))
-! 			call writeStep(fn,0.0_wp,1,'fy',real(fy))
-! 			call writeStep(fn,0.0_wp,1,'ft',real(ft))
+			character(:),allocatable::fn
+			real(wp),dimension(:),allocatable::x,y
+			
+			x = linspace(1.0_wp,real(N(1),wp),N(1))
+			y = linspace(1.0_wp,real(N(2),wp),N(2))
+			
+			fn = './results/'//prefix//'/fields'
+			fn = fn//'-'//intToChar(idx)
+			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
+			fn = fn//''//intToChar(pass)//']'
+			fn = fn//'.nc'
+			
+			call writeGrid(fn,['fx','fy','ft'],x,y)
+			call writeStep(fn,0.0_wp,1,'fx',fx%val())
+			call writeStep(fn,0.0_wp,1,'fy',fy%val())
+			call writeStep(fn,0.0_wp,1,'ft',ft%val())
 		end subroutine writeFields
 		
 	end function leastSquares
@@ -228,68 +228,20 @@ contains
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-! 		call writeGrid(fn, &
-! 			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
-! 			& self%dx,self%dy)
-! 		
-! 		call writeStep(fn,0.0_wp,1,'I',real(self%C))
-! 		call writeStep(fn,0.0_wp,1,'dIdU ',der(self%C,ADS_U ))
-! 		call writeStep(fn,0.0_wp,1,'dIdUx',der(self%C,ADS_Ux))
-! 		call writeStep(fn,0.0_wp,1,'dIdUy',der(self%C,ADS_Uy))
-! 		call writeStep(fn,0.0_wp,1,'dIdV ',der(self%C,ADS_V ))
-! 		call writeStep(fn,0.0_wp,1,'dIdVx',der(self%C,ADS_Vx))
-! 		call writeStep(fn,0.0_wp,1,'dIdVy',der(self%C,ADS_Vy))
-! 		call writeStep(fn,0.0_wp,1,'dIdR ',der(self%C,ADS_R ))
-! 		call writeStep(fn,0.0_wp,1,'dIdN ',der(self%C,ADS_N ))
-	end subroutine writeMap
-
-	subroutine readMap(self,fn)
-		!! FIXME: Need global derivative table
-		class(map_t)::self
-		character(*),intent(in),optional::fn
-			!! Filename of pair
+		call writeGrid(fn, &
+			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
+			& self%dx,self%dy)
 		
-! 		character(64),dimension(:),allocatable::vars
-! 		real(wp),dimension(:),allocatable::dx,dy,z,t
-! 		real(wp),dimension(:,:),allocatable::I,U,Ux,Uy,V,Vx,Vy,R,N
-! 		integer,dimension(2)::M
-! 		
-! 		call readGrid(fn,vars,dx,dy,z,t)
-! 		M = [size(dx),size(dy)]
-! 		self%dx = dx
-! 		self%dy = dy
-! 		
-! 		allocate( I( M(1) , M(2) ))
-! 		allocate( U( M(1) , M(2) ))
-! 		allocate(Ux( M(1) , M(2) ))
-! 		allocate(Uy( M(1) , M(2) ))
-! 		allocate( V( M(1) , M(2) ))
-! 		allocate(Vx( M(1) , M(2) ))
-! 		allocate(Vy( M(1) , M(2) ))
-! 		allocate( R( M(1) , M(2) ))
-! 		allocate( N( M(1) , M(2) ))
-! 		
-! 		call readStep(fn,'I',I,1)
-! 		call readStep(fn,'dIdU ',U ,1)
-! 		call readStep(fn,'dIdUx',Ux,1)
-! 		call readStep(fn,'dIdUy',Uy,1)
-! 		call readStep(fn,'dIdV ',V ,1)
-! 		call readStep(fn,'dIdVx',Vx,1)
-! 		call readStep(fn,'dIdVy',Vy,1)
-! 		call readStep(fn,'dIdR ',R ,1)
-! 		call readStep(fn,'dIdN ',N ,1)
-! 		if(allocated(self%C)) deallocate(self%C)
-! 		allocate(self%C( M(1) , M(2) ))
-! 		self%C%x = I
-! 		self%C%d(ADS_U ) = U
-! 		self%C%d(ADS_Ux) = Ux
-! 		self%C%d(ADS_Uy) = Uy
-! 		self%C%d(ADS_V ) = V
-! 		self%C%d(ADS_Vx) = Vx
-! 		self%C%d(ADS_Vy) = Vy
-! 		self%C%d(ADS_R ) = R
-! 		self%C%d(ADS_N ) = N
-	end subroutine readMap
+		call writeStep(fn,0.0_wp,1,'I    ',self%C%val(      ))
+		call writeStep(fn,0.0_wp,1,'dIdU ',self%C%der(ADS_U ))
+		call writeStep(fn,0.0_wp,1,'dIdUx',self%C%der(ADS_Ux))
+		call writeStep(fn,0.0_wp,1,'dIdUy',self%C%der(ADS_Uy))
+		call writeStep(fn,0.0_wp,1,'dIdV ',self%C%der(ADS_V ))
+		call writeStep(fn,0.0_wp,1,'dIdVx',self%C%der(ADS_Vx))
+		call writeStep(fn,0.0_wp,1,'dIdVy',self%C%der(ADS_Vy))
+		call writeStep(fn,0.0_wp,1,'dIdR ',self%C%der(ADS_R ))
+		call writeStep(fn,0.0_wp,1,'dIdN ',self%C%der(ADS_N ))
+	end subroutine writeMap
 
 	function dispInt(self) result(o)
 		class(map_t),intent(in)::self
@@ -339,17 +291,59 @@ contains
 	function pixelize(A,f) result(o)
 		type(ad_t),dimension(:,:),intent(in)::A
 		type(ad_t),dimension(:,:),allocatable::o
+		
+		real(wp),dimension(:),allocatable::grad
 		integer::f
 		integer::i,j
 		
 		allocate(o(size(A,1),size(A,2)))
+		allocate(grad(ADN))
 		
 		do j=1,size(A,2)
 			do i=1,size(A,1)
-				o(i,j) = ad_t( A(i,j)%val() , ADN )
-				!! FIXME: initialize pixel location to 1 and copy old derivatives
+				grad = 0.0_wp
+				grad(1:ADS_COUNT) = A(i,j)%grad()
+				if(per_pixel) grad( getIndex(i,j,f) ) = 1.0_wp
+				o(i,j) = ad_t( A(i,j)%val() , grad )
 			end do
 		end do
 	end function pixelize
+
+	function deIndex(a,f) result(o)
+		type(ad_t),intent(in)::a
+		integer,intent(in)::f
+		real(wp),dimension(:,:),allocatable::o
+		
+		integer,dimension(2)::N
+		integer::i,j
+		real(wp)::m
+		
+		N = max_pass_sizes
+		allocate( o(N(1),N(2)) )
+		
+		do j=1,N(2)
+			do i=1,N(1)
+				o(i,j) = a%der( getIndex(i,j,f) )
+			end do
+		end do
+		
+		m = sum(o(2:N(1)-1,2:N(2)-1))/real(product(N-2),wp)
+		
+		o(  1 ,:) = m
+		o(N(1),:) = m
+		o(:,  1 ) = m
+		o(:,N(1)) = m
+	end function deIndex
+
+	function getIndex(i,j,f) result(o)
+		integer,intent(in)::i,j,f
+		integer::o
+		
+		integer::idx
+		
+		idx = (f-1)*product(max_pass_sizes)+(j-1)*max_pass_sizes(2)+(i-1)+1
+		
+		o = idx+ADS_COUNT
+	end function getIndex
 
 end module displacement_mod

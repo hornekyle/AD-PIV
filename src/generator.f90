@@ -41,17 +41,17 @@ contains
 		type(particle_t),dimension(:),allocatable::particles
 		real(wp),dimension(:,:),allocatable::RN
 		integer::tid,tct
-		integer::k
+		integer::i,j,k
 		
 		o = pair_t(N)
 		
 		allocate( RN(N(1),N(2)) )
 		
 		call random_number(RN)
-		o%A = RN*ad_t(noise_level,ADS_COUNT,ADS_N)
+		forall(i=1:N(1),j=1:N(2)) o%A(i,j) = RN(i,j)*ad_t(noise_level,ADS_COUNT,ADS_N)
 		
 		call random_number(RN)
-		o%B = RN*ad_t(noise_level,ADS_COUNT,ADS_N)
+		forall(i=1:N(1),j=1:N(2)) o%B(i,j) = RN(i,j)*ad_t(noise_level,ADS_COUNT,ADS_N)
 		
 		allocate(particles(Np))
 		
@@ -170,8 +170,7 @@ contains
 		
 		do j=1,p%Nv(2)
 			do i=1,p%Nv(1)
-				x(1) = ad_t(p%vx(i),ADS_COUNT)
-				x(2) = ad_t(p%vy(j),ADS_COUNT)
+				x = ad_t( [p%vx(i),p%vy(j)] , ADS_COUNT )
 				ul = uf(x)
 				p%passes(0)%u(i,j) = ul(1)
 				p%passes(0)%v(i,j) = ul(2)

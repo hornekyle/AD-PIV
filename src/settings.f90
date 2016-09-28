@@ -55,7 +55,7 @@ module settings_mod
 	logical::write_map  = .true.
 	logical::per_pixel  = .true.
 	
-	integer::adN = 8
+	integer::adN = ADS_COUNT
 	
 contains
 
@@ -91,7 +91,7 @@ contains
 		
 		max_pass_sizes = [(pass_sizes(1,:)) , maxval(pass_sizes(2,:))]
 		if(per_pixel) then
-			adN = 8+2*product(max_pass_sizes)
+			adN = ADS_COUNT+2*product(max_pass_sizes)
 		end if
 	end subroutine readConfig
 

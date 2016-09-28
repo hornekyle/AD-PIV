@@ -55,7 +55,8 @@ contains
 		
 		N = image_size
 		Np = particle_count
-		R = [particle_radius,0.0_wp]*ad_t(1.0_wp,ADS_COUNT,ADS_R)
+		R(1) = ad_t(particle_radius,ADS_COUNT,ADS_R)
+		R(2) = ad_t(0.0_wp,ADS_COUNT)
 		
 		p = generatePair(N,Np,R)
 		p%idx = idx
