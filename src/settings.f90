@@ -23,6 +23,10 @@ module settings_mod
 	
 	integer,parameter::ADS_COUNT = 8
 	
+	
+	character(3),dimension(ADS_COUNT),parameter::ADS_CHS = &
+		& ['dU ','dUx','dUu','dV ','dVx','dVy','dR ','dN ']
+	
 	!=============!
 	!= Variables =!
 	!=============!

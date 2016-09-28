@@ -3,7 +3,6 @@ module generator_mod
 	use settings_mod
 	use stats_mod
 	use pair_mod
-	use omp_lib
 	use cluster_mod
 	use autoDiff_mod
 	implicit none
@@ -40,7 +39,6 @@ contains
 		
 		type(particle_t),dimension(:),allocatable::particles
 		real(wp),dimension(:,:),allocatable::RN
-		integer::tid,tct
 		integer::i,j,k
 		
 		o = pair_t(N)
@@ -61,16 +59,11 @@ contains
 			particles(k)%r = R(1)+R(2)*randomNormal()
 		end do
 		
-		!$omp parallel private(k,tid,tct)
-		tid = omp_get_thread_num()
-		tct = omp_get_num_threads()
-		!$omp barrier
 		do k=1,Np
-			if(tid==0 .and. amRoot()) call showProgress('Generating '//intToChar(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
-			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A , [tid,tct])
-			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B , [tid,tct])
+			call showProgress('Generating '//intToChar(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
+			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A )
+			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B )
 		end do
-		!$omp end parallel
 		
 	contains
 	
@@ -108,7 +101,7 @@ contains
 			o = x
 		end function integrate
 	
-		subroutine project(x0,p,F,omp)
+		subroutine project(x0,p,F)
 			!! Define compute ranges for i and j
 			!! - Respect array bounds
 			!! - Cover |x-x0|<3*r
@@ -121,18 +114,11 @@ contains
 				!! Particle data
 			type(ad_t),dimension(:,:),intent(inout)::F
 				!! Field to which the particle is added
-			integer,dimension(2),intent(in)::omp
-				!! Thread information [thread_id, thread_count]
 			
 			type(ad_t)::x,y
 			real(wp)::L
 			integer::il,ih,i
 			integer::jl,jh,j
-			
-			integer::tid,tct
-			
-			tid = omp(1)
-			tct = omp(2)
 			
 			il = max( nint(x0(1)-3.0_wp*p%r) ,1   )
 			ih = min( nint(x0(1)+3.0_wp*p%r) ,N(1))
@@ -142,7 +128,6 @@ contains
 			L = exp(-p%z**2)
 			
 			do j=jl,jh
-				if(.not. mod(j,tct)==tid) cycle
 				do i=il,ih
 					x = ad_t(real(i,wp),ADS_COUNT)
 					y = ad_t(real(j,wp),ADS_COUNT)

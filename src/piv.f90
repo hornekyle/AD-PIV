@@ -6,7 +6,6 @@ module piv_mod
 	use autodiff_mod
 	use displacement_mod
 	use pair_mod
-	use omp_lib
 	use cluster_mod
 	use netCDF_mod
 	implicit none
@@ -28,7 +27,6 @@ contains
 			!! Computation method
 		integer,intent(in),optional::reference
 		
-		integer::tid
 		integer::lref
 		type(regions_t)::R
 		type(ad_t),dimension(2)::d
@@ -38,12 +36,8 @@ contains
 		lref = -1
 		if(present(reference)) lref = reference
 		
-		!$omp parallel private(i,j,d,tid)
-		tid = omp_get_thread_num()
-		!$omp barrier
-		!$omp do schedule(static,1)
 		do j=1,p%Nv(2)
-			if(tid==0 .and. j/=p%Nv(2) .and. amRoot()) then
+			if( amRoot() .and. any(p%Nv>1) ) then
 				call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
 			end if
 			do i=1,p%Nv(1)
@@ -70,15 +64,11 @@ contains
 					fn = fn//'-['//intToChar(i)//','//intToChar(j)//'|'
 					fn = fn//''//intToChar(k)//']'
 					fn = fn//'.nc'
-					call writeVector(fn,d,R)
+					call R%writeVector(fn,d)
 				end if
 			end do
 		end do
-		!$omp end do
-		!$omp barrier
-		if(tid==0 .and. amRoot()) call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',1.0_wp)
-		!$omp barrier
-		!$omp end parallel
+		call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',1.0_wp)
 		
 	contains
 	
@@ -100,8 +90,6 @@ contains
 		end function firstPass
 	
 		function secondPass(i,j,ref) result(o)
-			!! @todo
-			!! Re-evaluation of algorithm is needed
 			integer,intent(in)::i,j
 				!! Corrdinates of vector
 			integer,intent(in)::ref
@@ -227,66 +215,5 @@ contains
 		end function tryMean
 	
 	end subroutine filter
-
-	subroutine writeVector(fn,v,R)
-		character(*),intent(in)::fn
-		type(ad_t),dimension(2)::v
-		type(regions_t),intent(in)::R
-		
-		real(wp),dimension(:),allocatable::x,y
-		real(wp),dimension(:,:),allocatable::var
-		integer,dimension(2)::N
-		
-		N = max_pass_sizes
-		
-		x = linspace(1.0_wp,real(N(1),wp),N(1))
-		y = linspace(1.0_wp,real(N(2),wp),N(2))
-		
-		call writeGrid(fn, &
-			& ['I    ','dudI ','dvdI ', &
-			&  'dIdU ','dIdUx','dIdUy', &
-			&  'dIdV ','dIdVx','dIdVy', &
-			&  'dIdR ','dIdN ', &
-			&  'dIdu ','dIdv '], &
-			& x,y)
-		
-		! First Image
-		
-		call writeStep(fn,0.0_wp,1,'I',R%A%val())
-		
-		var = deIndex(v(1),1)
-		call writeStep(fn,0.0_wp,1,'dudI',var)
-		
-		var = deIndex(v(2),1)
-		call writeStep(fn,0.0_wp,1,'dvdI',var)
-		
-		call writeStep(fn,0.0_wp,1,'dIdU ',R%A%der(ADS_U ))
-		call writeStep(fn,0.0_wp,1,'dIdUx',R%A%der(ADS_Ux))
-		call writeStep(fn,0.0_wp,1,'dIdUy',R%A%der(ADS_Uy))
-		call writeStep(fn,0.0_wp,1,'dIdV ',R%A%der(ADS_V ))
-		call writeStep(fn,0.0_wp,1,'dIdVx',R%A%der(ADS_Vx))
-		call writeStep(fn,0.0_wp,1,'dIdVy',R%A%der(ADS_Vy))
-		call writeStep(fn,0.0_wp,1,'dIdR ',R%A%der(ADS_R ))
-		call writeStep(fn,0.0_wp,1,'dIdN ',R%A%der(ADS_N ))
-		
-		! Second Image
-		
-		call writeStep(fn,1.0_wp,2,'I',R%B%val())
-		
-		var = deIndex(v(1),2)
-		call writeStep(fn,1.0_wp,2,'dudI',var)
-		
-		var = deIndex(v(2),2)
-		call writeStep(fn,1.0_wp,2,'dvdI',var)
-		
-		call writeStep(fn,1.0_wp,2,'dIdU ',R%B%der(ADS_U ))
-		call writeStep(fn,1.0_wp,2,'dIdUx',R%B%der(ADS_Ux))
-		call writeStep(fn,1.0_wp,2,'dIdUy',R%B%der(ADS_Uy))
-		call writeStep(fn,1.0_wp,2,'dIdV ',R%B%der(ADS_V ))
-		call writeStep(fn,1.0_wp,2,'dIdVx',R%B%der(ADS_Vx))
-		call writeStep(fn,1.0_wp,2,'dIdVy',R%B%der(ADS_Vy))
-		call writeStep(fn,1.0_wp,2,'dIdR ',R%B%der(ADS_R ))
-		call writeStep(fn,1.0_wp,2,'dIdN ',R%B%der(ADS_N ))
-	end subroutine writeVector
 
 end module piv_mod

@@ -8,6 +8,10 @@ module displacement_mod
 	implicit none
 	private
 	
+	!=================================!
+	!= regions_t Type and Interfaces =!
+	!=================================!
+	
 	type::regions_t
 		type(ad_t),dimension(:,:),allocatable::A,B
 		integer,dimension(2)::shift = 0
@@ -15,11 +19,16 @@ module displacement_mod
 	contains
 		procedure::crossCorrelateDirect
 		procedure::leastSquares
+		procedure::writeVector
 	end type
 	
 	interface regions_t
 		module procedure newRegions
 	end interface
+	
+	!=============================!
+	!= map_t Type and Interfaces =!
+	!=============================!
 	
 	type::map_t
 		type(ad_t),dimension(:,:),allocatable::C
@@ -30,15 +39,38 @@ module displacement_mod
 		procedure::writeMap
 	end type
 	
+	interface map_t
+		module procedure newMap
+	end interface
+	
+	!================================!
+	!= fields_t Type and Interfaces =!
+	!================================!
+	
+	type::fields_t
+		type(ad_t),dimension(:,:),allocatable::fx,fy,ft
+	contains
+		procedure::dispLsq
+		procedure::writeFields
+	end type
+	
+	interface fields_t
+		module procedure newFields
+	end interface
+	
+	!===========!
+	!= Exports =!
+	!===========!
+	
 	public::regions_t
 	public::map_t
 	public::deIndex
 	
 contains
 
-	!====================!
-	!= Regions Routines =!
-	!====================!
+	!=====================!
+	!= region_t Routines =!
+	!=====================!
 
 	function newRegions(A,B,ij,shift) result(self)
 		type(ad_t),dimension(:,:),intent(in)::A,B
@@ -64,30 +96,12 @@ contains
 		
 		type(map_t)::M
 		type(ad_t),dimension(:,:),allocatable::A,B
-		integer,dimension(2)::N
-		integer::Ail,Aih,Bil,Bih,i
-		integer::Ajl,Ajh,Bjl,Bjh,j
 		character(:),allocatable::fn
 		
 		A = pixelize(self%A,1)
 		B = pixelize(self%B,2)
 		
-		N = shape(A)
-		
-		allocate(M%C( -nint(F*N(1)):nint(F*N(1)) , -nint(F*N(2)):nint(F*N(2)) ))
-		M%dx = linspace(-real(nint(F*N(1)),wp),real(nint(F*N(1)),wp),size(M%C,1))
-		M%dy = linspace(-real(nint(F*N(2)),wp),real(nint(F*N(2)),wp),size(M%C,2))
-		
-		do i=lbound(M%C,1),ubound(M%C,1)
-			Ail = max(1-i,1); Aih = min(N(1)-i,N(1))
-			Bil = max(1+i,1); Bih = min(N(1)+i,N(1))
-			do j=lbound(M%C,2),ubound(M%C,2)
-				Ajl = max(1-j,1); Ajh = min(N(2)-j,N(2))
-				Bjl = max(1+j,1); Bjh = min(N(2)+j,N(2))
-				
-				M%C(i,j) = sum(A(Ail:Aih,Ajl:Ajh)*B(Bil:Bih,Bjl:Bjh))/real( (Aih-Ail)*(Ajh-Ajl) ,wp)
-			end do
-		end do
+		M = map_t(A,B,F)
 		
 		if(write_map) then
 			fn = './results/'//prefix//'/map'
@@ -107,140 +121,137 @@ contains
 		integer,intent(in)::idx,pass
 		type(ad_t),dimension(2)::o
 		
+		character(:),allocatable::fn
 		type(ad_t),dimension(:,:),allocatable::A,B
-		type(ad_t),dimension(:,:),allocatable::fx,fy,ft
-		type(ad_t),dimension(2,2)::As,Ai
-		type(ad_t),dimension(2)::bs
-		integer,dimension(2)::N
+		type(fields_t)::F
 		
 		A = pixelize(self%A,1)
 		B = pixelize(self%B,2)
 		
-		N = shape(A)
+		F = fields_t(A,B,order)
 		
-		fx = (grad_f(A,1,1.0_wp)+grad_b(B,1,1.0_wp))/2.0_wp
-		fy = (grad_f(A,2,1.0_wp)+grad_b(B,2,1.0_wp))/2.0_wp
-		ft = B-A
-		
-		As(1,1:2) = [sum(fx*fx),sum(fx*fy)]
-		As(2,1:2) = [sum(fy*fx),sum(fy*fy)]
-		bs(1:2)   = [sum(fx*ft),sum(fy*ft)]
-		
-		Ai(1,1:2) = [ As(2,2),-As(1,2)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
-		Ai(2,1:2) = [-As(2,1), As(1,1)]/(As(1,1)*As(2,2)-As(1,2)*As(2,1))
-		
-		o = real(self%shift,wp)+matmul(Ai,-bs)
-		
-		if(write_map) call writeFields
-		
-	contains
-	
-		function grad_f(f,r,h) result(o)
-			type(ad_t),dimension(:,:),intent(in)::f
-			integer,intent(in)::r
-			real(wp),intent(in)::h
-			type(ad_t),dimension(:,:),allocatable::o
-			
-			integer,dimension(2)::N,d
-			type(ad_t),dimension(-2:2)::l
-			integer::i,j,k
-			
-			N = shape(f)
-			d = 0
-			d(r) = 1
-			allocate(o(N(1),N(2)))
-			o = ad_t(0.0_wp,ADN)
-			
-			do j=1+2,N(2)-2
-				do i=1+2,N(1)-2
-					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-					
-					select case(order)
-					case(1)
-						o(i,j) = sum(l*[0.0_wp,0.0_wp,-1.0_wp,1.0_wp,0.0_wp])/(1.0_wp*h)
-					case(2)
-						o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-					case(3)
-						o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
-					end select
-				end do
-			end do
-		end function grad_f
-	
-		function grad_b(f,r,h) result(o)
-			type(ad_t),dimension(:,:),intent(in)::f
-			integer,intent(in)::r
-			real(wp),intent(in)::h
-			type(ad_t),dimension(:,:),allocatable::o
-			
-			integer,dimension(2)::N,d
-			type(ad_t),dimension(-2:2)::l
-			integer::i,j,k
-			
-			N = shape(f)
-			d = 0
-			d(r) = 1
-			allocate(o(N(1),N(2)))
-			o = ad_t(0.0_wp,ADN)
-			
-			do j=1+2,N(2)-2
-				do i=1+2,N(1)-2
-					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
-					
-					select case(order)
-					case(1)
-						o(i,j) = sum(l*[0.0_wp,-1.0_wp,1.0_wp,0.0_wp,0.0_wp])/(1.0_wp*h)
-					case(2)
-						o(i,j) = sum(l*[0.0_wp,-1.0_wp,0.0_wp,1.0_wp,0.0_wp])/(2.0_wp*h)
-					case(3)
-						o(i,j) = sum(l*[1.0_wp,-8.0_wp,0.0_wp,8.0_wp,-1.0_wp])/(2.0_wp*h)
-					end select
-				end do
-			end do
-		end function grad_b
-		
-		subroutine writeFields
-			character(:),allocatable::fn
-			real(wp),dimension(:),allocatable::x,y
-			
-			x = linspace(1.0_wp,real(N(1),wp),N(1))
-			y = linspace(1.0_wp,real(N(2),wp),N(2))
-			
+		if(write_map) then
 			fn = './results/'//prefix//'/fields'
 			fn = fn//'-'//intToChar(idx)
 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
 			fn = fn//''//intToChar(pass)//']'
 			fn = fn//'.nc'
-			
-			call writeGrid(fn,['fx','fy','ft'],x,y)
-			call writeStep(fn,0.0_wp,1,'fx',fx%val())
-			call writeStep(fn,0.0_wp,1,'fy',fy%val())
-			call writeStep(fn,0.0_wp,1,'ft',ft%val())
-		end subroutine writeFields
+			call F%writeFields(fn)
+		end if
 		
+		o = real(self%shift,wp)+F%dispLsq()
 	end function leastSquares
 
-	!================!
-	!= Mat Routines =!
-	!================!
+	subroutine writeVector(self,fn,v)
+		class(regions_t),intent(in)::self
+		character(*),intent(in)::fn
+		type(ad_t),dimension(2)::v
+		
+		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:,:),allocatable::var
+		integer,dimension(2)::N
+		
+		N = max_pass_sizes
+		
+		x = linspace(1.0_wp,real(N(1),wp),N(1))
+		y = linspace(1.0_wp,real(N(2),wp),N(2))
+		
+		call writeGrid(fn, &
+			& ['I    ','dudI ','dvdI ', &
+			&  'dIdU ','dIdUx','dIdUy', &
+			&  'dIdV ','dIdVx','dIdVy', &
+			&  'dIdR ','dIdN ', &
+			&  'dIdu ','dIdv '], &
+			& x,y)
+		
+		! First Image
+		
+		call writeStep(fn,0.0_wp,1,'I',self%A%val())
+		
+		var = deIndex(v(1),1)
+		call writeStep(fn,0.0_wp,1,'dudI',var)
+		
+		var = deIndex(v(2),1)
+		call writeStep(fn,0.0_wp,1,'dvdI',var)
+		
+		call writeStep(fn,0.0_wp,1,'dIdU ',self%A%der(ADS_U ))
+		call writeStep(fn,0.0_wp,1,'dIdUx',self%A%der(ADS_Ux))
+		call writeStep(fn,0.0_wp,1,'dIdUy',self%A%der(ADS_Uy))
+		call writeStep(fn,0.0_wp,1,'dIdV ',self%A%der(ADS_V ))
+		call writeStep(fn,0.0_wp,1,'dIdVx',self%A%der(ADS_Vx))
+		call writeStep(fn,0.0_wp,1,'dIdVy',self%A%der(ADS_Vy))
+		call writeStep(fn,0.0_wp,1,'dIdR ',self%A%der(ADS_R ))
+		call writeStep(fn,0.0_wp,1,'dIdN ',self%A%der(ADS_N ))
+		
+		! Second Image
+		
+		call writeStep(fn,1.0_wp,2,'I',self%B%val())
+		
+		var = deIndex(v(1),2)
+		call writeStep(fn,1.0_wp,2,'dudI',var)
+		
+		var = deIndex(v(2),2)
+		call writeStep(fn,1.0_wp,2,'dvdI',var)
+		
+		call writeStep(fn,1.0_wp,2,'dIdU ',self%B%der(ADS_U ))
+		call writeStep(fn,1.0_wp,2,'dIdUx',self%B%der(ADS_Ux))
+		call writeStep(fn,1.0_wp,2,'dIdUy',self%B%der(ADS_Uy))
+		call writeStep(fn,1.0_wp,2,'dIdV ',self%B%der(ADS_V ))
+		call writeStep(fn,1.0_wp,2,'dIdVx',self%B%der(ADS_Vx))
+		call writeStep(fn,1.0_wp,2,'dIdVy',self%B%der(ADS_Vy))
+		call writeStep(fn,1.0_wp,2,'dIdR ',self%B%der(ADS_R ))
+		call writeStep(fn,1.0_wp,2,'dIdN ',self%B%der(ADS_N ))
+	end subroutine writeVector
+
+	!==================!
+	!= map_t Routines =!
+	!==================!
+
+	function newMap(A,B,F) result(self)
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(:,:),intent(in)::B
+		real(wp),intent(in)::F
+		type(map_t)::self
+		
+		integer::Ail,Aih,Bil,Bih
+		integer::Ajl,Ajh,Bjl,Bjh
+		integer,dimension(2)::N
+		integer::i,j
+		
+		N = shape(A)
+		
+		allocate(self%C( -nint(F*N(1)):nint(F*N(1)) , -nint(F*N(2)):nint(F*N(2)) ))
+		self%dx = linspace(-real(nint(F*N(1)),wp),real(nint(F*N(1)),wp),size(self%C,1))
+		self%dy = linspace(-real(nint(F*N(2)),wp),real(nint(F*N(2)),wp),size(self%C,2))
+		
+		do i=lbound(self%C,1),ubound(self%C,1)
+			Ail = max(1-i,1); Aih = min(N(1)-i,N(1))
+			Bil = max(1+i,1); Bih = min(N(1)+i,N(1))
+			do j=lbound(self%C,2),ubound(self%C,2)
+				Ajl = max(1-j,1); Ajh = min(N(2)-j,N(2))
+				Bjl = max(1+j,1); Bjh = min(N(2)+j,N(2))
+				
+				self%C(i,j) = sum(A(Ail:Aih,Ajl:Ajh)*B(Bil:Bih,Bjl:Bjh))/real( (Aih-Ail)*(Ajh-Ajl) ,wp)
+			end do
+		end do
+	end function newMap
 
 	subroutine writeMap(self,fn)
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
 		
-		call writeGrid(fn, &
-			& ['I    ','dIdU ','dIdUx','dIdUy','dIdV ','dIdVx','dIdVy','dIdR ','dIdN '], &
-			& self%dx,self%dy)
+		character(5),dimension( 1+ADS_COUNT )::varNames
+		integer::k
+		
+		varNames( 1) = 'I    '
+		varNames( 2:9 ) = 'dI'//ADS_CHS
+		
+		call writeGrid(fn,varNames,self%dx,self%dy)
 		
 		call writeStep(fn,0.0_wp,1,'I    ',self%C%val(      ))
-		call writeStep(fn,0.0_wp,1,'dIdU ',self%C%der(ADS_U ))
-		call writeStep(fn,0.0_wp,1,'dIdUx',self%C%der(ADS_Ux))
-		call writeStep(fn,0.0_wp,1,'dIdUy',self%C%der(ADS_Uy))
-		call writeStep(fn,0.0_wp,1,'dIdV ',self%C%der(ADS_V ))
-		call writeStep(fn,0.0_wp,1,'dIdVx',self%C%der(ADS_Vx))
-		call writeStep(fn,0.0_wp,1,'dIdVy',self%C%der(ADS_Vy))
-		call writeStep(fn,0.0_wp,1,'dIdR ',self%C%der(ADS_R ))
-		call writeStep(fn,0.0_wp,1,'dIdN ',self%C%der(ADS_N ))
+		do k=1,ADS_COUNT
+			call writeStep(fn,0.0_wp,1,varNames(k+1),self%C%der(k))
+		end do
 	end subroutine writeMap
 
 	function dispInt(self) result(o)
@@ -283,6 +294,117 @@ contains
 		
 		o = real(m,wp)+s
 	end function dispGauss
+
+	!=====================!
+	!= fields_t Routines =!
+	!=====================!
+
+	function newFields(A,B,order) result(self)
+		type(ad_t),dimension(:,:),intent(in)::A
+		type(ad_t),dimension(:,:),intent(in)::B
+		integer,intent(in)::order
+		type(fields_t)::self
+		
+		self%fx = (grad(A,1,+1,order,1.0_wp)+grad(B,1,-1,order,1.0_wp))/2.0_wp
+		self%fy = (grad(A,2,+1,order,1.0_wp)+grad(B,2,-1,order,1.0_wp))/2.0_wp
+		self%ft = B-A
+		
+	contains
+	
+		function grad(f,dir,fb,order,h) result(o)
+			type(ad_t),dimension(:,:),intent(in)::f
+				!! Field to differentiate
+			integer,intent(in)::dir
+				!! Direction of derivative
+			integer,intent(in)::fb
+				!! Forwards or backwards derivative f=+1,b=-1
+			integer,intent(in)::order
+				!! Derivative order
+			real(wp),intent(in)::h
+				!! Step size
+			type(ad_t),dimension(:,:),allocatable::o
+				!! Differentiated field
+			
+			real(wp),dimension(-2:2,1:2,-1:1)::C
+			
+			integer,dimension(2)::N,d
+			type(ad_t),dimension(-2:2)::l
+			integer::i,j,k
+			
+			C = 0.0_wp
+			C(:,1,+1) = [ 0.0_wp, 0.0_wp,-1.0_wp, 1.0_wp, 0.0_wp]
+			C(:,2,+1) = [ 0.0_wp, 0.0_wp,-1.5_wp, 2.0_wp,-0.5_wp]
+			C(:,1,-1) = [ 0.0_wp,-1.0_wp, 1.0_wp, 0.0_wp, 0.0_wp]
+			C(:,2,-1) = [ 0.5_wp,-2.0_wp, 1.5_wp, 0.0_wp, 0.0_wp]
+			
+			N = shape(f)
+			d = 0
+			d(dir) = 1
+			allocate(o(N(1),N(2)))
+			o = ad_t(0.0_wp,ADN)
+			
+			do j=1+2,N(2)-2
+				do i=1+2,N(1)-2
+					forall(k=-2:2) l(k) = f(i+k*d(1),j+k*d(2))
+					o(i,j) = sum(l*C(:,order,fb))/h
+				end do
+			end do
+		end function grad
+	
+	end function newFields
+
+	function dispLsq(self) result(o)
+		class(fields_t),intent(in)::self
+		type(ad_t),dimension(2)::o
+		
+		type(ad_t),dimension(2,2)::As,Ai
+		type(ad_t),dimension(2)::bs
+		type(ad_t)::D
+		
+		As(1,1:2) = [sum(self%fx*self%fx),sum(self%fx*self%fy)]
+		As(2,1:2) = [sum(self%fy*self%fx),sum(self%fy*self%fy)]
+		bs(1:2)   = [sum(self%fx*self%ft),sum(self%fy*self%ft)]
+		
+		D = As(1,1)*As(2,2)-As(1,2)*As(2,1)
+		Ai(1,1:2) = [ As(2,2),-As(1,2)]/D
+		Ai(2,1:2) = [-As(2,1), As(1,1)]/D
+		
+		o = matmul(Ai,-bs)
+	end function dispLsq
+
+	subroutine writeFields(self,fn)
+		class(fields_t),intent(in)::self
+		character(*),intent(in)::fn
+		
+		character(6),dimension( 3*(1+ADS_COUNT) )::varNames
+		real(wp),dimension(:),allocatable::x,y
+		integer,dimension(2)::N
+		integer::k
+		
+		N = shape(self%fx)
+		
+		x = linspace(1.0_wp,real(N(1),wp),N(1))
+		y = linspace(1.0_wp,real(N(2),wp),N(2))
+		
+		varNames( 1) = 'fx    '
+		varNames( 2:9 ) = 'dfx'//ADS_CHS
+		varNames(10) = 'fy    '
+		varNames(11:18) = 'dfy'//ADS_CHS
+		varNames(19) = 'ft    '
+		varNames(20:27) = 'dft'//ADS_CHS
+		
+		call writeGrid(fn,varNames,x,y)
+		
+		call writeStep(fn,0.0_wp,1,'fx    ',self%fx%val())
+		call writeStep(fn,0.0_wp,1,'fy    ',self%fy%val())
+		call writeStep(fn,0.0_wp,1,'ft    ',self%ft%val())
+		
+		do k=1,ADS_COUNT
+			call writeStep(fn,0.0_wp,1,varNames(k+1 ),self%fx%der(k))
+			call writeStep(fn,0.0_wp,1,varNames(k+10),self%fy%der(k))
+			call writeStep(fn,0.0_wp,1,varNames(k+19),self%ft%der(k))
+		end do
+	end subroutine writeFields
 
 	!===================!
 	!= Helper Routines =!
