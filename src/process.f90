@@ -1,9 +1,9 @@
 program process_prg
-	use kinds_mod
 	use autodiff_mod
 	use settings_mod
 	use text_mod
 	use cluster_mod
+	use mpi
 	use pair_mod
 	use generator_mod
 	use piv_mod

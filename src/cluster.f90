@@ -1,8 +1,8 @@
 module cluster_mod
-	use kinds_mod
 	use mpi
 	use stats_mod
 	implicit none
+	private
 	
 	integer::mpi_size = 0
 		!! MPI global communicator size
@@ -14,6 +14,17 @@ module cluster_mod
 		!! MPI real type
 	integer,dimension(MPI_STATUS_SIZE)::mpi_stat
 		!! MPI status
+	
+	public::mpi_rank
+	public::mpi_size
+	public::mpi_err
+	public::mpi_wp
+	public::mpi_stat
+	
+	public::setupMPI
+	public::finalizeMPI
+	public::consoleMPI
+	public::amRoot
 	
 contains
 

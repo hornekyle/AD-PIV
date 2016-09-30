@@ -1,9 +1,6 @@
 module settings_mod
 	!! Module containting global settings
-	use kinds_mod
 	use autodiff_mod
-	use config_mod
-	use text_mod
 	implicit none
 	
 	!==============!
@@ -64,6 +61,8 @@ module settings_mod
 contains
 
 	subroutine readConfig(fn)
+		use config_mod
+		use text_mod
 		character(*),intent(in)::fn
 		type(config_t)::cfg
 		integer::k

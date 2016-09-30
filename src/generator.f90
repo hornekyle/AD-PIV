@@ -1,10 +1,10 @@
 module generator_mod
-	use kinds_mod
 	use settings_mod
+	use autoDiff_mod
+	use cluster_mod
 	use stats_mod
 	use pair_mod
-	use cluster_mod
-	use autoDiff_mod
+	use text_mod
 	implicit none
 	private
 	

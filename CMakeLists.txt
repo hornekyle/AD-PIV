@@ -85,10 +85,8 @@ add_dependencies(process symlinks)
 #======================#
 
 add_custom_command(OUTPUT "docs/index.html"
-	COMMAND basic
-	COMMAND examples
 	COMMAND ${EXECUTABLE_FORD} "${CMAKE_BINARY_DIR}/project.md"
-	DEPENDS logo basic examples symlinks
+	DEPENDS symlinks
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 add_custom_target(doc DEPENDS "docs/index.html")
 

@@ -1,9 +1,8 @@
 module pair_mod
-	use kinds_mod
+	use settings_mod
 	use array_mod
 	use autodiff_mod
 	use netCDF_mod
-	use settings_mod
 	implicit none
 	private
 	

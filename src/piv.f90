@@ -1,13 +1,10 @@
 module piv_mod
-	use kinds_mod
 	use settings_mod
-	use text_mod
-	use array_mod
 	use autodiff_mod
+	use text_mod
 	use displacement_mod
 	use pair_mod
 	use cluster_mod
-	use netCDF_mod
 	implicit none
 	
 contains
