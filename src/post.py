@@ -144,6 +144,8 @@ name "fig:%(label)s"
 \end_inset
 """
 
+Ncf = 30
+
 #===================#
 #= Plot Image Pair =#
 #===================#
@@ -156,6 +158,7 @@ def doImage(I,nm,sn):
 	ax = fig.add_subplot(1,1,1,aspect=1.0)
 	
 	ax.pcolormesh(x,y,I[:,:],cmap=seq)
+	#ax.contourf(x,y,I[:,:],Ncf,cmap=seq)
 	
 	ax.axhline(47.5,color='k',ls='--',lw=2)
 	ax.axhline(96.5,color='k',ls='--',lw=2)
@@ -205,6 +208,7 @@ def doVectorVar(V,vn,fvn,nm,sn,sym=True):
 		vr = [V.min(),V.max()]
 	
 	ax.pcolormesh(x,y,V[:,:],cmap=cm,vmin=vr[0],vmax=vr[1])
+	#ax.contourf(x,y,V[:,:],Ncf,cmap=cm,vmin=vr[0],vmax=vr[1])
 	
 	ax.set_xlim(x.min(),x.max())
 	ax.set_ylim(y.min(),y.max())
@@ -277,6 +281,7 @@ def doMapVar(V,vn,fvn,sn,sym=True):
 		vr = [V.min(),V.max()]
 	
 	ax.pcolormesh(x,y,V[:,:],cmap=cm,vmin=vr[0],vmax=vr[1])
+	#ax.contourf(x,y,V[:,:],Ncf,cmap=cm,vmin=vr[0],vmax=vr[1])
 	
 	ax.set_xlim(x.min(),x.max())
 	ax.set_ylim(y.min(),y.max())
