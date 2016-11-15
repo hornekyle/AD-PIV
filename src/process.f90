@@ -21,7 +21,7 @@ program process_prg
 	call sleep(1)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
-	do k=1,N_pairs
+	do k=pairs_start,N_pairs+pairs_start-1
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		call doPair(k)
 	end do

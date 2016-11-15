@@ -39,6 +39,7 @@ module settings_mod
 	integer::particle_count
 	real(wp)::particle_radius
 	integer::N_pairs
+	integer::pairs_start
 	
 	integer::N_Passes
 	integer,dimension(2)::buffer_window_size
@@ -80,6 +81,7 @@ contains
 		particle_count  = cfg%getInteger('particle_count')
 		particle_radius = cfg%getReal('particle_radius')
 		N_pairs         = cfg%getInteger('N_pairs')
+		pairs_start     = cfg%getInteger('pairs_start')
 		
 		N_passes = cfg%getInteger('N_passes')
 		buffer_window_size  = nint(cfg%getVector('buffer_window_size'))
