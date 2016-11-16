@@ -12,8 +12,11 @@ display: public
 
 Automatic differentiation Particle-image Velocimetry
 
-Image generation mode
-	* Automatic differentiation (figures)
+Rodolfo needs co-author credit on both papers
+Try to get Mike Black's help on Bayesian paper, and credit him as co-author
+
+Image generation mode paper figures
+	* Automatic differentiation (diagrams)
 		- Expression decomposition
 		- Chain rule propagation
 	* Demonstration of AD applied to PIV (plots)
@@ -31,9 +34,23 @@ Image generation mode
 		- Plot mean indicated vs true sensitivities with error bars (maybe violin plots?)
 	* Monte Carlo results for range of shears (plots)
 		- 0.0-0.5 px/px shear rates (6 samples)
+		- 5.5 px displacement
 		- Plot mean indicated vs true displacement with error bars (maybe violin plots?)
 		- Plot mean indicated vs true sensitivities with error bars (maybe violin plots?)
 
-Full differentiation mode
+Full differentiation mode todo
+	* Look more closely at relationship between dudU, dudI, dIdU
+	* Preliminary treatment of pixel uncertainty using Bayesian statistics
+	* Actual uncertainty recommendations for a basic test case
+	* Evaluation of the uncertainty effectiveness using Monte Carlo
+
+Full differentiation mode figures
+	* Automatic differentiation (diagrams)
+		- 3D derivative space
+		- Pixel seeding
+		- Explanation of data loss at edges
+	* Simple image pair (plots)
 		- Comparison of dIdU and dudI
 		- Comparison of dIdV and dvdI
+	* Bayesian pattern statistics representation (plots)
+	* Histograms of vectors, with comparison to predicted uncertainties (plots)

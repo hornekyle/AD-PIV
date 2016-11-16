@@ -94,19 +94,19 @@ def doVector(fns):
 	keys = ['u','dudU','dudV','dudUx','dudUy','dudVx','dudVy','v','dvdU','dvdV','dvdUx','dvdUy','dvdVx','dvdVy']
 	titles = {}
 	titles['u']     = 'Displacement $u$ [px]'
-	titles['dudU']  = 'Displacement Derivative $\\partial u / \\partial U$ [-]'
-	titles['dudV']  = 'Displacement Derivative $\\partial u / \\partial V$ [-]'
-	titles['dudUx'] = 'Displacement Derivative $\\partial u / \\partial U_x$ [-]'
-	titles['dudUy'] = 'Displacement Derivative $\\partial u / \\partial U_y$ [-]'
-	titles['dudVx'] = 'Displacement Derivative $\\partial u / \\partial V_x$ [-]'
-	titles['dudVy'] = 'Displacement Derivative $\\partial u / \\partial V_y$ [-]'
+	titles['dudU']  = 'Displacement Derivative $\\partial u / \\partial U$ [px/px]'
+	titles['dudV']  = 'Displacement Derivative $\\partial u / \\partial V$ [px/px]'
+	titles['dudUx'] = 'Displacement Derivative $\\partial u / \\partial U_x$ [px/px]'
+	titles['dudUy'] = 'Displacement Derivative $\\partial u / \\partial U_y$ [px/px]'
+	titles['dudVx'] = 'Displacement Derivative $\\partial u / \\partial V_x$ [px/px]'
+	titles['dudVy'] = 'Displacement Derivative $\\partial u / \\partial V_y$ [px/px]'
 	titles['v']     = 'Displacement $v$ [px]'
-	titles['dvdU']  = 'Displacement Derivative $\\partial v / \\partial U$ [-]'
-	titles['dvdV']  = 'Displacement Derivative $\\partial v / \\partial V$ [-]'
-	titles['dvdUx'] = 'Displacement Derivative $\\partial v / \\partial U_x$ [-]'
-	titles['dvdUy'] = 'Displacement Derivative $\\partial v / \\partial U_y$ [-]'
-	titles['dvdVx'] = 'Displacement Derivative $\\partial v / \\partial V_x$ [-]'
-	titles['dvdVy'] = 'Displacement Derivative $\\partial v / \\partial V_y$ [-]'
+	titles['dvdU']  = 'Displacement Derivative $\\partial v / \\partial U$ [px/px]'
+	titles['dvdV']  = 'Displacement Derivative $\\partial v / \\partial V$ [px/px]'
+	titles['dvdUx'] = 'Displacement Derivative $\\partial v / \\partial U_x$ [px/px]'
+	titles['dvdUy'] = 'Displacement Derivative $\\partial v / \\partial U_y$ [px/px]'
+	titles['dvdVx'] = 'Displacement Derivative $\\partial v / \\partial V_x$ [px/px]'
+	titles['dvdVy'] = 'Displacement Derivative $\\partial v / \\partial V_y$ [px/px]'
 	D = {k: pl.empty( (Nf,Np) ) for k in keys}
 	
 	for fk in range(Nf):

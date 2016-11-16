@@ -91,8 +91,9 @@ contains
 		pass_types = [character(3):: ( cfg%getString('pass_types['//intToChar(k)//']') , k=1,N_passes )]
 		correlationFactors = cfg%getVector('correlationFactors')
 		
-		write_map = cfg%getLogical('write_map')
-		per_pixel = cfg%getLogical('per_pixel')
+		write_pair = cfg%getLogical('write_pair')
+		write_map  = cfg%getLogical('write_map')
+		per_pixel  = cfg%getLogical('per_pixel')
 		
 		max_pass_sizes = [(pass_sizes(1,:)) , maxval(pass_sizes(2,:))]
 		if(per_pixel) then

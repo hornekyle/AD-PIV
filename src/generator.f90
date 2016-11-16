@@ -60,7 +60,6 @@ contains
 		end do
 		
 		do k=1,Np
-			call showProgress('Generating '//intToChar(Np)//' particles',real(k-1,wp)/real(Np-1,wp))
 			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A )
 			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B )
 		end do

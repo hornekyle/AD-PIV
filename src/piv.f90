@@ -34,9 +34,6 @@ contains
 		if(present(reference)) lref = reference
 		
 		do j=1,p%Nv(2)
-			if( amRoot() .and. any(p%Nv>1) ) then
-				call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',real(j-1,wp)/real(p%Nv(2)-1,wp))
-			end if
 			do i=1,p%Nv(1)
 				select case(lref)
 				case(0:)
@@ -65,7 +62,6 @@ contains
 				end if
 			end do
 		end do
-		call showProgress('Correlating '//intToChar(product(p%Nv))//' vectors',1.0_wp)
 		
 	contains
 	
