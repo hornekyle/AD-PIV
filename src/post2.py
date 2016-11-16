@@ -15,6 +15,7 @@ div = pl.get_cmap('coolwarm')
 
 Ncf = 20+1
 Np  = 128
+fext = 'png'
 
 def plotImage(I,nm,sn,vr=[0,1]):
 	x = pl.linspace(1,I.shape[0],I.shape[0])
@@ -40,7 +41,7 @@ def plotImage(I,nm,sn,vr=[0,1]):
 	
 	fig.colorbar(c,ax=ax)
 	
-	fn = '%s-%s.pdf'%(sn,nm)
+	fn = '%s-%s.%s'%(sn,nm,fext)
 	fig.savefig(fn)
 	pl.close(fig)
 
@@ -84,12 +85,12 @@ def plotHistogram(I,name,title='',Nb=None):
 	ax.bar(centers,chance,0.8*widths,lw=2,align='center',color=colors)
 	ax.set_xlabel(title)
 	ax.set_yticks([])
-	fig.savefig('%s.pdf'%name)
+	fig.savefig('%s.%s'%(name,fext))
 	pl.close(fig)
 
 def doVector(fns):
 	Nf = len(fns)
-	Np = 4
+	Np = 2+1
 	
 	keys = ['u','dudU','dudV','dudUx','dudUy','dudVx','dudVy','v','dvdU','dvdV','dvdUx','dvdUy','dvdVx','dvdVy']
 	titles = {}
@@ -125,5 +126,5 @@ def doVector(fns):
 #fns = [ 'results/monteCarlo/pair-%d.nc'%(k+1) for k in range(Np) ]
 #doPair(fns)
 
-fns = [ 'results/monteCarlo/vectors-%d.nc'%(k+1) for k in range(Np) ]
+fns = [ 'results/test/vectors-%d.nc'%(k+1) for k in range(Np) ]
 doVector(fns)

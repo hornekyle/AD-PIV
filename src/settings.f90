@@ -109,9 +109,14 @@ contains
 		type(ad_t),dimension(2,2)::vUl
 		
 		xl  = x-real(image_size,wp)/2.0_wp
-		U0l = [ ad_t(U0(1),ADS_COUNT,ADS_U) , ad_t(U0(2),ADS_COUNT,ADS_V) ]
-		vUl(1,1:2) = [ ad_t(vU(1,1),ADS_COUNT,ADS_Ux) , ad_t(vU(1,2),ADS_COUNT,ADS_Uy) ]
-		vUl(2,1:2) = [ ad_t(vU(2,1),ADS_COUNT,ADS_Vx) , ad_t(vU(2,2),ADS_COUNT,ADS_Vy) ]
+		
+		U0l(1) = ad_t(U0(1),ADS_COUNT,ADS_U)
+		U0l(2) = ad_t(U0(2),ADS_COUNT,ADS_V)
+		
+		vUl(1,1) = ad_t(vU(1,1),ADS_COUNT,ADS_Ux)
+		vUl(1,2) = ad_t(vU(1,2),ADS_COUNT,ADS_Uy)
+		vUl(2,1) = ad_t(vU(2,1),ADS_COUNT,ADS_Vx)
+		vUl(2,2) = ad_t(vU(2,2),ADS_COUNT,ADS_Vy)
 		
 		o = U0l+matmul(vUl,xl)
 	end function uf

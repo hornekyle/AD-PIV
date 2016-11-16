@@ -1,12 +1,12 @@
 program process_prg
 	use autodiff_mod
 	use settings_mod
-	use text_mod
 	use cluster_mod
 	use mpi
 	use pair_mod
 	use generator_mod
 	use piv_mod
+	use time_mod
 	implicit none
 	
 	character(128)::cfn
@@ -21,27 +21,31 @@ program process_prg
 	call sleep(1)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
-	do k=pairs_start,N_pairs+pairs_start-1
+	do k=pairs_start-1,N_pairs+pairs_start-2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
-		call doPair(k)
+		call doPair(k+1)
 	end do
 	call finalizeMPI()
 	
 contains
 
 	subroutine doPair(k)
-		integer::k
+		integer,intent(in)::k
 		
+		real(wp)::t0,t1
 		type(pair_t)::pair
 		character(64)::buf
 		
-		if(amRoot()) write(*,'(1A)') colorize('Processing pair: '//intToChar(k),[5,5,5])
+		if(amRoot()) write(stdout,'(1A)',advance='no') colorize('Pair: '//intToChar(k)//'; ',[5,5,5])
+		t0 = wallTime()
 		write(buf,*) k
 		buf = trim(adjustl(buf))
 		pair = createFullPair(k)
 		
 		if(write_pair) call pair%writePair('./results/'//prefix//'/pair-'//trim(buf)//'.nc')
 		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc')
+		t1 = wallTime()
+		if(amRoot()) write(stdout,'(1A)') colorize(realToChar(t1-t0,'F7.3')//' [s]',[5,5,5])
 	end subroutine doPair
 
 	function createFullPair(idx) result(p)

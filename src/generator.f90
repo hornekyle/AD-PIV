@@ -39,6 +39,7 @@ contains
 		
 		type(particle_t),dimension(:),allocatable::particles
 		real(wp),dimension(:,:),allocatable::RN
+		type(ad_t),dimension(2)::xA,xB
 		integer::i,j,k
 		
 		o = pair_t(N)
@@ -60,8 +61,10 @@ contains
 		end do
 		
 		do k=1,Np
-			call project( integrate(particles(k)%x,-0.5_wp) , particles(k) , o%A )
-			call project( integrate(particles(k)%x,+0.5_wp) , particles(k) , o%B )
+			xA = integrate(particles(k)%x,-0.5_wp)
+			xB = integrate(particles(k)%x,+0.5_wp)
+			call project( xA , particles(k) , o%A )
+			call project( xB , particles(k) , o%B )
 		end do
 		
 	contains
