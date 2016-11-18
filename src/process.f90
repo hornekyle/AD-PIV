@@ -13,12 +13,8 @@ program process_prg
 	integer::k
 	
 	call setupMPI()
-	
 	call get_command_argument(1,cfn)
 	call readConfig(cfn)
-	
-	if(amRoot()) call execute_command_line('mkdir -p ./results/'//prefix)
-	call sleep(1)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
 	do k=pairs_start-1,N_pairs+pairs_start-2
@@ -42,8 +38,8 @@ contains
 		buf = trim(adjustl(buf))
 		pair = createFullPair(k)
 		
-		if(write_pair) call pair%writePair('./results/'//prefix//'/pair-'//trim(buf)//'.nc')
-		call pair%writeVectors('./results/'//prefix//'/vectors-'//trim(buf)//'.nc')
+		if(write_pair) call pair%writePair('pair-'//trim(buf)//'.nc')
+		call pair%writeVectors('vectors-'//trim(buf)//'.nc')
 		t1 = wallTime()
 		if(amRoot()) write(stdout,'(1A)') colorize(realToChar(t1-t0,'F7.3')//' [s]',[5,5,5])
 	end subroutine doPair

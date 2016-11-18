@@ -53,7 +53,7 @@ contains
 				p%passes(k)%v(i,j) = d(2)
 				
 				if(per_pixel) then
-					fn = './results/'//prefix//'/vector'
+					fn = 'vector'
 					fn = fn//'-'//intToChar(p%idx)
 					fn = fn//'-['//intToChar(i)//','//intToChar(j)//'|'
 					fn = fn//''//intToChar(k)//']'

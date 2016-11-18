@@ -103,7 +103,7 @@ contains
 		M = map_t(A,B,F)
 		
 		if(write_map) then
-			fn = './results/'//prefix//'/map'
+			fn = 'map'
 			fn = fn//'-'//intToChar(idx)
 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
 			fn = fn//''//intToChar(pass)//']'
@@ -130,7 +130,7 @@ contains
 		F = fields_t(A,B,order)
 		
 		if(write_map) then
-			fn = './results/'//prefix//'/fields'
+			fn = 'fields'
 			fn = fn//'-'//intToChar(idx)
 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
 			fn = fn//''//intToChar(pass)//']'
@@ -339,13 +339,18 @@ contains
 		type(ad_t),dimension(2)::bs
 		type(ad_t)::D
 		
-		As(1,1:2) = [sum(self%fx*self%fx),sum(self%fx*self%fy)]
-		As(2,1:2) = [sum(self%fy*self%fx),sum(self%fy*self%fy)]
-		bs(1:2)   = [sum(self%fx*self%ft),sum(self%fy*self%ft)]
+		As(1,1) = sum(self%fx*self%fx)
+		As(1,2) = sum(self%fx*self%fy)
+		As(2,1) = sum(self%fy*self%fx)
+		As(2,2) = sum(self%fy*self%fy)
+		bs(1)   = sum(self%fx*self%ft)
+		bs(2)   = sum(self%fy*self%ft)
 		
 		D = As(1,1)*As(2,2)-As(1,2)*As(2,1)
-		Ai(1,1:2) = [ As(2,2),-As(1,2)]/D
-		Ai(2,1:2) = [-As(2,1), As(1,1)]/D
+		Ai(1,1) =  As(2,2)/D
+		Ai(1,2) = -As(1,2)/D
+		Ai(2,1) = -As(2,1)/D
+		Ai(2,2) =  As(1,1)/D
 		
 		o = matmul(Ai,-bs)
 	end function dispLsq

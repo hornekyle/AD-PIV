@@ -28,8 +28,6 @@ module settings_mod
 	!= Variables =!
 	!=============!
 	
-	character(:),allocatable::prefix
-	
 	real(wp),dimension(:),allocatable::U0
 	real(wp),dimension(:,:),allocatable::vU
 	
@@ -69,8 +67,6 @@ contains
 		integer::k
 		
 		cfg = config_t(fn)
-		
-		prefix = trim(cfg%getString('prefix'))
 		
 		U0 = cfg%getVector('U0')
 		vU = cfg%getMatrix('vU')

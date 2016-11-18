@@ -14,7 +14,8 @@ seq = pl.get_cmap('viridis')
 div = pl.get_cmap('coolwarm')
 
 Ncf = 20+1
-Np  = 128
+Np  = 8192
+fdir = 'figures'
 fext = 'png'
 
 def plotImage(I,nm,sn,vr=[0,1]):
@@ -41,7 +42,7 @@ def plotImage(I,nm,sn,vr=[0,1]):
 	
 	fig.colorbar(c,ax=ax)
 	
-	fn = '%s-%s.%s'%(sn,nm,fext)
+	fn = '%s/%s-%s.%s'%(fdir,sn,nm,fext)
 	fig.savefig(fn)
 	pl.close(fig)
 
@@ -67,10 +68,20 @@ def doPair(fns):
 	plotImage(IA.std(2),'A','std')
 	plotImage(IB.std(2),'B','std')
 
+def histogram(I,N):
+	S = pl.sort(I)
+	s = int(S.size/N)
+	edges = S[::s]
+	chance = pl.empty(edges.size-1)
+	for k in range(chance.size):
+		chance[k] = s/(edges[k+1]-edges[k])
+	return chance,edges
+
 def plotHistogram(I,name,title='',Nb=None):
 	if Nb==None:
-		Nb = int(pl.sqrt(I.size))
+		Nb = int(0.7*pl.sqrt(I.size))
 	chance,edges = pl.histogram(I,Nb,density=True)
+	#chance,edges = histogram(I,Nb)
 	edgesLeft  = edges[:-1]
 	edgesRight = edges[1:]
 	centers = (edgesLeft+edgesRight)/2.0
@@ -82,10 +93,10 @@ def plotHistogram(I,name,title='',Nb=None):
 	
 	fig = pl.figure(tight_layout=True,figsize=(5,4))
 	ax = fig.add_subplot(1,1,1)
-	ax.bar(centers,chance,0.8*widths,lw=2,align='center',color=colors)
+	ax.bar(centers,chance,widths,lw=0,align='center',color=colors)
 	ax.set_xlabel(title)
 	ax.set_yticks([])
-	fig.savefig('%s.%s'%(name,fext))
+	fig.savefig('%s/%s.%s'%(fdir,name,fext))
 	pl.close(fig)
 
 def doVector(fns):
