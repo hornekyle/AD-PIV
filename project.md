@@ -26,7 +26,6 @@ Image generation mode paper figures
 		- Window shifting example at vector level
 	* Monte Carlo results of single settings (plots)
 		- Statistical convergence of MC method (look at GUM)
-		- Average and standard deviation images
 		- Histograms of u,dudU,dudV, etc.
 	* Monte Carlo results for range of displacements (plots)
 		- 4.5-5.5 px displacement (11 samples)
