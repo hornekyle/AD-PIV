@@ -15,9 +15,9 @@ fext = 'png'
 fdir = ''
 
 radii = pl.linspace(0.5,2.5,2+1)
-disps = pl.linspace(5.0,6.0,10+1)
+shears = pl.linspace(0.0,0.5,5+1)
 
-Nd = disps.size
+Nd = shears.size
 
 varNames = ['u','dudU','dudV','dudUx','dudUy','dudVx','dudVy','v','dvdU','dvdV','dvdUx','dvdUy','dvdVx','dvdVy']
 passNames = ['true','map','map-shift','lsq-shift']
@@ -49,7 +49,7 @@ def unzoom(ax,d,r):
 			yr = yl[1]-yl[0]
 			ax.set_ylim(yl[0]-yr*r,yl[1]+yr*r)
 
-# Return Data[var][sample,displacment,pass]
+# Return Data[var][sample,shear,pass]
 def getData(base):
 	def getVarData(fn,var):
 		def getMembers(tfh):
@@ -81,7 +81,7 @@ def getData(base):
 		return data
 	
 	# Find MC sample count
-	fn = '%s/d-%3.1f-data.tar.gz'%(base,disps[0])
+	fn = '%s/s-%3.1f-data.tar.gz'%(base,shears[0])
 	data = getVarData(fn,'u')
 	Ns = data.shape[0]
 	# Create empty dictionary
@@ -90,11 +90,11 @@ def getData(base):
 	for var in varNames:
 		Data[var] = pl.empty( (Ns,Nd,Np) )
 	# Fill arrays
-	for disp_k in range(Nd):
-		fn = '%s/d-%3.1f-data.tar.gz'%(base,disps[disp_k])
+	for shear_k in range(Nd):
+		fn = '%s/s-%3.1f-data.tar.gz'%(base,shears[shear_k])
 		for vn in varNames:
 			data = getVarData(fn,vn)
-			Data[vn][:,disp_k,:] = data[:,:]
+			Data[vn][:,shear_k,:] = data[:,:]
 	
 	return Data
 
@@ -106,15 +106,15 @@ def plotStats(var,Data):
 		fig = pl.figure(figsize=(5,4),tight_layout={'rect':(0,0,1,0.93)})
 		ax = fig.add_subplot(1,1,1)
 		for pass_k in range(1,Np):
-			x = disps
+			x = shears
 			if plotType=='mean':
 				y = Data[var][:,:,pass_k].mean(0)-Data[var][:,:,0].mean(0)
 			elif plotType=='std':
 				y = Data[var][:,:,pass_k].std(0)
 			ax.plot(x,y,linesFormats[pass_k],label=passNames[pass_k],mew=0)
-		ax.set_xlim(disps.min(),disps.max())
-		ax.set_xlabel('Displacement $u$ [px]')
-		ax.set_xticks(pl.linspace(5.0,6.0,5+1))
+		ax.set_xlim(shears.min(),shears.max())
+		ax.set_xlabel('Shear $U_x$ [px/px]')
+		ax.set_xticks(pl.linspace(0.0,0.5,5+1))
 		unzoom(ax,'y',0.1)
 		ax.set_ylabel('%s\n%s'%(plotTypeNames[plotType],titles[var]))
 		ax.legend(loc='lower left', bbox_to_anchor=(-0.25,1.01),numpoints=3,
@@ -143,14 +143,14 @@ def plotHist(var,Data):
 	for pass_k in range(1,Np):
 		fig = pl.figure(tight_layout=True,figsize=(5,4))
 		ax = fig.add_subplot(1,1,1)
-		for disp_k in range(Nd):
-			I = Data[var][:,disp_k,pass_k]
-			plotHistogram(ax,I,titles[var],disps[disp_k],0.05)
-			ax.errorbar(disps[disp_k],I.mean(),I.std(),fmt='k.')
+		for shear_k in range(Nd):
+			I = Data[var][:,shear_k,pass_k]
+			plotHistogram(ax,I,titles[var],shears[shear_k],0.05)
+			ax.errorbar(shears[shear_k],I.mean(),I.std(),fmt='k.')
 		unzoom(ax,'y',0.1)
-		ax.set_xlim(disps.min()-0.1,disps.max()+0.1)
-		ax.set_xticks(pl.linspace(5.0,6.0,5+1))
-		ax.set_xlabel('Displacement $u$ [px]')
+		ax.set_xlim(shears.min()-0.1,shears.max()+0.1)
+		ax.set_xticks(pl.linspace(0.0,0.5,5+1))
+		ax.set_xlabel('Shear $U_x$ [px/px]')
 		ax.set_ylabel('%s'%titles[var])
 		fig.savefig('%s/%s-%d-hist.%s'%(fdir,var,pass_k,fext))
 		pl.close(fig)
@@ -161,8 +161,8 @@ def plotConvergence(var,Data):
 		fig = pl.figure(tight_layout={'h_pad':0,'rect':(0,0,1,0.95)},figsize=(5,4))
 		ax1 = fig.add_subplot(2,1,1)
 		ax2 = fig.add_subplot(2,1,2)
-		for disp_k in range(Nd):
-			I = Data[var][:,disp_k,pass_k]
+		for shear_k in range(Nd):
+			I = Data[var][:,shear_k,pass_k]
 			i = pl.linspace(1,Ns+1,Ns)
 			m = pl.empty(Ns)
 			d = pl.empty(Ns)
@@ -198,9 +198,9 @@ def plotConvergence(var,Data):
 
 # Plot all data series
 for rk in range(radii.size):
-	base = './results/disp-%.1f'%radii[rk]
+	base = './results/shear-%.1f'%radii[rk]
 	fn = '%s/combined.mat'%base
-	fdir = 'figures/disp-%.1f'%radii[rk]
+	fdir = 'figures/shear-%.1f'%radii[rk]
 	# Pre-cache combined data if not done
 	try:
 		Data = scipy.io.loadmat(fn)

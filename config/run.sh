@@ -2,10 +2,10 @@
 
 base="/home/kyle/Work/Research/Branches/PIV/AD-PIV"
 build="${base}/build"
-template="${base}/config/template-disp.cfg"
+template="${base}/config/template.cfg"
 config="input.cfg"
 
-export Npair=4000
+export Npair=16
 
 radii=(0.5 1.5 2.5)
 disps=(5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0)
