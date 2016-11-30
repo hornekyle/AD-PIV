@@ -15,11 +15,13 @@ fext = 'png'
 fdir = ''
 
 radii = pl.linspace(0.5,2.5,2+1)
+#radii = pl.linspace(2.5,2.5,1)
 disps = pl.linspace(5.0,6.0,10+1)
 
 Nd = disps.size
 
 varNames = ['u','dudU','dudV','dudUx','dudUy','dudVx','dudVy','v','dvdU','dvdV','dvdUx','dvdUy','dvdVx','dvdVy']
+#varNames = ['u','dudU']
 passNames = ['true','map','map-shift','lsq-shift']
 Np = len(passNames)
 
@@ -122,10 +124,24 @@ def plotStats(var,Data):
 		fig.savefig('%s/%s-%s.%s'%(fdir,var,plotType,fext))
 		pl.close(fig)
 
+def histogram(I,Nb):
+	L = pl.sort(I)
+	dL = int(L.size/Nb)
+	edges = pl.empty(Nb+1)
+	chance = pl.empty(Nb)
+	for k in range(Nb):
+		edges[k] = L[k*dL]
+	edges[-1] = L[-1]
+	for k in range(Nb):
+		chance[k] = dL/(edges[k+1]-edges[k])
+	return chance,edges
+	
+
 def plotHistogram(ax,I,name,offset=0.0,scale=1.0,title='',Nb=None):
-	if Nb==None:
-		Nb = int(1.0*pl.sqrt(I.size))
-	chance,edges = pl.histogram(I,Nb,density=True)
+	#if Nb==None:
+		#Nb = int(1.0*pl.sqrt(I.size))
+	#chance,edges = pl.histogram(I,Nb,density=True)
+	chance,edges = histogram(I,25)
 	chance = scale*(chance/chance.max())
 	edgesLeft  = edges[:-1]
 	edgesRight = edges[1:]
@@ -139,18 +155,36 @@ def plotHistogram(ax,I,name,offset=0.0,scale=1.0,title='',Nb=None):
 	left = offset-chance/2
 	ax.barh(centers,widths,heights,left,lw=0,align='center',color=colors)
 
+def computeBounds(I):
+	chance,edges = pl.histogram(I,int(1.0*pl.sqrt(I.size)),density=True)
+	mx = (edges[1:]+edges[:-1])/2.0
+	dx = edges[1:]-edges[:-1]
+	y = chance
+	xl = mx.min()
+	xh = mx.max()
+	for k in range(y.size):
+		if (y[:k]*dx[:k]).sum()>=0.01:
+			xl = mx[k]
+			break
+	for k in range(1,y.size):
+		if (y[-k:]*dx[-k:]).sum()>=0.01:
+			xh = mx[-k]
+			break
+	return (xl,xh)
+
 def plotHist(var,Data):
 	for pass_k in range(1,Np):
 		fig = pl.figure(tight_layout=True,figsize=(5,4))
 		ax = fig.add_subplot(1,1,1)
 		for disp_k in range(Nd):
 			I = Data[var][:,disp_k,pass_k]
-			plotHistogram(ax,I,titles[var],disps[disp_k],0.05)
+			plotHistogram(ax,I,titles[var],disps[disp_k],0.08)
 			ax.errorbar(disps[disp_k],I.mean(),I.std(),fmt='k.')
-		unzoom(ax,'y',0.1)
 		ax.set_xlim(disps.min()-0.1,disps.max()+0.1)
 		ax.set_xticks(pl.linspace(5.0,6.0,5+1))
 		ax.set_xlabel('Displacement $u$ [px]')
+		ax.set_ylim( computeBounds(Data[var][:,:,pass_k]) )
+		unzoom(ax,'y',0.2)
 		ax.set_ylabel('%s'%titles[var])
 		fig.savefig('%s/%s-%d-hist.%s'%(fdir,var,pass_k,fext))
 		pl.close(fig)
@@ -161,22 +195,21 @@ def plotConvergence(var,Data):
 		fig = pl.figure(tight_layout={'h_pad':0,'rect':(0,0,1,0.95)},figsize=(5,4))
 		ax1 = fig.add_subplot(2,1,1)
 		ax2 = fig.add_subplot(2,1,2)
+		i = pl.linspace(1,Ns+1,Ns)
+		m = pl.zeros( (Nd,Ns) )
+		s = pl.zeros( (Nd,Ns) )
+		I = Data[var][:,:,pass_k]
+		for k in range(2,Ns):
+			m[:,k] = I[:k,:].mean(0)
+			s[:,k] = I[:k,:].std(0)
 		for disp_k in range(Nd):
-			I = Data[var][:,disp_k,pass_k]
-			i = pl.linspace(1,Ns+1,Ns)
-			m = pl.empty(Ns)
-			d = pl.empty(Ns)
-			m[-1] = I.mean()
-			d[-1] = I.std()
-			for k in range(2,Ns-1):
-				m[k] = I[:k].mean()-m[-1]
-				d[k] = I[:k].std()-d[-1]
-			m[-1] = 0.0
-			d[-1] = 0.0
-			m /= abs(m[2:]).max()
-			d /= abs(d[2:]).max()
-			ax1.plot(i[2:],m[2:],'g-')
-			ax2.plot(i[2:],d[2:],'c-')
+			m[disp_k,:] = m[disp_k,:]-m[disp_k,-1]
+			s[disp_k,:] = s[disp_k,:]-s[disp_k,-1]
+		m0 = 3.0*abs(m).mean()
+		s0 = 5.0*abs(s).mean()
+		for disp_k in range(Nd):
+			ax1.plot(i[2:],m[disp_k,2:]/m0,'g-')
+			ax2.plot(i[2:],s[disp_k,2:]/s0,'c-')
 		
 		ax1.axhline(0.0,color='k',linestyle='--')
 		ax2.axhline(0.0,color='k',linestyle='--')
@@ -207,8 +240,8 @@ for rk in range(radii.size):
 	except:
 		Data = getData(base)
 		scipy.io.savemat(fn,Data)
-
 	for var in varNames:
+		print(rk,var)
 		plotStats(var,Data)
 		plotHist(var,Data)
 		plotConvergence(var,Data)
