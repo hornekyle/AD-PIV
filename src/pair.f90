@@ -83,57 +83,84 @@ contains
 	!= Pair-IO Routines =!
 	!====================!
 
-	subroutine writePair(self,fn)
+	subroutine writePair(self,fn,ts)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
+		integer,intent(in)::ts
 		
 		character(5),dimension( 1+ADS_COUNT )::varNames
-		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:),allocatable::x,y,z
+		real(wp),dimension(:,:,:),allocatable::buf
 		integer::k
 		
 		x = linspace(1.0_wp,real(self%N(1),wp),self%N(1))
 		y = linspace(1.0_wp,real(self%N(2),wp),self%N(2))
+		z = linspace(1.0_wp,2.0_wp,2)
+		allocate( buf(size(x),size(y),size(z)) )
 		
 		varNames( 1) = 'I    '
 		varNames( 2:9 ) = 'dI'//ADS_CHS
 		
-		call writeGrid(fn,varNames,x,y)
+		if(ts==1) call writeGrid(fn,varNames,x,y,z)
 		
-		! First Image
-		call writeStep(fn,0.0_wp,1,'I    ',self%A%val())
-		do k=1,ADS_COUNT
-			call writeStep(fn,0.0_wp,1,varNames(k+1),self%A%der(k))
-		end do
+		! Real value
+		buf(:,:,1) = self%A%val()
+		buf(:,:,2) = self%B%val()
+		call writeStep(fn,real(ts-1,wp),ts,'I    ',buf)
 		
-		! Second Image
-		call writeStep(fn,1.0_wp,2,'I    ',self%B%val())
+		! Derivatives
 		do k=1,ADS_COUNT
-			call writeStep(fn,1.0_wp,2,varNames(k+1),self%B%der(k))
+			buf(:,:,1) = self%A%der(k)
+			buf(:,:,2) = self%B%der(k)
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+1),buf)
 		end do
 	end subroutine writePair
 
-	subroutine writeVectors(self,fn)
+	subroutine writeVectors(self,fn,ts)
 		class(pair_t),intent(in)::self
 		character(*),intent(in)::fn
+		integer,intent(in)::ts
 		
 		character(5),dimension( 2*(1+ADS_COUNT) )::varNames
+		real(wp),dimension(:),allocatable::x,y,z
+		real(wp),dimension(:,:,:),allocatable::buf
 		integer::k,p
+		
+		x = self%vx
+		y = self%vy
+		z = linspace(0.0_wp,real(N_passes,wp),N_passes+1)
+		allocate( buf(size(x),size(y),size(z)) )
 		
 		varNames(  1  ) = 'u'
 		varNames( 2:9 ) = 'du'//ADS_CHS
 		varNames( 10  ) = 'v'
 		varNames(11:18) = 'dv'//ADS_CHS
 		
-		call writeGrid(fn,varNames,self%vx,self%vy)
+		if(ts==1) call writeGrid(fn,varNames,x,y,z)
 		
+		! u
 		do p=lbound(self%passes,1),ubound(self%passes,1)
-			call writeStep(fn,real(p,wp),p+1,'u',self%passes(p)%u%val())
-			call writeStep(fn,real(p,wp),p+1,'v',self%passes(p)%v%val())
-			
-			do k=1,ADS_COUNT
-				call writeStep(fn,real(p,wp),p+1,varNames(k+1 ),self%passes(p)%u%der(k))
-				call writeStep(fn,real(p,wp),p+1,varNames(k+10),self%passes(p)%v%der(k))
+			buf(:,:,p+1) = self%passes(p)%u%val()
+		end do
+		call writeStep(fn,real(ts-1,wp),ts,'u',buf)
+		! v
+		do p=lbound(self%passes,1),ubound(self%passes,1)
+			buf(:,:,p+1) = self%passes(p)%v%val()
+		end do
+		call writeStep(fn,real(ts-1,wp),ts,'v',buf)
+		
+		! Derivatives
+		do k=1,ADS_COUNT
+			! u
+			do p=lbound(self%passes,1),ubound(self%passes,1)
+				buf(:,:,p+1) = self%passes(p)%u%der(k)
 			end do
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+1 ),buf)
+			! v
+			do p=lbound(self%passes,1),ubound(self%passes,1)
+				buf(:,:,p+1) = self%passes(p)%v%der(k)
+			end do
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+10),buf)
 		end do
 		
 	end subroutine writeVectors

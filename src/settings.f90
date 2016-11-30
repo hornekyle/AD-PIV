@@ -52,6 +52,7 @@ module settings_mod
 	integer::lsqOrder = 1
 	
 	logical::write_pair = .true.
+	logical::write_vectors = .true.
 	logical::write_map  = .true.
 	logical::per_pixel  = .true.
 	

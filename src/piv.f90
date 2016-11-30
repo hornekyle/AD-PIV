@@ -54,11 +54,10 @@ contains
 				
 				if(per_pixel) then
 					fn = 'vector'
-					fn = fn//'-'//intToChar(p%idx)
 					fn = fn//'-['//intToChar(i)//','//intToChar(j)//'|'
 					fn = fn//''//intToChar(k)//']'
 					fn = fn//'.nc'
-					call R%writeVector(fn,d)
+					call R%writeVector(fn,d,p%idx)
 				end if
 			end do
 		end do

@@ -17,7 +17,10 @@ program process_prg
 	call readConfig(cfn)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
-	do k=pairs_start-1,N_pairs+pairs_start-2
+	k = pairs_start-1
+	if(amRoot()) call doPair(k+1)
+	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
+	do k=pairs_start,N_pairs+pairs_start-2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		call doPair(k+1)
 	end do
@@ -30,16 +33,15 @@ contains
 		
 		real(wp)::t0,t1
 		type(pair_t)::pair
-		character(64)::buf
+		integer::rank
 		
 		if(amRoot()) write(stdout,'(1A)',advance='no') colorize('Pair: '//intToChar(k)//'; ',[5,5,5])
 		t0 = wallTime()
-		write(buf,*) k
-		buf = trim(adjustl(buf))
 		pair = createFullPair(k)
 		
-		if(write_pair) call pair%writePair('pair-'//trim(buf)//'.nc')
-		call pair%writeVectors('vectors-'//trim(buf)//'.nc')
+		if(write_pair) call pair%writePair('pair.nc',k)
+		if(write_vectors) call pair%writeVectors('vectors.nc',k)
+		
 		t1 = wallTime()
 		if(amRoot()) write(stdout,'(1A)') colorize(realToChar(t1-t0,'F7.3')//' [s]',[5,5,5])
 	end subroutine doPair

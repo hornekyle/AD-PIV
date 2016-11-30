@@ -104,11 +104,10 @@ contains
 		
 		if(write_map) then
 			fn = 'map'
-			fn = fn//'-'//intToChar(idx)
 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
 			fn = fn//''//intToChar(pass)//']'
 			fn = fn//'.nc'
-			call M%writeMap(fn)
+			call M%writeMap(fn,idx)
 		end if
 		
 		o = real(self%shift,wp)+M%dispGauss()
@@ -131,23 +130,24 @@ contains
 		
 		if(write_map) then
 			fn = 'fields'
-			fn = fn//'-'//intToChar(idx)
 			fn = fn//'-['//intToChar(self%ij(1))//','//intToChar(self%ij(2))//'|'
 			fn = fn//''//intToChar(pass)//']'
 			fn = fn//'.nc'
-			call F%writeFields(fn)
+			call F%writeFields(fn,idx)
 		end if
 		
 		o = real(self%shift,wp)+F%dispLsq()
 	end function leastSquares
 
-	subroutine writeVector(self,fn,v)
+	subroutine writeVector(self,fn,v,ts)
 		class(regions_t),intent(in)::self
 		character(*),intent(in)::fn
 		type(ad_t),dimension(2)::v
+		integer,intent(in)::ts
 		
 		character(5),dimension(3+ADS_COUNT)::varNames
-		real(wp),dimension(:),allocatable::x,y
+		real(wp),dimension(:),allocatable::x,y,z
+		real(wp),dimension(:,:,:),allocatable::buf
 		integer,dimension(2)::N
 		integer::k
 		
@@ -155,30 +155,49 @@ contains
 		
 		x = linspace(1.0_wp,real(N(1),wp),N(1))
 		y = linspace(1.0_wp,real(N(2),wp),N(2))
+		z = linspace(1.0_wp,2.0_wp,2)
+		allocate( buf(size(x),size(y),size(z)) )
 		
 		varNames(  1  ) = 'I'
 		varNames( 2:9 ) = 'dI'//ADS_CHS
 		varNames(10:11) = ['dudI','dvdI']
 		
-		call writeGrid(fn,varNames,x,y)
+		if(ts==1) call writeGrid(fn,varNames,x,y,z)
 		
-		! First Image
-		call writeStep(fn,0.0_wp,1,varNames(1),self%A%val())
+		! Real value
+		buf(:,:,1) = self%A%val()
+		buf(:,:,2) = self%B%val()
+		call writeStep(fn,real(ts-1,wp),ts,'I    ',buf)
+		
+		! Derivatives
 		do k=1,ADS_COUNT
-			call writeStep(fn,0.0_wp,1,varNames(k+1),self%A%der(k))
+			buf(:,:,1) = self%A%der(k)
+			buf(:,:,2) = self%B%der(k)
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+1),buf)
 		end do
 		do k=1,2
-			call writeStep(fn,0.0_wp,1,varNames(k+9), deIndex(v(k),1) )
+			buf(:,:,1) = deIndex(v(k),1)
+			buf(:,:,2) = deIndex(v(k),2)
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+9), buf )
 		end do
 		
-		! Second Image
-		call writeStep(fn,1.0_wp,2,varNames(1),self%B%val())
-		do k=1,ADS_COUNT
-			call writeStep(fn,1.0_wp,2,varNames(k+1),self%B%der(k))
-		end do
-		do k=1,2
-			call writeStep(fn,1.0_wp,2,varNames(k+9), deIndex(v(k),2) )
-		end do
+! 		! First Image
+! 		call writeStep(fn,0.0_wp,1,varNames(1),self%A%val())
+! 		do k=1,ADS_COUNT
+! 			call writeStep(fn,0.0_wp,1,varNames(k+1),self%A%der(k))
+! 		end do
+! 		do k=1,2
+! 			call writeStep(fn,0.0_wp,1,varNames(k+9), deIndex(v(k),1) )
+! 		end do
+! 		
+! 		! Second Image
+! 		call writeStep(fn,1.0_wp,2,varNames(1),self%B%val())
+! 		do k=1,ADS_COUNT
+! 			call writeStep(fn,1.0_wp,2,varNames(k+1),self%B%der(k))
+! 		end do
+! 		do k=1,2
+! 			call writeStep(fn,1.0_wp,2,varNames(k+9), deIndex(v(k),2) )
+! 		end do
 	end subroutine writeVector
 
 	!==================!
@@ -214,9 +233,10 @@ contains
 		end do
 	end function newMap
 
-	subroutine writeMap(self,fn)
+	subroutine writeMap(self,fn,ts)
 		class(map_t),intent(in)::self
 		character(*),intent(in)::fn
+		integer,intent(in)::ts
 		
 		character(5),dimension( 1+ADS_COUNT )::varNames
 		integer::k
@@ -224,11 +244,11 @@ contains
 		varNames( 1 ) = 'I'
 		varNames(2:9) = 'dI'//ADS_CHS
 		
-		call writeGrid(fn,varNames,self%dx,self%dy)
+		if(ts==1) call writeGrid(fn,varNames,self%dx,self%dy)
 		
-		call writeStep(fn,0.0_wp,1,varNames(1),self%C%val(      ))
+		call writeStep(fn,real(ts-1,wp),ts,varNames(1),self%C%val())
 		do k=1,ADS_COUNT
-			call writeStep(fn,0.0_wp,1,varNames(k+1),self%C%der(k))
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+1),self%C%der(k))
 		end do
 	end subroutine writeMap
 
@@ -355,9 +375,10 @@ contains
 		o = matmul(Ai,-bs)
 	end function dispLsq
 
-	subroutine writeFields(self,fn)
+	subroutine writeFields(self,fn,ts)
 		class(fields_t),intent(in)::self
 		character(*),intent(in)::fn
+		integer,intent(in)::ts
 		
 		character(6),dimension( 3*(1+ADS_COUNT) )::varNames
 		real(wp),dimension(:),allocatable::x,y
@@ -376,16 +397,16 @@ contains
 		varNames( 19  ) = 'ft'
 		varNames(20:27) = 'dft'//ADS_CHS
 		
-		call writeGrid(fn,varNames,x,y)
+		if(ts==1) call writeGrid(fn,varNames,x,y)
 		
-		call writeStep(fn,0.0_wp,1,varNames( 1),self%fx%val())
-		call writeStep(fn,0.0_wp,1,varNames(10),self%fy%val())
-		call writeStep(fn,0.0_wp,1,varNames(19),self%ft%val())
+		call writeStep(fn,real(ts-1,wp),ts,varNames( 1),self%fx%val())
+		call writeStep(fn,real(ts-1,wp),ts,varNames(10),self%fy%val())
+		call writeStep(fn,real(ts-1,wp),ts,varNames(19),self%ft%val())
 		
 		do k=1,ADS_COUNT
-			call writeStep(fn,0.0_wp,1,varNames(k+1 ),self%fx%der(k))
-			call writeStep(fn,0.0_wp,1,varNames(k+10),self%fy%der(k))
-			call writeStep(fn,0.0_wp,1,varNames(k+19),self%ft%der(k))
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+1 ),self%fx%der(k))
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+10),self%fy%der(k))
+			call writeStep(fn,real(ts-1,wp),ts,varNames(k+19),self%ft%der(k))
 		end do
 	end subroutine writeFields
 
