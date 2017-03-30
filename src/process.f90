@@ -17,10 +17,7 @@ program process_prg
 	call readConfig(cfn)
 	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
 	
-	k = pairs_start-1
-	if(amRoot()) call doPair(k+1)
-	call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
-	do k=pairs_start,N_pairs+pairs_start-2
+	do k=pairs_start-1,N_pairs+pairs_start-2
 		if(mod(k,mpi_size)/=mpi_rank) cycle
 		call doPair(k+1)
 	end do
@@ -39,8 +36,12 @@ contains
 		t0 = wallTime()
 		pair = createFullPair(k)
 		
-		if(write_pair) call pair%writePair('pair.nc',k)
-		if(write_vectors) call pair%writeVectors('vectors.nc',k)
+		do rank=0,mpi_size-1
+			call MPI_Barrier(MPI_COMM_WORLD,mpi_err)
+			if(mpi_rank/=rank) cycle
+			if(write_pair) call pair%writePair('pair.nc',k)
+			if(write_vectors) call pair%writeVectors('vectors.nc',k)
+		end do
 		
 		t1 = wallTime()
 		if(amRoot()) write(stdout,'(1A)') colorize(realToChar(t1-t0,'F7.3')//' [s]',[5,5,5])

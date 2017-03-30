@@ -17,7 +17,8 @@ from random import shuffle
 fext = 'svg'
 fdir = ''
 
-radii = pl.linspace(0.5,2.5,2+1)
+#radii = pl.linspace(0.5,2.5,2+1)
+radii = pl.array([0.5])
 disps = pl.linspace(5.0,6.0,10+1)
 
 Nd = disps.size
@@ -99,30 +100,6 @@ def getData(base):
 			Data[vn][:,disp_k,:] = data[:,:]
 	return Data
 
-def plotStats(var,Data):
-	linesFormats = ['','g-o','c-s','m-^']
-	plotTypes = ['mean','std']
-	plotTypeNames = {'mean':'Mean Error','std':'Deviation'}
-	for plotType in plotTypes:
-		fig = pl.figure(figsize=(4,4),tight_layout={'rect':(0,0,1,0.93)})
-		ax = fig.add_subplot(1,1,1)
-		for pass_k in range(1,Np):
-			x = disps
-			if plotType=='mean':
-				y = Data[var][:,:,pass_k].mean(0)-Data[var][:,:,0].mean(0)
-			elif plotType=='std':
-				y = Data[var][:,:,pass_k].std(0)
-			ax.plot(x,y,linesFormats[pass_k],label=passNames[pass_k],mew=0)
-		ax.set_xlim(disps.min(),disps.max())
-		ax.set_xlabel('Displacement $u$ [px]')
-		ax.set_xticks(pl.linspace(5.0,6.0,5+1))
-		unzoom(ax,'y',0.1)
-		ax.set_ylabel('%s\n%s'%(plotTypeNames[plotType],titles[var]))
-		ax.legend(loc='lower left', bbox_to_anchor=(-0.25,1.01),numpoints=3,
-			frameon=False,ncol=3,borderpad=0.1,handletextpad=0.2,columnspacing=1.5)
-		fig.savefig('%s/%s-%s.%s'%(fdir,var,plotType,fext))
-		pl.close(fig)
-
 def histogram(I,Nb):
 	L = pl.sort(I)
 	dL = int(L.size/Nb)
@@ -171,93 +148,26 @@ def computeBounds(I):
 			break
 	return (xl,xh)
 
-def plotHist(var,Data):
+def plotViolin(var,Data):
 	for pass_k in range(1,Np):
 		fig = pl.figure(tight_layout=True,figsize=(4,4))
 		ax = fig.add_subplot(1,1,1)
 		for disp_k in range(Nd):
 			I = Data[var][:,disp_k,pass_k]
-			plotHistogram(ax,I,titles[var],disps[disp_k],0.08)
 			ax.errorbar(disps[disp_k],I.mean(),I.std(),fmt='k.')
+		violin_parts = ax.violinplot(Data[var][:,:,pass_k],disps,vert=True,widths=0.075,showextrema=False)
+		for pc in violin_parts['bodies']:
+			pc.set_alpha(0.5)
+			pc.set_facecolor('C0')
+			pc.set_edgecolor('')
 		ax.set_xlim(disps.min()-0.1,disps.max()+0.1)
 		ax.set_xticks(pl.linspace(5.0,6.0,5+1))
 		ax.set_xlabel('Displacement $u$ [px]')
 		ax.set_ylim( computeBounds(Data[var][:,:,pass_k]) )
 		unzoom(ax,'y',0.2)
 		ax.set_ylabel('%s'%titles[var])
-		fig.savefig('%s/%s-%d-hist.%s'%(fdir,var,pass_k,fext))
+		fig.savefig('%s/%s-%d-violin.%s'%(fdir,var,pass_k,fext))
 		pl.close(fig)
-
-def plotConvergence(var,Data):
-	Ns = Data[var][:,0,0].size
-	for pass_k in range(1,Np):
-		fig = pl.figure(tight_layout={'h_pad':0,'rect':(0,0,1,0.95)},figsize=(4,4))
-		ax1 = fig.add_subplot(2,1,1)
-		ax2 = fig.add_subplot(2,1,2)
-		i = pl.linspace(1,Ns+1,Ns)
-		m = pl.zeros( (Nd,Ns) )
-		s = pl.zeros( (Nd,Ns) )
-		I = Data[var][:,:,pass_k]
-		for k in range(2,Ns):
-			m[:,k] = I[:k,:].mean(0)
-			s[:,k] = I[:k,:].std(0)
-		for disp_k in range(Nd):
-			m[disp_k,:] = m[disp_k,:]-m[disp_k,-1]
-			s[disp_k,:] = s[disp_k,:]-s[disp_k,-1]
-		m0 = 3.0*abs(m).mean()
-		s0 = 5.0*abs(s).mean()
-		for disp_k in range(Nd):
-			ax1.plot(i[2::SP],m[disp_k,2::SP]/m0,'C0-')
-			ax2.plot(i[2::SP],s[disp_k,2::SP]/s0,'C1-')
-		
-		ax1.axhline(0.0,color='k',linestyle='--')
-		ax2.axhline(0.0,color='k',linestyle='--')
-		ax1.set_xlim(1,Ns)
-		ax2.set_xlim(1,Ns)
-		ax1.set_xticks([])
-		ax1.set_ylim(-1.1,1.1)
-		ax2.set_ylim(-1.1,1.1)
-		ax1.set_yticks([-1,0,1])
-		ax1.set_yticklabels(['','',''])
-		ax2.set_yticks([-1,0,1])
-		ax2.set_yticklabels(['','',''])
-		ax2.set_xlabel(r'Monte Carlo Iterations $k$ [\#]')
-		#fig.suptitle('Normalized %s'%titles[var])
-		ax1.set_ylabel('Mean $n( \\mu_{%s} )$ [-]'%shortTitles[var])
-		ax2.set_ylabel('Deviation $n( \\delta_{%s} )$ [-]'%shortTitles[var])
-		fig.savefig('%s/%s-%d-conv.%s'%(fdir,var,pass_k,fext))
-		pl.close(fig)
-
-def plotCorrelation(Data):
-	for var in ['u','v']:
-		for dim in ['U','V']:
-			for kp in range(1,Np):
-				Ns = Data['d%sd%s'%(var,dim)][:,0,kp].shape[0]
-				
-				e = pl.empty( (Nd,Ns) )
-				d = pl.empty( (Nd,Ns) )
-				s = pl.empty( (Nd,Ns) )
-				order = pl.array(range(d.size))
-				shuffle(order)
-				
-				fig = pl.figure(figsize=(4,4),tight_layout=True)
-				ax  = fig.add_subplot(1,1,1)
-				for kd in range(Nd):
-					t = 0.0
-					if var=='u': t = disps[kd]
-					e[kd,:] = Data[var][:,kd,kp]-t
-					d[kd,:] = Data['d%sd%s'%(var,dim)][:,kd,kp]
-					s[kd,:] = pl.ones(Ns)*disps[kd]
-				e = e.flatten()[order]
-				d = d.flatten()[order]
-				s = s.flatten()[order]
-				
-				sp = ax.scatter(d[::SP],e[::SP],c=s[::SP],marker='+')
-				ax.set_xlabel(titles['d%sd%s'%(var,dim)])
-				ax.set_ylabel('Displacement Error $\\epsilon_%s$ [px]'%var)
-				fig.colorbar(sp,ax=ax,label='Displacement $u$ [px]')
-				fig.savefig('%s/d%sd%s-%d-corr.%s'%(fdir,var,dim,kp,fext),dpi=300)
-				pl.close(fig)
 
 # Plot all data series
 for rk in range(radii.size):
@@ -272,7 +182,4 @@ for rk in range(radii.size):
 		scipy.io.savemat(fn,Data)
 	for var in varNames:
 		print(rk,var)
-		#plotStats(var,Data)
-		plotHist(var,Data)
-		plotConvergence(var,Data)
-	plotCorrelation(Data)
+		plotViolin(var,Data)

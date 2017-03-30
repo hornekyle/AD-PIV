@@ -2,13 +2,15 @@
 
 base="/home/kyle/Work/Research/Branches/PIV/AD-PIV"
 build="${base}/build"
-template="${base}/config/template.cfg"
+template="${base}/config/templateMC.cfg"
 config="input.cfg"
 
-export Npair=16
+export Npair=10000
 
 radii=(0.5 1.5 2.5)
 disps=(5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0)
+
+
 shears=(0.0 0.1 0.2 0.3 0.4 0.5)
 
 for r in "${radii[@]}";
@@ -27,9 +29,6 @@ do
 		cd "${results}/${run}"
 		cat ${template} | envsubst > ${config}
 		mpirun -np $(nproc) ${build}/process ${config} > output.log
-		tar cfz "../d-${run}-data.tar.gz" "."
-		cd ..
-		rm -rf ${run}
 	done
 	
 	for s in "${shears[@]}";
@@ -46,8 +45,5 @@ do
 		cd "${results}/${run}"
 		cat ${template} | envsubst > ${config}
 		mpirun -np $(nproc) ${build}/process ${config} > output.log
-		tar cfz "../s-${run}-data.tar.gz" "."
-		cd ..
-		rm -rf ${run}
 	done
 done

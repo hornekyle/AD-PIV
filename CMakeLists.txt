@@ -60,9 +60,9 @@ add_custom_target(symlinks
 	COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_SOURCE_DIR}/project.md" "${CMAKE_BINARY_DIR}/project.md"
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 
-#=========================#
-#= Create Library Target =#
-#=========================#
+#============================#
+#= Create Executable Target =#
+#============================#
 
 # Source Files
 set(process_src
