@@ -33,9 +33,9 @@ def plotPair(fn):
 	
 	ax.set_xticks([1,24,48,72,96,120,144])
 	ax.set_yticks([1,24,48,72,96,120,144])
-	ax.set_xlabel('Position $x$ [px]')
-	ax.set_ylabel('Position $y$ [px]')
-	fig.colorbar(cf,ax=ax,label='Intensity $I$ [-]')
+	ax.set_xlabel('Position $x$ $/$ px')
+	ax.set_ylabel('Position $y$ $/$ px')
+	fig.colorbar(cf,ax=ax,label='Intensity $I$ $/$ 1')
 	fig.savefig('./figures/example/pair.svg')
 	
 	fh.close()
@@ -51,13 +51,15 @@ def plotVector(fn):
 	
 	v = pl.empty( (Nx,Ny) )
 	
-	vns = ['I','dIdU','dIdV','dIdR']
+	vns = ['I','dIdU','dIdV','dIdR','dudI','dvdI']
 	vds = ['Intensity $I$ [-]',
-	       'Intensity Derivative $\partial I / \partial U$ [1/px]',
-	       'Intensity Derivative $\partial I / \partial V$ [1/px]',
-	       'Intensity Derivative $\partial I / \partial R$ [1/px]'
+	       'Intensity Derivative $\partial_U (I)$ $/$ px$^{-1}$',
+	       'Intensity Derivative $\partial_V (I)$ $/$ px$^{-1}$',
+	       'Intensity Derivative $\partial_R (I)$ $/$ px$^{-1}$',
+	       'Velocity Derivative $\partial_I (u)$ $/$ px',
+	       'Velocity Derivative $\partial_I (v)$ $/$ px'
 	       ]
-	vDs = [False,True,True,False]
+	vDs = [False,True,True,False,True,True]
 	for k in range(len(vns)):
 		v[:,:] = fh.variables[ vns[k] ][0,1,:,:]
 		
@@ -71,8 +73,8 @@ def plotVector(fn):
 		
 		ax.set_xticks([48,72,96])
 		ax.set_yticks([48,72,96])
-		ax.set_xlabel('Position $x$ [px]')
-		ax.set_ylabel('Position $y$ [px]')
+		ax.set_xlabel('Position $x$ $/$ px')
+		ax.set_ylabel('Position $y$ $/$ px')
 		fig.colorbar(cf,ax=ax,label='%s'%vds[k])
 		fig.savefig('./figures/example/vector-%s.svg'%vns[k])
 	
@@ -90,10 +92,10 @@ def plotMap(fn):
 	v = pl.empty( (Nx,Ny) )
 	
 	vns = ['I','dIdU','dIdV','dIdR']
-	vds = ['Correlation $C$ [-]',
-	       'Correlation Derivative $\partial C / \partial U$ [1/px]',
-	       'Correlation Derivative $\partial C / \partial V$ [1/px]',
-	       'Correlation Derivative $\partial C / \partial R$ [1/px]'
+	vds = ['Correlation $C$ $/$ 1',
+	       'Correlation Derivative $\partial_U (C)$ $/$ px$^{-1}$',
+	       'Correlation Derivative $\partial_V (C)$ $/$ px$^{-1}$',
+	       'Correlation Derivative $\partial_R (C)$ $/$ px$^{-1}$'
 	       ]
 	vDs = [False,True,True,False]
 	for k in range(len(vns)):
@@ -107,8 +109,8 @@ def plotMap(fn):
 		else:
 			cf = ax.pcolorfast(x,y,v,cmap='BuPu')
 		
-		ax.set_xlabel('Position $x$ [px]')
-		ax.set_ylabel('Position $y$ [px]')
+		ax.set_xlabel('Position $x$ $/$ px')
+		ax.set_ylabel('Position $y$ $/$ px')
 		fig.colorbar(cf,ax=ax,label='%s'%vds[k])
 		fig.savefig('./figures/example/map-%s.svg'%vns[k])
 	

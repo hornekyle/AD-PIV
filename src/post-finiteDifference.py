@@ -45,8 +45,8 @@ def plotField(F,T):
 	fig = pl.figure(tight_layout=True,figsize=(5,4))
 	ax = fig.add_subplot(1,1,1,aspect=1.0)
 	im = ax.imshow(F,cmap=cm,interpolation='nearest')
-	ax.set_xlabel('x-coordinate [px]')
-	ax.set_ylabel('y-coordinate [px]')
+	ax.set_xlabel('x-coordinate $/$ px')
+	ax.set_ylabel('y-coordinate $/$ px')
 	fig.colorbar(im,ax=ax,label=T)
 	return fig
 
@@ -79,13 +79,13 @@ hI,eI = computeConvergence(SI,'I','dIdU')
 
 fig = pl.figure(figsize=(4,3),tight_layout=True)
 ax = fig.add_subplot(1,1,1)
-plotConvergence(ax,hI,eI,'C0',['--','s'],r'$\partial I / \partial U$')
-plotConvergence(ax,hu[:-2],eu[:-2],'C1',[':','o'],r'$\partial u / \partial U$')
+plotConvergence(ax,hI,eI,'C0',['--','s'],r'$\partial_U (I)$')
+plotConvergence(ax,hu[:-2],eu[:-2],'C1',[':','o'],r'$\partial_U (u)$')
 ax.legend(loc='upper center',ncol=2)
 ax.set_xlim(10**(-1.0),10**(0.2))
 ax.set_ylim(10**(-1.8),10**(0.8))
-ax.set_xlabel('Normalized Spacing $h$ [-]')
-ax.set_ylabel('Normalized Error $\\epsilon$ [-]')
+ax.set_xlabel('Normalized Spacing $h$ $/$ 1')
+ax.set_ylabel('Normalized Error $\\epsilon$ $/$ 1')
 
 fig.savefig('./figures/finiteDifference/convergence.svg')
 pl.close(fig)
